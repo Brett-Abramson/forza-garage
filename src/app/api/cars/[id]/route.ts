@@ -10,9 +10,22 @@ export async function PATCH(
   if (isNaN(carId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
 
   const body = await request.json()
-  const car = await prisma.car.update({
+
+  if (body.owned) {
+    const existing = await prisma.userGarage.findFirst({ where: { carId } })
+    if (!existing) {
+      await prisma.userGarage.create({ data: { carId } })
+    }
+  } else {
+    await prisma.userGarage.deleteMany({ where: { carId } })
+  }
+
+  const car = await prisma.car.findUnique({
     where: { id: carId },
-    data: { owned: body.owned },
+    include: { garage: { select: { id: true } } },
   })
-  return NextResponse.json(car)
+  if (!car) return NextResponse.json({ error: 'Car not found' }, { status: 404 })
+
+  const { garage, ...carData } = car
+  return NextResponse.json({ ...carData, owned: garage.length > 0 })
 }

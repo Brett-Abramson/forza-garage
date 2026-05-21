@@ -1,12 +1,18 @@
 import { prisma } from '@/lib/prisma'
 import GarageView from '@/components/GarageView'
+import type { Car } from '@/types/car'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  const cars = await prisma.car.findMany({
+  const rawCars = await prisma.car.findMany({
+    include: { garage: { select: { id: true } } },
     orderBy: [{ make: 'asc' }, { model: 'asc' }],
   })
+  const cars: Car[] = rawCars.map(({ garage, ...car }) => ({
+    ...car,
+    owned: garage.length > 0,
+  }))
 
   return (
     <main className="max-w-screen-2xl mx-auto px-4 py-8">
