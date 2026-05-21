@@ -1,43 +1,93 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
-import { Car, PI_CLASS_ORDER, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
+import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS } from '@/types/car'
+import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
+import CarCard from './CarCard'
+import CarRow from './CarRow'
+import FilterBar from './FilterBar'
+import { SortTh, GridIcon, TableIcon } from './table-ui'
 import Link from 'next/link'
+
+type ViewMode = 'grid' | 'table'
+
+interface SortState {
+  key: SortKey | null
+  dir: SortDir
+}
 
 interface Props {
   initialCars: Car[]
 }
 
+function buildOptions(cars: Car[]) {
+  return {
+    divisions: [...new Set(cars.map((c) => c.division))].sort(),
+    makes: [...new Set(cars.map((c) => c.make))].sort(),
+    countries: [...new Set(cars.map((c) => c.country))].sort(),
+  }
+}
+
+const DEFAULT_FILTERS: FilterState = {
+  search: '',
+  piClass: '',
+  division: '',
+  make: '',
+  drivetrain: '',
+  country: '',
+  owned: 'all',
+}
+
 export default function GarageShowcase({ initialCars }: Props) {
   const [cars, setCars] = useState<Car[]>(initialCars)
-  const [search, setSearch] = useState('')
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
+  const [view, setView] = useState<ViewMode>('grid')
+  const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return cars
-    const q = search.toLowerCase()
-    return cars.filter(
-      (c) =>
-        c.make.toLowerCase().includes(q) ||
-        c.model.toLowerCase().includes(q) ||
-        c.division.toLowerCase().includes(q)
-    )
-  }, [cars, search])
+  const options = useMemo(() => buildOptions(cars), [cars])
 
-  const groups = useMemo(() => {
-    return [...PI_CLASS_ORDER].reverse().flatMap((cls) => {
-      const group = filtered.filter((c) => c.piClass === cls)
-      return group.length > 0 ? [{ cls, cars: group }] : []
+  const classCounts = useMemo(
+    () => Object.fromEntries(PI_CLASS_ORDER.map((cls) => [cls, cars.filter((c) => c.piClass === cls).length])),
+    [cars]
+  )
+
+  const filteredCars = useMemo(() => {
+    return cars.filter((car) => {
+      if (filters.search) {
+        const q = filters.search.toLowerCase()
+        if (
+          !car.make.toLowerCase().includes(q) &&
+          !car.model.toLowerCase().includes(q) &&
+          !car.division.toLowerCase().includes(q)
+        )
+          return false
+      }
+      if (filters.piClass && car.piClass !== filters.piClass) return false
+      if (filters.division && car.division !== filters.division) return false
+      if (filters.make && car.make !== filters.make) return false
+      if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false
+      if (filters.country && car.country !== filters.country) return false
+      return true
     })
-  }, [filtered])
+  }, [cars, filters])
 
-  const classCounts = useMemo(() => {
-    return Object.fromEntries(
-      PI_CLASS_ORDER.map((cls) => [cls, cars.filter((c) => c.piClass === cls).length])
-    )
-  }, [cars])
+  const sortedCars = useMemo(() => {
+    const copy = [...filteredCars]
+    copy.sort(sort.key ? (a, b) => compareRows(a, b, sort.key!, sort.dir) : defaultSort)
+    return copy
+  }, [filteredCars, sort])
 
-  const removeFromGarage = useCallback(async (id: number) => {
+  const handleSort = useCallback((key: SortKey) => {
+    setSort((prev) => ({
+      key,
+      dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc',
+    }))
+  }, [])
+
+  // In the garage every car is already owned; toggling off = remove from garage
+  const handleToggle = useCallback(async (id: number, owned: boolean) => {
+    if (owned) return // shouldn't happen — all cars here are owned
     setPendingIds((s) => new Set(s).add(id))
     try {
       const res = await fetch(`/api/cars/${id}`, {
@@ -67,7 +117,7 @@ export default function GarageShowcase({ initialCars }: Props) {
           Head to the Car Database to find and add cars to your collection.
         </p>
         <Link
-          href="/"
+          href="/cars"
           className="px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 rounded-lg text-sm font-medium hover:bg-cyan-500/30 transition-colors"
         >
           Browse Car Database
@@ -77,139 +127,107 @@ export default function GarageShowcase({ initialCars }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Class stat chips */}
+    <div className="flex flex-col gap-6">
+      {/* Class stat chips — click to filter by that class */}
       <div className="flex flex-wrap gap-2">
         {PI_CLASS_ORDER.filter((cls) => classCounts[cls] > 0)
           .reverse()
           .map((cls) => (
-            <div
+            <button
               key={cls}
-              className="flex items-center gap-2 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2"
+              onClick={() => setFilters((f) => ({ ...f, piClass: f.piClass === cls ? '' : cls }))}
+              className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${
+                filters.piClass === cls
+                  ? 'bg-cyan-500/15 border-cyan-500/40'
+                  : 'bg-[#161b22] border-[#30363d] hover:border-[#484f58]'
+              }`}
             >
               <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[cls]}`}>
                 {cls}
               </span>
               <span className="text-sm font-semibold">{classCounts[cls]}</span>
               <span className="text-xs text-gray-500">{classCounts[cls] === 1 ? 'car' : 'cars'}</span>
-            </div>
+            </button>
           ))}
       </div>
 
-      {/* Search */}
-      <input
-        type="text"
-        placeholder="Search your garage..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full max-w-sm bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600"
+      {/* Search + view toggle */}
+      <div className="flex gap-3 items-center">
+        <input
+          type="text"
+          placeholder="Search make, model, division..."
+          value={filters.search}
+          onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+          className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600"
+        />
+        <div className="flex bg-[#161b22] border border-[#30363d] rounded-lg overflow-hidden shrink-0">
+          <button
+            onClick={() => setView('grid')}
+            title="Grid view"
+            className={`px-3 py-2 transition-colors ${view === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <GridIcon />
+          </button>
+          <button
+            onClick={() => setView('table')}
+            title="Table view"
+            className={`px-3 py-2 transition-colors ${view === 'table' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <TableIcon />
+          </button>
+        </div>
+      </div>
+
+      {/* Filter bar — hideOwned since every car here is already owned */}
+      <FilterBar
+        filters={filters}
+        options={options}
+        onChange={setFilters}
+        totalCount={cars.length}
+        filteredCount={filteredCars.length}
+        hideOwned
       />
 
-      {groups.length === 0 ? (
-        <p className="text-gray-500 text-sm">No cars match your search.</p>
+      {/* Results */}
+      {sortedCars.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-gray-600">
+          <div className="text-4xl mb-3">🔍</div>
+          <div className="text-lg font-medium">No cars match</div>
+          <div className="text-sm">Try adjusting your filters</div>
+        </div>
+      ) : view === 'grid' ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          {sortedCars.map((car) => (
+            <div key={car.id} className={pendingIds.has(car.id) ? 'opacity-60 pointer-events-none' : ''}>
+              <CarCard car={car} onToggleOwned={handleToggle} />
+            </div>
+          ))}
+        </div>
       ) : (
-        groups.map(({ cls, cars: groupCars }) => (
-          <section key={cls}>
-            <div className="flex items-center gap-3 mb-4">
-              <span className={`text-sm font-bold px-2.5 py-1 rounded ${PI_CLASS_COLORS[cls]}`}>
-                {cls}
-              </span>
-              <span className="text-gray-400 text-sm">
-                {groupCars.length} {groupCars.length === 1 ? 'car' : 'cars'}
-              </span>
-              <div className="flex-1 h-px bg-[#21262d]" />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {groupCars
-                .sort((a, b) => b.piRating - a.piRating)
-                .map((car) => (
-                  <GarageCard
-                    key={car.id}
-                    car={car}
-                    isPending={pendingIds.has(car.id)}
-                    onRemove={removeFromGarage}
-                  />
-                ))}
-            </div>
-          </section>
-        ))
+        <div className="overflow-x-auto rounded-xl border border-[#30363d]">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[#161b22] border-b border-[#30363d] text-xs uppercase tracking-wide select-none">
+                <SortTh label="Class" sortKey="piClass" sort={sort} onSort={handleSort} />
+                <SortTh label="PI" sortKey="piRating" sort={sort} onSort={handleSort} />
+                <SortTh label="Year" sortKey="year" sort={sort} onSort={handleSort} />
+                <SortTh label="Make" sortKey="make" sort={sort} onSort={handleSort} />
+                <SortTh label="Model" sortKey="model" sort={sort} onSort={handleSort} />
+                <SortTh label="Division" sortKey="division" sort={sort} onSort={handleSort} className="hidden md:table-cell" />
+                <SortTh label="Drive" sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
+                <SortTh label="Country" sortKey="country" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
+                <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
+                <th className="text-left py-2.5 px-3 text-gray-500">Garage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedCars.map((car) => (
+                <CarRow key={car.id} car={car} onToggleOwned={handleToggle} isPending={pendingIds.has(car.id)} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )
-}
-
-function GarageCard({
-  car,
-  isPending,
-  onRemove,
-}: {
-  car: Car
-  isPending: boolean
-  onRemove: (id: number) => void
-}) {
-  const sourceColor = getSourceColor(car.source)
-
-  return (
-    <div
-      className={`
-        bg-[#161b22] border border-cyan-500/30 rounded-xl overflow-hidden
-        transition-all duration-200 hover:border-cyan-500/60
-        ${isPending ? 'opacity-50 pointer-events-none' : ''}
-      `}
-    >
-      <div className={`h-1 w-full ${stripeColor(car.piClass)}`} />
-
-      <div className="p-4 flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="text-xs text-gray-500">{car.year} · {car.make}</div>
-            <div className="text-sm font-semibold leading-snug truncate">{car.model}</div>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[car.piClass]}`}>
-              {car.piClass}
-            </span>
-            <span className="text-xs text-gray-500 tabular-nums">{car.piRating}</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-400">
-          <Spec label="Division" value={car.division} />
-          <Spec label="Country" value={car.country} />
-          {car.drivetrain && <Spec label="Drivetrain" value={car.drivetrain} />}
-          {car.engineType && <Spec label="Engine" value={car.engineType} />}
-        </div>
-
-        <div className={`text-xs font-medium ${sourceColor}`}>
-          {car.source}
-          {car.sourceInfo && <span className="text-gray-600 font-normal"> · {car.sourceInfo}</span>}
-        </div>
-
-        <button
-          onClick={() => onRemove(car.id)}
-          className="w-full py-1.5 rounded-lg text-xs font-semibold border border-[#30363d] text-gray-500 hover:border-red-500/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-        >
-          Remove from garage
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function Spec({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <div className="text-gray-600 text-[10px] uppercase tracking-wide">{label}</div>
-      <div className="truncate">{value}</div>
-    </div>
-  )
-}
-
-function stripeColor(piClass: string) {
-  const map: Record<string, string> = {
-    D: 'bg-gray-500', C: 'bg-green-600', B: 'bg-blue-600',
-    A: 'bg-purple-600', S1: 'bg-orange-500', S2: 'bg-red-600', R: 'bg-yellow-400',
-  }
-  return map[piClass] ?? 'bg-gray-700'
 }

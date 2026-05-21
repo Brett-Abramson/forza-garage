@@ -1,27 +1,29 @@
 import { prisma } from '@/lib/prisma'
-import GarageView from '@/components/GarageView'
+import GarageShowcase from '@/components/GarageShowcase'
 import type { Car } from '@/types/car'
 
 export const dynamic = 'force-dynamic'
 
-export default async function Home() {
-  const rawCars = await prisma.car.findMany({
-    include: { garage: { select: { id: true } } },
-    orderBy: [{ make: 'asc' }, { model: 'asc' }],
+export default async function GaragePage() {
+  const entries = await prisma.userGarage.findMany({
+    include: { car: true },
+    orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
   })
-  const cars: Car[] = rawCars.map(({ garage, ...car }) => ({
-    ...car,
-    owned: garage.length > 0,
-  }))
+  const cars: Car[] = entries.map(({ car }) => ({ ...car, owned: true }))
 
   return (
     <main className="max-w-screen-2xl mx-auto px-4 py-8">
       <header className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Car Database</h1>
-        <p className="text-gray-500 text-sm mt-1">Browse all cars — mark the ones you own to add them to your garage.</p>
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-2xl font-bold tracking-tight">My Garage</h1>
+          <span className="text-gray-500 text-sm">
+            {cars.length} {cars.length === 1 ? 'car' : 'cars'}
+          </span>
+        </div>
+        <p className="text-gray-500 text-sm mt-1">Your personal collection.</p>
       </header>
 
-      <GarageView initialCars={cars} />
+      <GarageShowcase initialCars={cars} />
     </main>
   )
 }

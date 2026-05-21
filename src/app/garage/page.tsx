@@ -1,27 +1,5 @@
-import { prisma } from '@/lib/prisma'
-import GarageShowcase from '@/components/GarageShowcase'
-import type { Car } from '@/types/car'
+import { redirect } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-
-export default async function GaragePage() {
-  const entries = await prisma.userGarage.findMany({
-    include: { car: true },
-    orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
-  })
-  const cars: Car[] = entries.map(({ car }) => ({ ...car, owned: true }))
-
-  return (
-    <main className="max-w-screen-2xl mx-auto px-4 py-8">
-      <header className="mb-8">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">My Garage</h1>
-          <span className="text-gray-500 text-sm">{cars.length} {cars.length === 1 ? 'car' : 'cars'} owned</span>
-        </div>
-        <p className="text-gray-500 text-sm mt-1">Your personal collection, grouped by PI class.</p>
-      </header>
-
-      <GarageShowcase initialCars={cars} />
-    </main>
-  )
+export default function GarageRedirect() {
+  redirect('/')
 }

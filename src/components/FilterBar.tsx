@@ -12,6 +12,7 @@ interface Props {
   onChange: (filters: FilterState) => void
   totalCount: number
   filteredCount: number
+  hideOwned?: boolean
 }
 
 function Select({
@@ -43,7 +44,7 @@ function Select({
   )
 }
 
-export default function FilterBar({ filters, options, onChange, totalCount, filteredCount }: Props) {
+export default function FilterBar({ filters, options, onChange, totalCount, filteredCount, hideOwned = false }: Props) {
   const set = (key: keyof FilterState) => (value: string) =>
     onChange({ ...filters, [key]: value })
 
@@ -53,7 +54,7 @@ export default function FilterBar({ filters, options, onChange, totalCount, filt
     filters.make !== '' ||
     filters.drivetrain !== '' ||
     filters.country !== '' ||
-    filters.owned !== 'all'
+    (!hideOwned && filters.owned !== 'all')
 
   return (
     <div className="flex flex-col gap-3">
@@ -105,16 +106,18 @@ export default function FilterBar({ filters, options, onChange, totalCount, filt
           ]}
           onChange={set('country')}
         />
-        <Select
-          label="Garage"
-          value={filters.owned}
-          options={[
-            { value: 'all', label: 'All Cars' },
-            { value: 'owned', label: 'Owned' },
-            { value: 'not-owned', label: 'Not Owned' },
-          ]}
-          onChange={set('owned')}
-        />
+        {!hideOwned && (
+          <Select
+            label="Garage"
+            value={filters.owned}
+            options={[
+              { value: 'all', label: 'All Cars' },
+              { value: 'owned', label: 'Owned' },
+              { value: 'not-owned', label: 'Not Owned' },
+            ]}
+            onChange={set('owned')}
+          />
+        )}
 
         {hasActiveFilters && (
           <button
