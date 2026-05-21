@@ -40,17 +40,20 @@ function getDivisionGradient(division: string) {
 interface Props {
   car: Car
   onToggleOwned: (id: number, owned: boolean) => void
+  onCardClick?: (car: Car) => void
 }
 
-export default function CarCard({ car, onToggleOwned }: Props) {
+export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const gradient = getDivisionGradient(car.division)
 
   return (
     <div
+      onClick={() => onCardClick?.(car)}
       className={`
         relative flex flex-col rounded-xl border overflow-hidden transition-all duration-200
+        ${onCardClick ? 'cursor-pointer' : ''}
         ${car.owned
           ? 'border-cyan-500/60 shadow-[0_0_12px_rgba(6,182,212,0.15)]'
           : 'border-[#30363d] hover:border-[#484f58]'
@@ -97,7 +100,7 @@ export default function CarCard({ car, onToggleOwned }: Props) {
       {/* Owned toggle */}
       <div className="px-3 pb-3">
         <button
-          onClick={() => onToggleOwned(car.id, !car.owned)}
+          onClick={(e) => { e.stopPropagation(); onToggleOwned(car.id, !car.owned) }}
           className={`
             w-full py-1.5 rounded-lg text-xs font-semibold transition-colors
             ${car.owned

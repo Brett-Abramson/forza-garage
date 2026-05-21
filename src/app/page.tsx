@@ -9,10 +9,11 @@ export default async function GaragePage() {
     include: { car: true, tags: true },
     orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
   })
-  const cars: Car[] = entries.map(({ car, tags }) => ({
+  const cars: Car[] = entries.map(({ car, tags, notes }) => ({
     ...car,
     owned: true,
     tags: tags.map((t) => t.tag),
+    notes,
   }))
 
   return (

@@ -8,6 +8,7 @@ import CarRow from './CarRow'
 import FilterBar from './FilterBar'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
 import { CAR_TAGS } from '@/lib/tags'
+import GarageDrawer from './GarageDrawer'
 import Link from 'next/link'
 
 type ViewMode = 'grid' | 'table'
@@ -46,6 +47,7 @@ export default function GarageShowcase({ initialCars }: Props) {
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
+  const [drawerCar, setDrawerCar] = useState<Car | null>(null)
 
   const options = useMemo(() => buildOptions(cars), [cars])
 
@@ -99,6 +101,10 @@ export default function GarageShowcase({ initialCars }: Props) {
     })
   }, [])
 
+  const handleTagsChange = useCallback((carId: number, tags: string[]) => {
+    setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, tags } : c)))
+  }, [])
+
   // In the garage every car is already owned; toggling off = remove from garage
   const handleToggle = useCallback(async (id: number, owned: boolean) => {
     if (owned) return // shouldn't happen — all cars here are owned
@@ -141,30 +147,8 @@ export default function GarageShowcase({ initialCars }: Props) {
   }
 
   return (
+    <>
     <div className="flex flex-col gap-6">
-      {/* Class stat chips — click to filter by that class */}
-      <div className="flex flex-wrap gap-2">
-        {PI_CLASS_ORDER.filter((cls) => classCounts[cls] > 0)
-          .reverse()
-          .map((cls) => (
-            <button
-              key={cls}
-              onClick={() => setFilters((f) => ({ ...f, piClass: f.piClass === cls ? '' : cls }))}
-              className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${
-                filters.piClass === cls
-                  ? 'bg-cyan-500/15 border-cyan-500/40'
-                  : 'bg-[#161b22] border-[#30363d] hover:border-[#484f58]'
-              }`}
-            >
-              <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[cls]}`}>
-                {cls}
-              </span>
-              <span className="text-sm font-semibold">{classCounts[cls]}</span>
-              <span className="text-xs text-gray-500">{classCounts[cls] === 1 ? 'car' : 'cars'}</span>
-            </button>
-          ))}
-      </div>
-
       {/* Search + view toggle */}
       <div className="flex gap-3 items-center">
         <input
@@ -192,6 +176,29 @@ export default function GarageShowcase({ initialCars }: Props) {
         </div>
       </div>
 
+      {/* Class stat chips — click to filter by that class */}
+      <div className="flex flex-wrap gap-2">
+        {PI_CLASS_ORDER.filter((cls) => classCounts[cls] > 0)
+          .reverse()
+          .map((cls) => (
+            <button
+              key={cls}
+              onClick={() => setFilters((f) => ({ ...f, piClass: f.piClass === cls ? '' : cls }))}
+              className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${
+                filters.piClass === cls
+                  ? 'bg-cyan-500/15 border-cyan-500/40'
+                  : 'bg-[#161b22] border-[#30363d] hover:border-[#484f58]'
+              }`}
+            >
+              <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[cls]}`}>
+                {cls}
+              </span>
+              <span className="text-sm font-semibold">{classCounts[cls]}</span>
+              <span className="text-xs text-gray-500">{classCounts[cls] === 1 ? 'car' : 'cars'}</span>
+            </button>
+          ))}
+      </div>
+
       {/* Filter bar — hideOwned since every car here is already owned */}
       <FilterBar
         filters={filters}
@@ -204,14 +211,6 @@ export default function GarageShowcase({ initialCars }: Props) {
 
       {/* Tag filter chips */}
       <div className="flex flex-wrap gap-2">
-        {selectedTags.size > 0 && (
-          <button
-            onClick={() => setSelectedTags(new Set())}
-            className="px-3 py-1 rounded-full text-xs font-medium border border-[#30363d] text-gray-500 hover:text-gray-300 hover:border-[#484f58] transition-colors"
-          >
-            ✕ clear
-          </button>
-        )}
         {CAR_TAGS.map((tag) => (
           <button
             key={tag}
@@ -225,6 +224,14 @@ export default function GarageShowcase({ initialCars }: Props) {
             {tag}
           </button>
         ))}
+        {selectedTags.size > 0 && (
+          <button
+            onClick={() => setSelectedTags(new Set())}
+            className="px-3 py-1 rounded-full text-xs font-medium border border-[#30363d] text-gray-500 hover:text-gray-300 hover:border-[#484f58] transition-colors"
+          >
+            ✕ clear
+          </button>
+        )}
       </div>
 
       {/* Results */}
@@ -238,7 +245,7 @@ export default function GarageShowcase({ initialCars }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {sortedCars.map((car) => (
             <div key={car.id} className={pendingIds.has(car.id) ? 'opacity-60 pointer-events-none' : ''}>
-              <CarCard car={car} onToggleOwned={handleToggle} />
+              <CarCard car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} />
             </div>
           ))}
         </div>
@@ -261,12 +268,19 @@ export default function GarageShowcase({ initialCars }: Props) {
             </thead>
             <tbody>
               {sortedCars.map((car) => (
-                <CarRow key={car.id} car={car} onToggleOwned={handleToggle} isPending={pendingIds.has(car.id)} />
+                <CarRow key={car.id} car={car} onToggleOwned={handleToggle} isPending={pendingIds.has(car.id)} onCardClick={setDrawerCar} />
               ))}
             </tbody>
           </table>
         </div>
       )}
     </div>
+
+    <GarageDrawer
+      car={drawerCar}
+      onClose={() => setDrawerCar(null)}
+      onTagsChange={handleTagsChange}
+    />
+    </>
   )
 }

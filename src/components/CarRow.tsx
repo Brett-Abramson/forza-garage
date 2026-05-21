@@ -6,16 +6,19 @@ interface Props {
   car: Car
   onToggleOwned: (id: number, owned: boolean) => void
   isPending?: boolean
+  onCardClick?: (car: Car) => void
 }
 
-export default function CarRow({ car, onToggleOwned, isPending }: Props) {
+export default function CarRow({ car, onToggleOwned, isPending, onCardClick }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
 
   return (
     <tr
+      onClick={() => onCardClick?.(car)}
       className={`
         border-b border-[#21262d] hover:bg-[#161b22] transition-colors text-sm
+        ${onCardClick ? 'cursor-pointer' : ''}
         ${car.owned ? 'bg-cyan-950/20' : ''}
         ${isPending ? 'opacity-60 pointer-events-none' : ''}
       `}
@@ -37,7 +40,7 @@ export default function CarRow({ car, onToggleOwned, isPending }: Props) {
       </td>
       <td className="py-2.5 px-3">
         <button
-          onClick={() => onToggleOwned(car.id, !car.owned)}
+          onClick={(e) => { e.stopPropagation(); onToggleOwned(car.id, !car.owned) }}
           className={`
             px-3 py-1 rounded text-xs font-semibold transition-colors whitespace-nowrap
             ${car.owned
