@@ -19,6 +19,7 @@ export interface Car {
   cylinders: number | null
   bodyStyle: string | null
   owned: boolean
+  tags?: string[]
 }
 
 export interface FilterState {

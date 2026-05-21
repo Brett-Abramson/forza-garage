@@ -7,6 +7,7 @@ import CarCard from './CarCard'
 import CarRow from './CarRow'
 import FilterBar from './FilterBar'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
+import { CAR_TAGS } from '@/lib/tags'
 import Link from 'next/link'
 
 type ViewMode = 'grid' | 'table'
@@ -43,6 +44,7 @@ export default function GarageShowcase({ initialCars }: Props) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [view, setView] = useState<ViewMode>('grid')
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
 
   const options = useMemo(() => buildOptions(cars), [cars])
@@ -68,9 +70,13 @@ export default function GarageShowcase({ initialCars }: Props) {
       if (filters.make && car.make !== filters.make) return false
       if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false
       if (filters.country && car.country !== filters.country) return false
+      if (selectedTags.size > 0) {
+        const carTags = car.tags ?? []
+        if (![...selectedTags].every((t) => carTags.includes(t))) return false
+      }
       return true
     })
-  }, [cars, filters])
+  }, [cars, filters, selectedTags])
 
   const sortedCars = useMemo(() => {
     const copy = [...filteredCars]
@@ -83,6 +89,14 @@ export default function GarageShowcase({ initialCars }: Props) {
       key,
       dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc',
     }))
+  }, [])
+
+  const toggleTag = useCallback((tag: string) => {
+    setSelectedTags((prev) => {
+      const next = new Set(prev)
+      next.has(tag) ? next.delete(tag) : next.add(tag)
+      return next
+    })
   }, [])
 
   // In the garage every car is already owned; toggling off = remove from garage
@@ -187,6 +201,31 @@ export default function GarageShowcase({ initialCars }: Props) {
         filteredCount={filteredCars.length}
         hideOwned
       />
+
+      {/* Tag filter chips */}
+      <div className="flex flex-wrap gap-2">
+        {selectedTags.size > 0 && (
+          <button
+            onClick={() => setSelectedTags(new Set())}
+            className="px-3 py-1 rounded-full text-xs font-medium border border-[#30363d] text-gray-500 hover:text-gray-300 hover:border-[#484f58] transition-colors"
+          >
+            ✕ clear
+          </button>
+        )}
+        {CAR_TAGS.map((tag) => (
+          <button
+            key={tag}
+            onClick={() => toggleTag(tag)}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              selectedTags.has(tag)
+                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
+                : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+            }`}
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
 
       {/* Results */}
       {sortedCars.length === 0 ? (

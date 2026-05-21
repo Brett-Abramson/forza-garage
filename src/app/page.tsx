@@ -6,10 +6,14 @@ export const dynamic = 'force-dynamic'
 
 export default async function GaragePage() {
   const entries = await prisma.userGarage.findMany({
-    include: { car: true },
+    include: { car: true, tags: true },
     orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
   })
-  const cars: Car[] = entries.map(({ car }) => ({ ...car, owned: true }))
+  const cars: Car[] = entries.map(({ car, tags }) => ({
+    ...car,
+    owned: true,
+    tags: tags.map((t) => t.tag),
+  }))
 
   return (
     <main className="max-w-screen-2xl mx-auto px-4 py-8">
