@@ -1,0 +1,54 @@
+'use client'
+
+import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
+
+interface Props {
+  car: Car
+  onToggleOwned: (id: number, owned: boolean) => void
+  isPending?: boolean
+}
+
+export default function CarRow({ car, onToggleOwned, isPending }: Props) {
+  const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
+  const sourceColor = getSourceColor(car.source)
+
+  return (
+    <tr
+      className={`
+        border-b border-[#21262d] hover:bg-[#161b22] transition-colors text-sm
+        ${car.owned ? 'bg-cyan-950/20' : ''}
+        ${isPending ? 'opacity-60 pointer-events-none' : ''}
+      `}
+    >
+      <td className="py-2.5 px-3">
+        <span className={`text-xs font-bold px-2 py-0.5 rounded ${classBadge}`}>
+          {car.piClass}
+        </span>
+      </td>
+      <td className="py-2.5 px-3 text-gray-400 tabular-nums">{car.piRating}</td>
+      <td className="py-2.5 px-3 text-gray-400">{car.year}</td>
+      <td className="py-2.5 px-3 font-medium">{car.make}</td>
+      <td className="py-2.5 px-3">{car.model}</td>
+      <td className="py-2.5 px-3 text-gray-400 hidden md:table-cell">{car.division}</td>
+      <td className="py-2.5 px-3 text-gray-400 hidden lg:table-cell">{car.drivetrain ?? '—'}</td>
+      <td className="py-2.5 px-3 text-gray-400 hidden lg:table-cell">{car.country}</td>
+      <td className={`py-2.5 px-3 hidden xl:table-cell text-xs font-medium ${sourceColor}`}>
+        {car.source}
+      </td>
+      <td className="py-2.5 px-3">
+        <button
+          onClick={() => onToggleOwned(car.id, !car.owned)}
+          className={`
+            px-3 py-1 rounded text-xs font-semibold transition-colors whitespace-nowrap
+            ${car.owned
+              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/40'
+              : 'bg-[#21262d] text-gray-400 border border-[#30363d] hover:bg-cyan-500/20 hover:text-cyan-400 hover:border-cyan-500/40'
+            }
+          `}
+        >
+          {car.owned ? 'Owned' : '+ Add'}
+        </button>
+      </td>
+    </tr>
+  )
+}

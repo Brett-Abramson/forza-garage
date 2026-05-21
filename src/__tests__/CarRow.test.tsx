@@ -1,0 +1,88 @@
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import CarRow from '@/components/CarRow'
+import type { Car } from '@/types/car'
+
+const baseCar: Car = {
+  id: 1,
+  make: 'Porsche',
+  model: '911 GT3 RS',
+  year: 2019,
+  division: 'Modern Sports Cars',
+  piClass: 'S1',
+  piRating: 826,
+  drivetrain: null,
+  engineType: null,
+  engineCC: null,
+  cylinders: null,
+  country: 'Germany',
+  bodyStyle: null,
+  source: 'Autoshow',
+  sourceInfo: null,
+  owned: false,
+}
+
+function renderRow(car: Car, extra: { onToggleOwned?: () => void; isPending?: boolean } = {}) {
+  const onToggleOwned = extra.onToggleOwned ?? vi.fn()
+  return render(
+    <table>
+      <tbody>
+        <CarRow car={car} onToggleOwned={onToggleOwned} isPending={extra.isPending} />
+      </tbody>
+    </table>
+  )
+}
+
+describe('CarRow', () => {
+  it('renders make, model, and year', () => {
+    renderRow(baseCar)
+    const row = screen.getByRole('row')
+    expect(within(row).getByText('Porsche')).toBeInTheDocument()
+    expect(within(row).getByText('911 GT3 RS')).toBeInTheDocument()
+    expect(within(row).getByText('2019')).toBeInTheDocument()
+  })
+
+  it('renders the PI class badge', () => {
+    renderRow(baseCar)
+    expect(screen.getByText('S1')).toBeInTheDocument()
+  })
+
+  it('shows "+ Add" button when car is not owned', () => {
+    renderRow({ ...baseCar, owned: false })
+    expect(screen.getByRole('button', { name: '+ Add' })).toBeInTheDocument()
+  })
+
+  it('shows "Owned" button when car is owned', () => {
+    renderRow({ ...baseCar, owned: true })
+    expect(screen.getByRole('button', { name: 'Owned' })).toBeInTheDocument()
+  })
+
+  it('calls onToggleOwned with (id, true) when clicking + Add', async () => {
+    const onToggleOwned = vi.fn()
+    renderRow({ ...baseCar, owned: false }, { onToggleOwned })
+    await userEvent.click(screen.getByRole('button', { name: '+ Add' }))
+    expect(onToggleOwned).toHaveBeenCalledOnce()
+    expect(onToggleOwned).toHaveBeenCalledWith(baseCar.id, true)
+  })
+
+  it('calls onToggleOwned with (id, false) when clicking Owned', async () => {
+    const onToggleOwned = vi.fn()
+    renderRow({ ...baseCar, owned: true }, { onToggleOwned })
+    await userEvent.click(screen.getByRole('button', { name: 'Owned' }))
+    expect(onToggleOwned).toHaveBeenCalledWith(baseCar.id, false)
+  })
+
+  it('applies opacity and pointer-events-none when isPending', () => {
+    renderRow(baseCar, { isPending: true })
+    const row = screen.getByRole('row')
+    expect(row.className).toContain('opacity-60')
+    expect(row.className).toContain('pointer-events-none')
+  })
+
+  it('does not apply pending styles when isPending is false', () => {
+    renderRow(baseCar, { isPending: false })
+    const row = screen.getByRole('row')
+    expect(row.className).not.toContain('opacity-60')
+  })
+})
