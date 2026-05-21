@@ -23,12 +23,20 @@ const baseCar: Car = {
   owned: false,
 }
 
-function renderRow(car: Car, extra: { onToggleOwned?: () => void; isPending?: boolean } = {}) {
+function renderRow(
+  car: Car,
+  extra: { onToggleOwned?: () => void; isPending?: boolean; onCardClick?: (car: Car) => void } = {}
+) {
   const onToggleOwned = extra.onToggleOwned ?? vi.fn()
   return render(
     <table>
       <tbody>
-        <CarRow car={car} onToggleOwned={onToggleOwned} isPending={extra.isPending} />
+        <CarRow
+          car={car}
+          onToggleOwned={onToggleOwned}
+          isPending={extra.isPending}
+          onCardClick={extra.onCardClick}
+        />
       </tbody>
     </table>
   )
@@ -84,5 +92,35 @@ describe('CarRow', () => {
     renderRow(baseCar, { isPending: false })
     const row = screen.getByRole('row')
     expect(row.className).not.toContain('opacity-60')
+  })
+})
+
+// ─── onCardClick ─────────────────────────────────────────────────────────────
+
+describe('CarRow — onCardClick', () => {
+  it('calls onCardClick with the car when the row is clicked', async () => {
+    const onCardClick = vi.fn()
+    renderRow(baseCar, { onCardClick })
+    await userEvent.click(screen.getByRole('row'))
+    expect(onCardClick).toHaveBeenCalledOnce()
+    expect(onCardClick).toHaveBeenCalledWith(baseCar)
+  })
+
+  it('does not call onCardClick when the owned button is clicked', async () => {
+    const onCardClick = vi.fn()
+    renderRow({ ...baseCar, owned: false }, { onCardClick })
+    await userEvent.click(screen.getByRole('button', { name: '+ Add' }))
+    expect(onCardClick).not.toHaveBeenCalled()
+  })
+
+  it('adds cursor-pointer class to the row when onCardClick is provided', () => {
+    const onCardClick = vi.fn()
+    renderRow(baseCar, { onCardClick })
+    expect(screen.getByRole('row').className).toContain('cursor-pointer')
+  })
+
+  it('does not add cursor-pointer when onCardClick is absent', () => {
+    renderRow(baseCar)
+    expect(screen.getByRole('row').className).not.toContain('cursor-pointer')
   })
 })
