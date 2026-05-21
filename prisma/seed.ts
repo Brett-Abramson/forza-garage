@@ -35,22 +35,15 @@ const STARTER_CARS = [
   { year: 1970, make: 'GMC',     model: 'Jimmy' },
 ]
 
-function isStarter(year: number, make: string, model: string) {
-  return STARTER_CARS.some(
-    (s) => s.year === year && s.make === make && s.model === model
-  )
-}
-
 async function main() {
   const csv = readFileSync(join(__dirname, 'fh6-cars.csv'), 'utf-8')
   const [_header, ...rows] = parseCSV(csv)
 
-  const cars = rows.map((cols) => {
+  const carData = rows.map((cols) => {
     const [year, make, model, classField, division, country, source, sourceInfo] = cols
     const [piClass, piRatingStr] = classField.split(' ')
-    const yearInt = parseInt(year)
     return {
-      year: yearInt,
+      year: parseInt(year),
       make,
       model,
       piClass,
@@ -59,7 +52,6 @@ async function main() {
       country,
       source,
       sourceInfo: sourceInfo || null,
-      owned: isStarter(yearInt, make, model),
       // Not in CSV yet
       drivetrain: null,
       engineType: null,
@@ -69,9 +61,24 @@ async function main() {
     }
   })
 
-  console.log(`Seeding ${cars.length} FH6 cars...`)
+  console.log(`Seeding ${carData.length} FH6 cars...`)
+  await prisma.carTag.deleteMany()
+  await prisma.userGarage.deleteMany()
   await prisma.car.deleteMany()
-  await prisma.car.createMany({ data: cars })
+  await prisma.car.createMany({ data: carData })
+
+  // Seed starter cars into UserGarage
+  for (const starter of STARTER_CARS) {
+    const car = await prisma.car.findFirst({
+      where: { year: starter.year, make: starter.make, model: starter.model },
+    })
+    if (car) {
+      await prisma.userGarage.create({ data: { carId: car.id } })
+    } else {
+      console.warn(`Starter car not found: ${starter.year} ${starter.make} ${starter.model}`)
+    }
+  }
+
   console.log('Done.')
 }
 
