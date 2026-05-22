@@ -154,3 +154,42 @@ describe('GarageShowcase — drawer', () => {
     expect(screen.getByRole('link', { name: /browse car database/i })).toBeInTheDocument()
   })
 })
+
+// ─── initialTagFilter ─────────────────────────────────────────────────────────
+
+describe('GarageShowcase — initialTagFilter', () => {
+  it('pre-activates the specified tag chips on mount', () => {
+    render(<GarageShowcase initialCars={mockCars} initialTagFilter={['grip']} />)
+    const gripChip = screen.getByRole('button', { name: 'grip' })
+    expect(gripChip.className).toContain('text-cyan-400')
+  })
+
+  it('pre-filters the car list based on initialTagFilter', () => {
+    render(<GarageShowcase initialCars={mockCars} initialTagFilter={['grip']} />)
+    // Only 911 GT3 has 'grip'
+    expect(screen.getByText('911 GT3')).toBeInTheDocument()
+    expect(screen.queryByText('Silvia')).not.toBeInTheDocument()
+    expect(screen.queryByText('Jimmy')).not.toBeInTheDocument()
+  })
+
+  it('applies AND logic when multiple tags are passed via initialTagFilter', () => {
+    // Both 911 GT3 and Silvia have 'asphalt'; only 911 GT3 also has 'grip'
+    render(<GarageShowcase initialCars={mockCars} initialTagFilter={['asphalt', 'grip']} />)
+    expect(screen.getByText('911 GT3')).toBeInTheDocument()
+    expect(screen.queryByText('Silvia')).not.toBeInTheDocument()
+  })
+
+  it('shows all cars when initialTagFilter is empty', () => {
+    render(<GarageShowcase initialCars={mockCars} initialTagFilter={[]} />)
+    expect(screen.getByText('911 GT3')).toBeInTheDocument()
+    expect(screen.getByText('Silvia')).toBeInTheDocument()
+    expect(screen.getByText('Jimmy')).toBeInTheDocument()
+  })
+
+  it('shows all cars when initialTagFilter is omitted', () => {
+    render(<GarageShowcase initialCars={mockCars} />)
+    expect(screen.getByText('911 GT3')).toBeInTheDocument()
+    expect(screen.getByText('Silvia')).toBeInTheDocument()
+    expect(screen.getByText('Jimmy')).toBeInTheDocument()
+  })
+})
