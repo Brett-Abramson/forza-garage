@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { RACE_TYPES, getRaceFilterUrl, type RaceType } from '@/lib/races'
+import { getGuidesByRaceType, type TuningGuide } from '@/lib/tuningGuides'
 
 const SURFACE_COLORS: Record<string, string> = {
   'Asphalt':            'bg-slate-700 text-slate-200',
@@ -13,6 +14,45 @@ const SURFACE_COLORS: Record<string, string> = {
 
 function surfaceBadge(surface: string) {
   return SURFACE_COLORS[surface] ?? 'bg-gray-700 text-gray-200'
+}
+
+// ─── Collapsible tuning guide panel used inside the detail drawer ─────────────
+
+function TuningGuidePanel({ guide }: { guide: TuningGuide }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border border-[#30363d] rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[#161b22] transition-colors"
+      >
+        <span className="text-xs font-medium text-gray-300">{guide.division}</span>
+        <svg
+          width="12" height="12" viewBox="0 0 16 16" fill="currentColor"
+          className={`shrink-0 text-gray-600 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+        >
+          <path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z" />
+        </svg>
+      </button>
+      {open && (
+        <div className="px-3 pb-3 flex flex-col gap-3 border-t border-[#21262d]">
+          <p className="text-xs text-gray-400 leading-relaxed pt-3">{guide.philosophy}</p>
+          <ol className="space-y-1.5">
+            {guide.priorities.map((p, i) => (
+              <li key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                <span className="text-cyan-500/60 font-mono shrink-0 w-4">{i + 1}.</span>
+                {p}
+              </li>
+            ))}
+          </ol>
+          <div className="rounded border border-amber-500/20 bg-amber-500/5 px-2.5 py-2">
+            <span className="text-[10px] text-amber-500/70 uppercase tracking-wide mr-1.5">Watch out:</span>
+            <span className="text-xs text-amber-200/60 leading-relaxed">{guide.watchOut}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function RacesView() {
@@ -178,6 +218,25 @@ export default function RacesView() {
                   ))}
                 </div>
               </div>
+
+              {/* Tuning guides by division */}
+              {(() => {
+                const guides = getGuidesByRaceType(displayed.id)
+                if (guides.length === 0) return null
+                return (
+                  <div className="p-5 border-b border-[#21262d]">
+                    <h3 className="text-xs text-gray-500 uppercase tracking-wide mb-3">
+                      Tuning guides
+                      <span className="ml-1.5 text-gray-700 normal-case">({guides.length} divisions)</span>
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      {guides.map((guide) => (
+                        <TuningGuidePanel key={guide.division} guide={guide} />
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* CTA */}
               <div className="p-5">
