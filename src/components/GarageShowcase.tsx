@@ -183,6 +183,7 @@ function ExpandedRow({
               {tuningGuide ? (
                 <>
                   <p className="text-xs text-gray-500 leading-relaxed">{tuningGuide.philosophy}</p>
+                  <p className="text-xs text-gray-600 italic leading-relaxed">{tuningGuide.spectrum}</p>
                   <ol className="space-y-1">
                     {tuningGuide.priorities.map((p, i) => (
                       <li key={i} className="flex items-start gap-1.5 text-xs">

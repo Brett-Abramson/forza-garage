@@ -278,6 +278,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
                   {tuningGuide ? (
                     <div className="flex flex-col gap-4">
                       <p className="text-xs text-gray-400 leading-relaxed">{tuningGuide.philosophy}</p>
+                      <p className="text-xs text-gray-600 italic leading-relaxed">{tuningGuide.spectrum}</p>
                       <div>
                         <div className="text-[10px] text-gray-600 uppercase tracking-wide mb-2">Priorities</div>
                         <ol className="space-y-1.5">
