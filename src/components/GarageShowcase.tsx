@@ -15,6 +15,8 @@ import { getTuningGuide } from '@/lib/tuningGuides'
 import { getDivisionsForGroup } from '@/lib/divisionGroups'
 import GarageDrawer from './GarageDrawer'
 import DivisionGroupFilter from './DivisionGroupFilter'
+import StatBars from './StatBars'
+import { getStatCallouts } from '@/lib/statCallouts'
 import Link from 'next/link'
 
 type ViewMode = 'grid' | 'table'
@@ -116,6 +118,7 @@ function ExpandedRow({
     rankedRaces.length > 0
       ? getTuningGuide(rankedRaces[0].race.id, car.division)
       : null
+  const statCallouts = getStatCallouts(car)
 
   async function patchUserTags(next: string[]) {
     setUserTags(next)
@@ -231,6 +234,11 @@ function ExpandedRow({
             rows={2}
             className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-xs text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/60 resize-none"
           />
+          {/* Stat bars — compact version */}
+          <div className="border-t border-[#21262d] pt-3">
+            <StatBars car={car} />
+          </div>
+
           {rankedRaces.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap text-xs text-gray-600 mt-1">
               <span>Best for:</span>
@@ -251,6 +259,26 @@ function ExpandedRow({
                   </a>
                 </span>
               ))}
+            </div>
+          )}
+
+          {/* Stat analysis callouts */}
+          {statCallouts.length > 0 && (
+            <div className="border-t border-[#21262d] pt-3">
+              <div className="flex items-baseline gap-2 mb-2">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wide">Stat analysis</div>
+                <div className="text-[9px] text-gray-700 italic">based on available data</div>
+              </div>
+              <div className="flex flex-col gap-2">
+                {statCallouts.map((c) => (
+                  <div key={c.id} className="rounded border border-blue-500/20 bg-blue-500/5 px-2.5 py-2">
+                    <div className="text-[10px] text-blue-400/80 font-medium uppercase tracking-wide mb-0.5">
+                      {c.title}
+                    </div>
+                    <p className="text-xs text-blue-200/60 leading-relaxed">{c.body}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

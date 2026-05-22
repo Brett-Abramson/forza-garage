@@ -8,6 +8,8 @@ import { splitTagsBySource } from '@/lib/autotags'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
 import { getTuningGuide } from '@/lib/tuningGuides'
 import { getGroupForDivision } from '@/lib/divisionGroups'
+import StatBars from './StatBars'
+import { getStatCallouts } from '@/lib/statCallouts'
 
 type TagDetail = { tag: string; source: string }
 
@@ -210,6 +212,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
 
   const hasAnyStats = Object.values(stats).some((v) => v !== '')
 
+  const statCallouts = displayCar ? getStatCallouts(displayCar) : []
+
   return (
     <>
       {/* Overlay */}
@@ -288,6 +292,12 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                     <span className="text-gray-300 text-xs">{displayCar.engineType}</span>
                   </Stat>
                 )}
+              </div>
+
+              {/* Stat bars */}
+              <div className="p-5 border-b border-[#21262d]">
+                <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Performance</div>
+                <StatBars car={displayCar} />
               </div>
 
               {/* Current tags */}
@@ -369,6 +379,26 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                           <span>{race.icon}</span>
                           <span>{race.name}</span>
                         </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Stat analysis callouts */}
+              {statCallouts.length > 0 && (
+                <div className="p-5 border-b border-[#21262d]">
+                  <div className="flex items-baseline gap-2 mb-3">
+                    <div className="text-xs text-gray-500 uppercase tracking-wide">Stat analysis</div>
+                    <div className="text-[10px] text-gray-700 italic">based on available data</div>
+                  </div>
+                  <div className="flex flex-col gap-2.5">
+                    {statCallouts.map((c) => (
+                      <div key={c.id} className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-2.5">
+                        <div className="text-[10px] text-blue-400/80 font-medium uppercase tracking-wide mb-1">
+                          {c.title}
+                        </div>
+                        <p className="text-xs text-blue-200/60 leading-relaxed">{c.body}</p>
                       </div>
                     ))}
                   </div>
