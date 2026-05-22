@@ -503,6 +503,190 @@ export const TUNING_GUIDES: TuningGuide[] = [
       "Maximum power builds on classic muscle. These cars have heavy chassis and old suspension geometry. Too much power makes them unpredictable rather than fast.",
   },
 
+  // ─── TOUGE RACING ─────────────────────────────────────────────────────────
+
+  {
+    raceTypeId: 'touge',
+    division:   'Classic Sports Cars',
+    philosophy:
+      "Classic sports cars are the soul of touge racing in FH6. Lightweight, communicative, and naturally suited to narrow mountain passes where precision beats power. The AE86 and early MX-5 belong here. Tune to feel — these cars tell you everything through the wheel if you let them.",
+    spectrum:
+      "The lightest classics (AE86, early MX-5, Lotus Elan) are the best touge cars in the game at their PI class. They rotate naturally, brake shorter than heavier cars, and recover quickly from mistakes. Heavier classics in this division work but need more conservative setup.",
+    priorities: [
+      "Race brakes — the most important single upgrade for touge",
+      "Brake bias forward — hairpin braking is where touge is won",
+      "Sport or race tires — compound matters hugely on mountain passes",
+      "Short final drive gearing — straights are too short to need top speed",
+      "Softest appropriate spring rate — mechanical grip over everything",
+    ],
+    watchOut:
+      "Overtuning for power. The AE86 at 200hp on race tires beats a 400hp swap on street tires every time on touge. The roads are too narrow for power to matter as much as control.",
+  },
+
+  {
+    raceTypeId: 'touge',
+    division:   'Modern Sports Cars',
+    philosophy:
+      "Modern sports cars on touge routes have more power than the lightweight classics but still reward precision over aggression. The goal is making a faster car feel as confidence-inspiring as a lighter one — that means brakes, tires, and suspension before anything else.",
+    spectrum:
+      "The GR86, BRZ, and Z are natural touge picks — RWD, balanced, and lightweight enough to rotate cleanly. Heavier turbocharged modern sports cars (Supra, Z4) need more careful brake tuning and carry more risk on tight hairpins. Keep RWD — AWD conversions add understeer that hurts on narrow mountain roads.",
+    priorities: [
+      "Race brakes — non-negotiable on downhill touge sections",
+      "Brake bias forward 2-3% from default",
+      "Race tires — grip is the limiting factor not power",
+      "Short gearing — tight final drive ratio",
+      "Differential decel tuning — stability under braking into hairpins",
+    ],
+    watchOut:
+      "AWD conversion for touge. It adds understeer through the tightest hairpins and costs PI that's better spent on tires and brakes. RWD and a clean tune wins touge.",
+  },
+
+  {
+    raceTypeId: 'touge',
+    division:   'Retro Sports Cars',
+    philosophy:
+      "Retro sports cars from the 80s and 90s sit in a sweet spot for touge — more power and technology than classics but still light and communicative. The RX-7, Silvia, and MR2 are all competitive here. Tune for the hairpins and the downhill sections will take care of themselves.",
+    spectrum:
+      "Mid-engine retro sports cars (MR2, AW11) have naturally planted rear ends but can snap if pushed past the limit on downhill hairpins. FR cars (Silvia, RX-7) are more forgiving and easier to rotate. Both tune well for touge with the right approach.",
+    priorities: [
+      "Race brakes — critical for consistent downhill hairpin braking",
+      "Tire compound upgrade first — bigger than any other gain",
+      "Brake balance forward for stability",
+      "Conservative spring rates — mountain roads are uneven",
+      "Short gearing suited to the route's longest straight",
+    ],
+    watchOut:
+      "Big engine swaps on mid-engine cars. The MR2 and AW11 are balanced specifically around their stock power range. A 500hp swap makes them difficult to control at the hairpin limits.",
+  },
+
+  {
+    raceTypeId: 'touge',
+    division:   'Hot Hatch',
+    philosophy:
+      "Hot hatches are underrated for touge at lower PI classes. Their light weight and short wheelbase help them rotate through tight hairpins faster than larger cars. FWD models need trail braking technique to rotate but are very competitive at B class.",
+    spectrum:
+      "FWD hot hatches (Polo GTI, Fiesta ST, 208 GTi) use trail braking to generate rotation where they'd otherwise understeer. AWD hot hatches (Golf R, Focus RS) are more consistent but may push wide through the tightest hairpins. Both work well tuned.",
+    priorities: [
+      "Race tires — biggest single gain",
+      "Brake upgrade and forward bias",
+      "Rear ARB slightly softer — helps FWD cars rotate",
+      "Short gearing",
+      "Weight reduction before power adds",
+    ],
+    watchOut:
+      "Expecting grip-car behavior from FWD builds on downhill hairpins. You need to trail brake to rotate a FWD hot hatch through a tight touge hairpin. If you're not using that technique the car will understeer every time.",
+  },
+
+  {
+    raceTypeId: 'touge',
+    division:   'Drift Cars',
+    philosophy:
+      "Drift cars tuned for touge rather than drift zones is an unusual setup but genuinely effective. The controlled oversteer tendencies that score points in drift zones help carry speed through touge hairpins — if you can keep it tidy. This is a high-skill approach.",
+    spectrum:
+      "Purpose-built drift cars dialed back slightly — less diff accel, more decel, slightly stiffer rear ARB — make excellent touge machines for experienced drivers. The rotation is there naturally, the task is controlling it on narrow mountain roads where the consequences of getting it wrong are bigger.",
+    priorities: [
+      "Dial back differential accel from drift setup — less aggressive on tight roads",
+      "Increase differential decel for stability under braking",
+      "Race brakes — more important here than in drift zones",
+      "Slightly stiffer rear ARB than your drift tune",
+      "Keep tire compound the same as drift setup",
+    ],
+    watchOut:
+      "Using a pure drift tune on touge. The aggressive rotation that scores in drift zones will put you off the road on downhill hairpins. Tune it back toward balance while keeping the natural rotation.",
+  },
+
+  // ─── DRAG RACING ──────────────────────────────────────────────────────────
+
+  {
+    raceTypeId: 'drag',
+    division:   'Modern Muscle',
+    philosophy:
+      "Modern muscle cars are natural drag builds — high torque, rear or all-wheel drive, and chassis tuned for straight-line stability. The tune is simple: maximize launch, gear for the powerband, remove anything that adds drag without adding power.",
+    spectrum:
+      "The Camaro ZL1, Mustang GT500, Corvette ZR1, and Dodge Hellcat variants are the top drag performers in this division. AWD muscle (Cadillac CT5-V Blackwing) has the traction advantage. RWD muscle has more top-end but needs better launch control. Know which you're working with.",
+    priorities: [
+      "Drag tires — the most important upgrade for launch traction",
+      "AWD conversion if RWD stock — traction wins drag races",
+      "Final drive tuning — gear the car to hit the finish line before running out of revs",
+      "Weight reduction — every kg costs time",
+      "Remove aero — downforce adds drag on a straight",
+    ],
+    watchOut:
+      "Poor final drive ratio. Most muscle cars have gearing that's too long or too short for their powerband at drag strip length. If you're pulling ahead then getting caught late, lengthen the final drive. If you're hitting the limiter before the finish, shorten it.",
+  },
+
+  {
+    raceTypeId: 'drag',
+    division:   'Classic Muscle',
+    philosophy:
+      "Classic muscle cars have massive torque and RWD which makes them exciting but inconsistent drag builds. The tune is about controlling the launch — getting power to the ground without spinning the tires through the first two gears.",
+    spectrum:
+      "Big-block classics (Chevelle SS 454, Charger R/T, Mustang Mach 1) have brutal torque that spins tires violently off the line without careful tuning. Small-block classics are more manageable but less quick at the top end. AWD conversions are worth considering for the big-block cars at competitive PI.",
+    priorities: [
+      "Drag tires — essential for managing the torque",
+      "Launch control settings — critical for big-block classics",
+      "Shorter first and second gear ratios — get into the powerband faster",
+      "Soft suspension — weight transfer to rear helps launch traction",
+      "Weight reduction — classic muscle is heavy from the factory",
+    ],
+    watchOut:
+      "Wheelspin through the first two gears. Classic muscle lost more drag races to wheelspin than any other issue. If you're spinning, run drag tires before any other change.",
+  },
+
+  {
+    raceTypeId: 'drag',
+    division:   'Modern Supercars',
+    philosophy:
+      "Modern supercars at high PI classes are extremely competitive in drag racing — they have the power, AWD traction, and sophisticated launch systems to post elite times. The tune is mostly gearing and weight optimization.",
+    spectrum:
+      "AWD supercars (Lamborghini Huracan, McLaren GT4, Porsche 911 Turbo S) are the safest drag builds in this division. Mid-engine RWD supercars can be very quick with precise launches but are riskier. The key differentiator at this level is gearing — the power is already there.",
+    priorities: [
+      "Drag tires or semi-slick — depends on class",
+      "Final drive and individual gear ratios — the most important tuning for supercar drag",
+      "Weight reduction maximized",
+      "Remove all aero",
+      "Tune acceleration and launch stats to maximum in upgrade screen",
+    ],
+    watchOut:
+      "Ignoring individual gear ratios. At supercar PI the engine powerband is narrow and precise. Stock gearing rarely matches it perfectly for a drag strip. Race transmission and ratio tuning is worth the PI cost here.",
+  },
+
+  {
+    raceTypeId: 'drag',
+    division:   'Hypercars',
+    philosophy:
+      "Hypercars are the top tier of drag racing in FH6. At this PI level it's almost entirely about gearing, launch, and clean shifting. The car has enough power — the tune is about deploying it perfectly.",
+    spectrum:
+      "AWD hypercars (Bugatti Chiron, Rimac Nevera, Koenigsegg Gemera) launch more consistently. RWD hypercars (Koenigsegg Jesko) have higher top-end speed but riskier launches. The Jesko in particular is a top-speed machine rather than a 0-60 king — better on longer drag strips.",
+    priorities: [
+      "Gearing tuned specifically for the drag strip length",
+      "Maximum weight reduction — non-negotiable at this level",
+      "Drag tires",
+      "No aero whatsoever",
+      "Launch control — the difference between winning and losing at hypercar level",
+    ],
+    watchOut:
+      "Assuming the fastest car wins. At hypercar PI a Jesko with wrong gearing loses to a Chiron with perfect gearing. Tune the gears for your specific strip length and powerband before anything else.",
+  },
+
+  {
+    raceTypeId: 'drag',
+    division:   'Retro Muscle',
+    philosophy:
+      "Retro muscle in drag racing is a mid-range option — less power than modern muscle but more characterful. The tune is straightforward: control the torque, gear correctly, remove weight and drag.",
+    spectrum:
+      "The Buick GNX, Fox-body Mustang, and early Camaro Z28 are the best retro drag picks. The GNX in particular is an excellent drag build at B class — turbocharged, relatively lightweight, and surprisingly grippy with the right tires.",
+    priorities: [
+      "Drag tires",
+      "Final drive ratio — most retro muscle is geared too long from stock",
+      "Engine upgrade — spend remaining PI budget here after tires and weight",
+      "Weight reduction",
+      "AWD conversion for consistent launches if PI allows",
+    ],
+    watchOut:
+      "Running stock gearing on retro muscle. These cars were geared for highway cruising, not quarter miles. The final drive almost always needs shortening for drag strip distances.",
+  },
+
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
