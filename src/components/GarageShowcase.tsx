@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS } from '@/types/car'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
 import CarCard from './CarCard'
@@ -13,6 +13,7 @@ import GarageDrawer from './GarageDrawer'
 import Link from 'next/link'
 
 type ViewMode = 'grid' | 'table'
+type FilterMode = 'tags' | 'race'
 
 interface SortState {
   key: SortKey | null
@@ -45,14 +46,20 @@ const DEFAULT_FILTERS: FilterState = {
 export default function GarageShowcase({ initialCars, initialTagFilter }: Props) {
   const [cars, setCars] = useState<Car[]>(initialCars)
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
-  const [view, setView] = useState<ViewMode>('grid')
+  const [view, setView] = useState<ViewMode>('table')
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
+  const [filterMode, setFilterMode] = useState<FilterMode>('tags')
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(initialTagFilter ?? []))
   const [selectedRace, setSelectedRace] = useState<string | null>(null)
+  const [displayedRaceId, setDisplayedRaceId] = useState<string | null>(null)
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
 
+  useEffect(() => { if (selectedRace) setDisplayedRaceId(selectedRace) }, [selectedRace])
+
   const options = useMemo(() => buildOptions(cars), [cars])
+  const activeRace = useMemo(() => RACE_TYPES.find((r) => r.id === selectedRace) ?? null, [selectedRace])
+  const displayedRace = useMemo(() => RACE_TYPES.find((r) => r.id === displayedRaceId) ?? null, [displayedRaceId])
 
   const classCounts = useMemo(
     () => Object.fromEntries(PI_CLASS_ORDER.map((cls) => [cls, cars.filter((c) => c.piClass === cls).length])),
@@ -75,13 +82,19 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
       if (filters.make && car.make !== filters.make) return false
       if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false
       if (filters.country && car.country !== filters.country) return false
+      // Race filter: OR — car matches any of the recommended tags
+      if (activeRace) {
+        const carTags = car.tags ?? []
+        if (!activeRace.recommendedTags.some((t) => carTags.includes(t))) return false
+      }
+      // Tag filter: AND — car must have every selected tag
       if (selectedTags.size > 0) {
         const carTags = car.tags ?? []
         if (![...selectedTags].every((t) => carTags.includes(t))) return false
       }
       return true
     })
-  }, [cars, filters, selectedTags])
+  }, [cars, filters, activeRace, selectedTags])
 
   const sortedCars = useMemo(() => {
     const copy = [...filteredCars]
@@ -94,6 +107,12 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
       key,
       dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc',
     }))
+  }, [])
+
+  const switchMode = useCallback((mode: FilterMode) => {
+    setFilterMode(mode)
+    if (mode === 'tags') setSelectedRace(null)
+    if (mode === 'race') setSelectedTags(new Set())
   }, [])
 
   const toggleRace = useCallback((id: string) => {
@@ -112,9 +131,8 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
     setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, tags } : c)))
   }, [])
 
-  // In the garage every car is already owned; toggling off = remove from garage
   const handleToggle = useCallback(async (id: number, owned: boolean) => {
-    if (owned) return // shouldn't happen — all cars here are owned
+    if (owned) return
     setPendingIds((s) => new Set(s).add(id))
     try {
       const res = await fetch(`/api/cars/${id}`, {
@@ -156,29 +174,6 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
   return (
     <>
     <div className="flex flex-col gap-6">
-      {/* Race type pills */}
-      <div>
-        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Race type</p>
-        <div className="flex flex-wrap gap-2">
-          {RACE_TYPES.map((race) => (
-            <button
-              key={race.id}
-              onClick={() => toggleRace(race.id)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                selectedRace === race.id
-                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                  : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
-              }`}
-            >
-              <span>{race.icon}</span>
-              {race.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <hr className="border-[#21262d]" />
-
       {/* Search + view toggle */}
       <div className="flex gap-3 items-center">
         <input
@@ -206,7 +201,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
         </div>
       </div>
 
-      {/* Class stat chips — click to filter by that class */}
+      {/* Class stat chips */}
       <div className="flex flex-wrap gap-2">
         {PI_CLASS_ORDER.filter((cls) => classCounts[cls] > 0)
           .reverse()
@@ -229,7 +224,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
           ))}
       </div>
 
-      {/* Filter bar — hideOwned since every car here is already owned */}
+      {/* Filter bar */}
       <FilterBar
         filters={filters}
         options={options}
@@ -239,29 +234,127 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
         hideOwned
       />
 
-      {/* Tag filter chips */}
-      <div className="flex flex-wrap gap-2">
-        {CAR_TAGS.map((tag) => (
+      {/* Filter mode toggle + chip row */}
+      <div>
+        <div className="flex items-center gap-1 mb-3">
+          <span className="text-xs text-gray-500 uppercase tracking-wide mr-2">Filter by</span>
           <button
-            key={tag}
-            onClick={() => toggleTag(tag)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-              selectedTags.has(tag)
-                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+            onClick={() => switchMode('tags')}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+              filterMode === 'tags'
+                ? 'bg-cyan-500/20 text-cyan-400'
+                : 'text-gray-500 hover:text-gray-300'
             }`}
           >
-            {tag}
+            Tags
           </button>
-        ))}
-        {selectedTags.size > 0 && (
           <button
-            onClick={() => setSelectedTags(new Set())}
-            className="px-3 py-1 rounded-full text-xs font-medium border border-[#30363d] text-gray-500 hover:text-gray-300 hover:border-[#484f58] transition-colors"
+            onClick={() => switchMode('race')}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+              filterMode === 'race'
+                ? 'bg-amber-500/20 text-amber-400'
+                : 'text-gray-500 hover:text-gray-300'
+            }`}
           >
-            ✕ clear
+            Race type
           </button>
+        </div>
+
+        {filterMode === 'tags' ? (
+          <div className="flex flex-wrap gap-2">
+            {CAR_TAGS.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => toggleTag(tag)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  selectedTags.has(tag)
+                    ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
+                    : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+            {selectedTags.size > 0 && (
+              <button
+                onClick={() => setSelectedTags(new Set())}
+                className="px-3 py-1 rounded-full text-xs font-medium border border-[#30363d] text-gray-500 hover:text-gray-300 hover:border-[#484f58] transition-colors"
+              >
+                ✕ clear
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {RACE_TYPES.map((race) => (
+              <button
+                key={race.id}
+                onClick={() => toggleRace(race.id)}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  selectedRace === race.id
+                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                    : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+                }`}
+              >
+                <span>{race.icon}</span>
+                {race.name}
+              </button>
+            ))}
+          </div>
         )}
+      </div>
+
+      {/* Race tray — slides in when a race pill is active */}
+      <div className={`grid transition-all duration-300 ease-in-out ${selectedRace ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+        <div className="overflow-hidden">
+          {displayedRace && (
+            <div className="pb-2">
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg leading-none">{displayedRace.icon}</span>
+                    <span className="text-sm font-semibold text-amber-300">{displayedRace.name}</span>
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-900/40 text-amber-400 border border-amber-500/20">
+                      {displayedRace.surface}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedRace(null)}
+                    aria-label="Close race tray"
+                    className="shrink-0 text-gray-500 hover:text-gray-300 transition-colors"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <ul className="space-y-1">
+                    {displayedRace.demands.map((d) => (
+                      <li key={d} className="flex items-start gap-1.5 text-xs text-gray-300">
+                        <span className="text-amber-500 mt-0.5 shrink-0">▸</span>
+                        {d}
+                      </li>
+                    ))}
+                  </ul>
+                  <div>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Filtering by</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {displayedRace.recommendedTags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Results */}
@@ -271,38 +364,46 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
           <div className="text-lg font-medium">No cars match</div>
           <div className="text-sm">Try adjusting your filters</div>
         </div>
-      ) : view === 'grid' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          {sortedCars.map((car) => (
-            <div key={car.id} className={pendingIds.has(car.id) ? 'opacity-60 pointer-events-none' : ''}>
-              <CarCard car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} />
-            </div>
-          ))}
-        </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-[#30363d]">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-[#161b22] border-b border-[#30363d] text-xs uppercase tracking-wide select-none">
-                <SortTh label="Class" sortKey="piClass" sort={sort} onSort={handleSort} />
-                <SortTh label="PI" sortKey="piRating" sort={sort} onSort={handleSort} />
-                <SortTh label="Year" sortKey="year" sort={sort} onSort={handleSort} />
-                <SortTh label="Make" sortKey="make" sort={sort} onSort={handleSort} />
-                <SortTh label="Model" sortKey="model" sort={sort} onSort={handleSort} />
-                <SortTh label="Division" sortKey="division" sort={sort} onSort={handleSort} className="hidden md:table-cell" />
-                <SortTh label="Drive" sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
-                <SortTh label="Country" sortKey="country" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
-                <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
-                <th className="text-left py-2.5 px-3 text-gray-500">Garage</th>
-              </tr>
-            </thead>
-            <tbody>
+        <>
+          <p className="text-xs text-gray-500 -mb-3">
+            Showing {sortedCars.length} {sortedCars.length === 1 ? 'car' : 'cars'}
+            {sortedCars.length < cars.length && ` of ${cars.length}`}
+          </p>
+          {view === 'grid' ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {sortedCars.map((car) => (
-                <CarRow key={car.id} car={car} onToggleOwned={handleToggle} isPending={pendingIds.has(car.id)} onCardClick={setDrawerCar} />
+                <div key={car.id} className={pendingIds.has(car.id) ? 'opacity-60 pointer-events-none' : ''}>
+                  <CarCard car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} />
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-[#30363d]">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#161b22] border-b border-[#30363d] text-xs uppercase tracking-wide select-none">
+                    <SortTh label="Class" sortKey="piClass" sort={sort} onSort={handleSort} />
+                    <SortTh label="PI" sortKey="piRating" sort={sort} onSort={handleSort} />
+                    <SortTh label="Year" sortKey="year" sort={sort} onSort={handleSort} />
+                    <SortTh label="Make" sortKey="make" sort={sort} onSort={handleSort} />
+                    <SortTh label="Model" sortKey="model" sort={sort} onSort={handleSort} />
+                    <SortTh label="Division" sortKey="division" sort={sort} onSort={handleSort} className="hidden md:table-cell" />
+                    <SortTh label="Drive" sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
+                    <SortTh label="Country" sortKey="country" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
+                    <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
+                    <th className="text-left py-2.5 px-3 text-gray-500">Garage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedCars.map((car) => (
+                    <CarRow key={car.id} car={car} onToggleOwned={handleToggle} isPending={pendingIds.has(car.id)} onCardClick={setDrawerCar} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
 
