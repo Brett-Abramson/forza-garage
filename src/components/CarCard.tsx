@@ -1,6 +1,7 @@
 'use client'
 
 import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
+import { getBestRaceType } from '@/lib/raceMatch'
 
 const DIVISION_GRADIENTS: Record<string, string> = {
   'Hypercars':             'from-red-900/60 to-orange-900/40',
@@ -47,6 +48,7 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const gradient = getDivisionGradient(car.division)
+  const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined)
 
   return (
     <div
@@ -95,6 +97,11 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
         )}
 
         <div className={`text-xs mt-0.5 font-medium ${sourceColor}`}>{car.source}</div>
+        {bestRace && (
+          <div className="text-xs mt-1.5 text-gray-600">
+            {bestRace.icon} {bestRace.name}
+          </div>
+        )}
       </div>
 
       {/* Owned toggle */}

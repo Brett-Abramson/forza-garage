@@ -10,6 +10,7 @@ import { SortTh, GridIcon, TableIcon } from './table-ui'
 import { CAR_TAGS } from '@/lib/tags'
 import { splitTagsBySource } from '@/lib/autotags'
 import { RACE_TYPES } from '@/lib/races'
+import { getRankedRaceTypes } from '@/lib/raceMatch'
 import GarageDrawer from './GarageDrawer'
 import Link from 'next/link'
 
@@ -61,6 +62,12 @@ function ExpandedRow({
   const [userTags, setUserTags] = useState<string[]>(initUserTags)
   const [notes, setNotes] = useState(car.notes ?? '')
   const [notesDirty, setNotesDirty] = useState(false)
+
+  const rankedRaces = getRankedRaceTypes(
+    car.division,
+    [...autoTags, ...userTags],
+    car.drivetrain ?? undefined
+  )
 
   async function patchUserTags(next: string[]) {
     setUserTags(next)
@@ -142,6 +149,28 @@ function ExpandedRow({
             rows={2}
             className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-xs text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/60 resize-none"
           />
+          {rankedRaces.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap text-xs text-gray-600 mt-1">
+              <span>Best for:</span>
+              <a
+                href={`/races/${rankedRaces[0].race.id}`}
+                className="text-gray-400 hover:text-cyan-400 transition-colors"
+              >
+                {rankedRaces[0].race.icon} {rankedRaces[0].race.name}
+              </a>
+              {rankedRaces.slice(1).map(({ race }) => (
+                <span key={race.id} className="flex items-center gap-1.5">
+                  <span className="text-gray-700">·</span>
+                  <a
+                    href={`/races/${race.id}`}
+                    className="text-gray-600 hover:text-gray-400 transition-colors"
+                  >
+                    {race.icon} {race.name}
+                  </a>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </td>
     </tr>

@@ -1,6 +1,7 @@
 'use client'
 
 import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
+import { getBestRaceType } from '@/lib/raceMatch'
 
 interface Props {
   car: Car
@@ -13,6 +14,7 @@ interface Props {
 export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
+  const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined)
 
   return (
     <tr
@@ -33,7 +35,12 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
       <td className="py-2.5 px-3 text-gray-400">{car.year}</td>
       <td className="py-2.5 px-3 font-medium">{car.make}</td>
       <td className="py-2.5 px-3">{car.model}</td>
-      <td className="py-2.5 px-3 text-gray-400 hidden md:table-cell">{car.division}</td>
+      <td className="py-2.5 px-3 text-gray-400 hidden md:table-cell">
+        <div>{car.division}</div>
+        {bestRace && (
+          <div className="text-xs text-gray-600 mt-0.5">{bestRace.icon} {bestRace.name}</div>
+        )}
+      </td>
       <td className="py-2.5 px-3 text-gray-400 hidden lg:table-cell">{car.drivetrain ?? '—'}</td>
       <td className="py-2.5 px-3 text-gray-400 hidden lg:table-cell">{car.country}</td>
       <td className={`py-2.5 px-3 hidden xl:table-cell text-xs font-medium ${sourceColor}`}>

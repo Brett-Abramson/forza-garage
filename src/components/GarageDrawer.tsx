@@ -5,6 +5,7 @@ import type { Car } from '@/types/car'
 import { PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { CAR_TAGS } from '@/lib/tags'
 import { splitTagsBySource } from '@/lib/autotags'
+import { getRankedRaceTypes } from '@/lib/raceMatch'
 
 type TagDetail = { tag: string; source: string }
 
@@ -93,6 +94,15 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
   )
   const sourceColor = displayCar ? getSourceColor(displayCar.source) : ''
   const classBadge = displayCar ? (PI_CLASS_COLORS[displayCar.piClass] ?? 'bg-gray-600 text-white') : ''
+
+  // Race type recommendations based on all tags (auto + user)
+  const rankedRaces = displayCar
+    ? getRankedRaceTypes(
+        displayCar.division,
+        [...autoTags, ...userTags],
+        displayCar.drivetrain ?? undefined
+      )
+    : []
 
   return (
     <>
@@ -218,6 +228,37 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
                       >
                         + {tag}
                       </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Race types */}
+              {rankedRaces.length > 0 && (
+                <div className="p-5 border-b border-[#21262d]">
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Race types</div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <span className="text-[10px] text-gray-600 uppercase tracking-wide w-16 shrink-0">Best for</span>
+                      <a
+                        href={`/races/${rankedRaces[0].race.id}`}
+                        className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 hover:underline text-xs"
+                      >
+                        <span>{rankedRaces[0].race.icon}</span>
+                        <span>{rankedRaces[0].race.name}</span>
+                      </a>
+                    </div>
+                    {rankedRaces.slice(1).map(({ race }) => (
+                      <div key={race.id} className="flex items-center gap-1.5 text-sm">
+                        <span className="text-[10px] text-gray-600 uppercase tracking-wide w-16 shrink-0">Also suits</span>
+                        <a
+                          href={`/races/${race.id}`}
+                          className="flex items-center gap-1 text-gray-500 hover:text-gray-300 hover:underline text-xs"
+                        >
+                          <span>{race.icon}</span>
+                          <span>{race.name}</span>
+                        </a>
+                      </div>
                     ))}
                   </div>
                 </div>
