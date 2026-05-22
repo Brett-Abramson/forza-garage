@@ -7,8 +7,8 @@ const VALID_TAGS = new Set<string>(CAR_TAGS)
 // ─── RACE_TYPES shape ─────────────────────────────────────────────────────────
 
 describe('RACE_TYPES', () => {
-  it('defines exactly 5 race types', () => {
-    expect(RACE_TYPES).toHaveLength(5)
+  it('defines exactly 7 race types', () => {
+    expect(RACE_TYPES).toHaveLength(7)
   })
 
   it('every race type has a non-empty id, name, icon, surface, and description', () => {
@@ -59,13 +59,15 @@ describe('RACE_TYPES', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('includes road, street, dirt, crosscountry, and drift', () => {
+  it('includes road, street, dirt, crosscountry, drift, touge, and drag', () => {
     const ids = RACE_TYPES.map((r) => r.id)
     expect(ids).toContain('road')
     expect(ids).toContain('street')
     expect(ids).toContain('dirt')
     expect(ids).toContain('crosscountry')
     expect(ids).toContain('drift')
+    expect(ids).toContain('touge')
+    expect(ids).toContain('drag')
   })
 })
 

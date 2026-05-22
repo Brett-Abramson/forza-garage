@@ -21,7 +21,7 @@ const DIVISION_TAGS: Record<string, CarTag[]> = {
   "Retro Rally":            ["dirt", "mixed"],
 
   // Drift
-  "Drift Cars":             ["drift", "asphalt"],
+  "Drift Cars":             ["drift", "asphalt", "tight"],
 
   // Drag / Muscle
   "Classic Muscle":         ["asphalt", "long straights", "drag"],
@@ -34,8 +34,8 @@ const DIVISION_TAGS: Record<string, CarTag[]> = {
   "Retro Hot Hatch":        ["asphalt", "tight", "technical"],
 
   // Sports / GT
-  "Classic Sports Cars":    ["asphalt", "grip", "technical"],
-  "Retro Sports Cars":      ["asphalt", "grip", "technical"],
+  "Classic Sports Cars":    ["asphalt", "grip", "technical", "tight"],
+  "Retro Sports Cars":      ["asphalt", "grip", "technical", "tight"],
   "Modern Sports Cars":     ["asphalt", "grip", "technical"],
   "GT Cars":                ["asphalt", "grip", "long straights"],
   "Super GT":               ["asphalt", "grip", "long straights"],

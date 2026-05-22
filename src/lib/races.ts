@@ -131,6 +131,60 @@ export const RACE_TYPES: RaceType[] = [
     drivetrainNote:
       "RWD only. AWD conversions work against you here. FWD is not viable for drift zones.",
   },
+
+  {
+    id: "touge",
+    name: "Touge Racing",
+    icon: "⛰️",
+    surface: "Asphalt — mountain pass",
+    description:
+      "Touge (pronounced toh-gay) is one-on-one mountain pass racing on Japan's narrow, winding roads. Five dedicated routes spread across the map, each with its own class restriction and rival. Top speed is irrelevant here — the race is won and lost at corners. Precision, braking control, and clean corner exits matter more than horsepower.",
+    demands: [
+      "Precise braking into tight hairpins — late braking is punished hard",
+      "Clean rotation without oversteering off the narrow road",
+      "Strong corner exit acceleration — straights are short",
+      "Stability on downhill sections under heavy braking",
+      "Composure through sustained technical sequences with no relief",
+    ],
+    avoid: [
+      "Heavy SUVs and trucks — too sluggish to transition between hairpins",
+      "High-power AWD builds that understeer through tight sections",
+      "Cars tuned for top speed — you'll never use it",
+      "Excessive aero — touge speeds don't generate enough for it to help",
+      "Any car that feels nervous or unpredictable at the limit",
+    ],
+    recommendedTags: ["asphalt", "tight", "technical", "grip", "tuned"],
+    piSweetSpot: "B 600 to A 700 (route dependent — each route has its own class cap)",
+    drivetrainNote:
+      "RWD lightweight cars dominate touge. The AE86 and RX-7 are the community top picks for a reason — light weight and natural rotation win on mountain passes. AWD builds tend to understeer through the tightest sections. FWD is viable at lower classes.",
+  },
+
+  {
+    id: "drag",
+    name: "Drag Racing",
+    icon: "🚦",
+    surface: "Asphalt — straight line",
+    description:
+      "Drag racing is the one discipline where cornering ability is completely irrelevant. It is purely about launch, acceleration, and getting power to the ground cleanly. A well-tuned B-class car with a perfect launch beats a poorly geared hypercar. Gearing and launch control decide the winner as much as raw power.",
+    demands: [
+      "Maximum launch traction off the line",
+      "Clean, precise gear shifts through the powerband",
+      "Gearing spaced to keep the engine in peak power range",
+      "AWD for consistent launch without wheelspin",
+      "Acceleration stat to maximum before worrying about top speed",
+    ],
+    avoid: [
+      "Aero — downforce adds drag and costs straight-line speed",
+      "RWD unless specifically tuned for drag — wheelspin kills launch",
+      "Poor gearing — running out of gear early or late is the most common mistake",
+      "Handling upgrades that don't add acceleration — wasted PI budget",
+      "Stiff suspension tuned for corners — irrelevant here",
+    ],
+    recommendedTags: ["asphalt", "long straights", "drag", "tuned"],
+    piSweetSpot: "Any class — drag racing exists at every PI level. S2 and R class have the fastest times.",
+    drivetrainNote:
+      "AWD is dominant for drag racing. The launch traction advantage is decisive at most PI classes. RWD builds can be competitive with very precise tuning and driving but require more skill to execute. FWD rarely works for serious drag builds.",
+  },
 ]
 
 // Helper — given a race type id, returns the recommended tags as a query string
