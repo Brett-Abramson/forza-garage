@@ -11,13 +11,76 @@ import { getGroupForDivision } from '@/lib/divisionGroups'
 
 type TagDetail = { tag: string; source: string }
 
+// ── Stat state shape (all strings so inputs stay controlled; empty = null) ──
+
+interface StatFields {
+  statSpeed: string
+  statHandling: string
+  statAcceleration: string
+  statLaunch: string
+  statBraking: string
+  statOffroad: string
+  powerHp: string
+  torqueFtLb: string
+  weightLb: string
+  frontWeight: string
+  displacementL: string
+  rarity: string
+}
+
+function carToStats(car: Car | null): StatFields {
+  return {
+    statSpeed:        car?.statSpeed        != null ? String(car.statSpeed)        : '',
+    statHandling:     car?.statHandling     != null ? String(car.statHandling)     : '',
+    statAcceleration: car?.statAcceleration != null ? String(car.statAcceleration) : '',
+    statLaunch:       car?.statLaunch       != null ? String(car.statLaunch)       : '',
+    statBraking:      car?.statBraking      != null ? String(car.statBraking)      : '',
+    statOffroad:      car?.statOffroad      != null ? String(car.statOffroad)      : '',
+    powerHp:          car?.powerHp          != null ? String(car.powerHp)          : '',
+    torqueFtLb:       car?.torqueFtLb       != null ? String(car.torqueFtLb)       : '',
+    weightLb:         car?.weightLb         != null ? String(car.weightLb)         : '',
+    frontWeight:      car?.frontWeight      != null ? String(car.frontWeight)      : '',
+    displacementL:    car?.displacementL    != null ? String(car.displacementL)    : '',
+    rarity:           car?.rarity           ?? '',
+  }
+}
+
+function statsToPayload(s: StatFields): Record<string, number | string | null> {
+  return {
+    statSpeed:        s.statSpeed        !== '' ? parseFloat(s.statSpeed)        : null,
+    statHandling:     s.statHandling     !== '' ? parseFloat(s.statHandling)     : null,
+    statAcceleration: s.statAcceleration !== '' ? parseFloat(s.statAcceleration) : null,
+    statLaunch:       s.statLaunch       !== '' ? parseFloat(s.statLaunch)       : null,
+    statBraking:      s.statBraking      !== '' ? parseFloat(s.statBraking)      : null,
+    statOffroad:      s.statOffroad      !== '' ? parseFloat(s.statOffroad)      : null,
+    powerHp:          s.powerHp          !== '' ? parseInt(s.powerHp)            : null,
+    torqueFtLb:       s.torqueFtLb       !== '' ? parseInt(s.torqueFtLb)         : null,
+    weightLb:         s.weightLb         !== '' ? parseInt(s.weightLb)           : null,
+    frontWeight:      s.frontWeight      !== '' ? parseInt(s.frontWeight)        : null,
+    displacementL:    s.displacementL    !== '' ? parseFloat(s.displacementL)    : null,
+    rarity:           s.rarity           !== '' ? s.rarity                       : null,
+  }
+}
+
+const PERF_STATS: { key: keyof StatFields; label: string }[] = [
+  { key: 'statSpeed',        label: 'Speed'        },
+  { key: 'statHandling',     label: 'Handling'     },
+  { key: 'statAcceleration', label: 'Acceleration' },
+  { key: 'statLaunch',       label: 'Launch'       },
+  { key: 'statBraking',      label: 'Braking'      },
+  { key: 'statOffroad',      label: 'Offroad'      },
+]
+
+const RARITY_OPTIONS = ['Common', 'Rare', 'Legendary', 'Forza Edition']
+
 interface Props {
   car: Car | null
   onClose: () => void
   onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
+  onStatsChange?: (carId: number, partial: Partial<Car>) => void
 }
 
-export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props) {
+export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStatsChange }: Props) {
   // Keep a stale copy so the drawer content doesn't vanish during slide-out
   const [displayCar, setDisplayCar] = useState<Car | null>(car)
   useEffect(() => {
@@ -33,6 +96,11 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
   const [notesDirty, setNotesDirty] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  // Stat entry state
+  const [stats, setStats] = useState<StatFields>(() => carToStats(displayCar))
+  const [statsDirty, setStatsDirty] = useState(false)
+  const [savingStats, setSavingStats] = useState(false)
+
   const prevId = useRef<number | undefined>(undefined)
   useEffect(() => {
     if (displayCar && displayCar.id !== prevId.current) {
@@ -40,6 +108,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
       setUserTags(user)
       setNotes(displayCar.notes ?? '')
       setNotesDirty(false)
+      setStats(carToStats(displayCar))
+      setStatsDirty(false)
       prevId.current = displayCar.id
     }
   }, [displayCar])
@@ -54,6 +124,15 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
   async function patchGarage(body: Record<string, unknown>) {
     if (!displayCar) return
     await fetch(`/api/garage/${displayCar.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+  }
+
+  async function patchCar(body: Record<string, unknown>) {
+    if (!displayCar) return
+    await fetch(`/api/cars/${displayCar.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -90,6 +169,21 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
     setNotesDirty(false)
   }
 
+  async function saveStats() {
+    if (!statsDirty || !displayCar) return
+    setSavingStats(true)
+    const payload = statsToPayload(stats)
+    await patchCar(payload)
+    onStatsChange?.(displayCar.id, payload as Partial<Car>)
+    setSavingStats(false)
+    setStatsDirty(false)
+  }
+
+  function updateStat(key: keyof StatFields, value: string) {
+    setStats((prev) => ({ ...prev, [key]: value }))
+    setStatsDirty(true)
+  }
+
   // Only offer tags not already applied (either source)
   const availableTags = CAR_TAGS.filter(
     (t) => !userTags.includes(t) && !autoTags.includes(t)
@@ -113,6 +207,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
     displayCar && rankedRaces.length > 0
       ? getTuningGuide(rankedRaces[0].race.id, displayCar.division)
       : null
+
+  const hasAnyStats = Object.values(stats).some((v) => v !== '')
 
   return (
     <>
@@ -312,7 +408,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
               )}
 
               {/* Notes */}
-              <div className="p-5">
+              <div className="p-5 border-b border-[#21262d]">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-xs text-gray-500 uppercase tracking-wide">Notes</div>
                   {saving && <span className="text-xs text-gray-600">Saving…</span>}
@@ -327,6 +423,98 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
                   className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600 resize-none"
                 />
               </div>
+
+              {/* Stat entry */}
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-xs text-gray-500 uppercase tracking-wide">Stats</div>
+                  {savingStats && <span className="text-xs text-gray-600">Saving…</span>}
+                  {!savingStats && !statsDirty && hasAnyStats && (
+                    <span className="text-xs text-gray-600">Saved</span>
+                  )}
+                </div>
+
+                {/* Performance stats (0–10 from in-game stat screen) */}
+                <div className="mb-5">
+                  <div className="text-[10px] text-gray-600 uppercase tracking-wide mb-2.5">
+                    Performance · 0–10 from in-game stat screen
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                    {PERF_STATS.map(({ key, label }) => (
+                      <StatInput
+                        key={key}
+                        label={label}
+                        value={stats[key]}
+                        type="float"
+                        min={0}
+                        max={10}
+                        step={0.1}
+                        onChange={(v) => updateStat(key, v)}
+                        onBlur={saveStats}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Specs */}
+                <div>
+                  <div className="text-[10px] text-gray-600 uppercase tracking-wide mb-2.5">Specs</div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                    <StatInput
+                      label="Power (hp)"
+                      value={stats.powerHp}
+                      type="int"
+                      onChange={(v) => updateStat('powerHp', v)}
+                      onBlur={saveStats}
+                    />
+                    <StatInput
+                      label="Torque (ft-lb)"
+                      value={stats.torqueFtLb}
+                      type="int"
+                      onChange={(v) => updateStat('torqueFtLb', v)}
+                      onBlur={saveStats}
+                    />
+                    <StatInput
+                      label="Weight (lb)"
+                      value={stats.weightLb}
+                      type="int"
+                      onChange={(v) => updateStat('weightLb', v)}
+                      onBlur={saveStats}
+                    />
+                    <StatInput
+                      label="Front weight (%)"
+                      value={stats.frontWeight}
+                      type="int"
+                      min={0}
+                      max={100}
+                      onChange={(v) => updateStat('frontWeight', v)}
+                      onBlur={saveStats}
+                    />
+                    <StatInput
+                      label="Displacement (L)"
+                      value={stats.displacementL}
+                      type="float"
+                      step={0.1}
+                      onChange={(v) => updateStat('displacementL', v)}
+                      onBlur={saveStats}
+                    />
+                    <div className="min-w-0">
+                      <div className="text-[10px] text-gray-600 mb-1">Rarity</div>
+                      <select
+                        value={stats.rarity}
+                        onChange={(e) => { updateStat('rarity', e.target.value) }}
+                        onBlur={saveStats}
+                        className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-cyan-500/60"
+                      >
+                        <option value="">—</option>
+                        {RARITY_OPTIONS.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </>
         )}
@@ -335,11 +523,43 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
   )
 }
 
+// ── Sub-components ────────────────────────────────────────────────────────────
+
 function Stat({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0">
       <div className="text-gray-600 text-[10px] uppercase tracking-wide mb-0.5">{label}</div>
       <div className="flex items-center flex-wrap gap-1">{children}</div>
+    </div>
+  )
+}
+
+interface StatInputProps {
+  label: string
+  value: string
+  type: 'float' | 'int'
+  min?: number
+  max?: number
+  step?: number
+  onChange: (v: string) => void
+  onBlur: () => void
+}
+
+function StatInput({ label, value, type, min, max, step, onChange, onBlur }: StatInputProps) {
+  return (
+    <div className="min-w-0">
+      <div className="text-[10px] text-gray-600 mb-1">{label}</div>
+      <input
+        type="number"
+        value={value}
+        min={min}
+        max={max}
+        step={type === 'float' ? (step ?? 0.1) : 1}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
+        placeholder="—"
+        className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
     </div>
   )
 }

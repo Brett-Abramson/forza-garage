@@ -52,19 +52,60 @@ const DEFAULT_FILTERS: FilterState = {
 
 type TagDetail = { tag: string; source: string }
 
+interface StatFields {
+  statSpeed: string
+  statHandling: string
+  statAcceleration: string
+  statLaunch: string
+  statBraking: string
+  statOffroad: string
+  powerHp: string
+  torqueFtLb: string
+  weightLb: string
+  frontWeight: string
+  displacementL: string
+  rarity: string
+}
+
+function carToStats(car: Car): StatFields {
+  return {
+    statSpeed:        car.statSpeed        != null ? String(car.statSpeed)        : '',
+    statHandling:     car.statHandling     != null ? String(car.statHandling)     : '',
+    statAcceleration: car.statAcceleration != null ? String(car.statAcceleration) : '',
+    statLaunch:       car.statLaunch       != null ? String(car.statLaunch)       : '',
+    statBraking:      car.statBraking      != null ? String(car.statBraking)      : '',
+    statOffroad:      car.statOffroad      != null ? String(car.statOffroad)      : '',
+    powerHp:          car.powerHp          != null ? String(car.powerHp)          : '',
+    torqueFtLb:       car.torqueFtLb       != null ? String(car.torqueFtLb)       : '',
+    weightLb:         car.weightLb         != null ? String(car.weightLb)         : '',
+    frontWeight:      car.frontWeight      != null ? String(car.frontWeight)      : '',
+    displacementL:    car.displacementL    != null ? String(car.displacementL)    : '',
+    rarity:           car.rarity           ?? '',
+  }
+}
+
+const RARITY_OPTIONS = ['Common', 'Rare', 'Legendary', 'Forza Edition']
+
 function ExpandedRow({
   car,
   onTagDetailsChange,
   onNotesChange,
+  onStatsChange,
 }: {
   car: Car
   onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
   onNotesChange: (carId: number, notes: string) => void
+  onStatsChange: (carId: number, partial: Partial<Car>) => void
 }) {
   const { auto: autoTags, user: initUserTags } = splitTagsBySource(car.tagDetails ?? [])
   const [userTags, setUserTags] = useState<string[]>(initUserTags)
   const [notes, setNotes] = useState(car.notes ?? '')
   const [notesDirty, setNotesDirty] = useState(false)
+
+  // Stat entry state
+  const [stats, setStats] = useState<StatFields>(() => carToStats(car))
+  const [statsDirty, setStatsDirty] = useState(false)
+  const [savingStats, setSavingStats] = useState(false)
 
   const rankedRaces = getRankedRaceTypes(
     car.division,
@@ -100,6 +141,40 @@ function ExpandedRow({
       body: JSON.stringify({ notes }),
     })
   }
+
+  async function saveStats() {
+    if (!statsDirty) return
+    setSavingStats(true)
+    const payload: Record<string, number | string | null> = {
+      statSpeed:        stats.statSpeed        !== '' ? parseFloat(stats.statSpeed)        : null,
+      statHandling:     stats.statHandling     !== '' ? parseFloat(stats.statHandling)     : null,
+      statAcceleration: stats.statAcceleration !== '' ? parseFloat(stats.statAcceleration) : null,
+      statLaunch:       stats.statLaunch       !== '' ? parseFloat(stats.statLaunch)       : null,
+      statBraking:      stats.statBraking      !== '' ? parseFloat(stats.statBraking)      : null,
+      statOffroad:      stats.statOffroad      !== '' ? parseFloat(stats.statOffroad)      : null,
+      powerHp:          stats.powerHp          !== '' ? parseInt(stats.powerHp)            : null,
+      torqueFtLb:       stats.torqueFtLb       !== '' ? parseInt(stats.torqueFtLb)         : null,
+      weightLb:         stats.weightLb         !== '' ? parseInt(stats.weightLb)           : null,
+      frontWeight:      stats.frontWeight      !== '' ? parseInt(stats.frontWeight)        : null,
+      displacementL:    stats.displacementL    !== '' ? parseFloat(stats.displacementL)    : null,
+      rarity:           stats.rarity           !== '' ? stats.rarity                       : null,
+    }
+    await fetch(`/api/cars/${car.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    onStatsChange(car.id, payload as Partial<Car>)
+    setSavingStats(false)
+    setStatsDirty(false)
+  }
+
+  function updateStat(key: keyof StatFields, value: string) {
+    setStats((prev) => ({ ...prev, [key]: value }))
+    setStatsDirty(true)
+  }
+
+  const hasAnyStats = Object.values(stats).some((v) => v !== '')
 
   const available = (CAR_TAGS as readonly string[]).filter(
     (t) => !userTags.includes(t) && !autoTags.includes(t)
@@ -204,9 +279,93 @@ function ExpandedRow({
               )}
             </div>
           )}
+
+          {/* Stat entry */}
+          <div className="border-t border-[#21262d] pt-3">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="text-[10px] text-gray-500 uppercase tracking-wide">Stats</div>
+              {savingStats && <span className="text-[10px] text-gray-600">Saving…</span>}
+              {!savingStats && !statsDirty && hasAnyStats && (
+                <span className="text-[10px] text-gray-600">Saved</span>
+              )}
+            </div>
+            {/* Performance — 3 columns for compact row layout */}
+            <div className="mb-3">
+              <div className="text-[10px] text-gray-700 mb-1.5">Performance · 0–10</div>
+              <div className="grid grid-cols-3 gap-x-3 gap-y-2">
+                {([
+                  ['statSpeed', 'Speed'], ['statHandling', 'Handling'], ['statAcceleration', 'Accel'],
+                  ['statLaunch', 'Launch'], ['statBraking', 'Braking'], ['statOffroad', 'Offroad'],
+                ] as [keyof StatFields, string][]).map(([key, label]) => (
+                  <RowStatInput
+                    key={key}
+                    label={label}
+                    value={stats[key]}
+                    step={0.1}
+                    min={0}
+                    max={10}
+                    onChange={(v) => updateStat(key, v)}
+                    onBlur={saveStats}
+                  />
+                ))}
+              </div>
+            </div>
+            {/* Specs — 3 columns */}
+            <div>
+              <div className="text-[10px] text-gray-700 mb-1.5">Specs</div>
+              <div className="grid grid-cols-3 gap-x-3 gap-y-2">
+                <RowStatInput label="HP" value={stats.powerHp} onChange={(v) => updateStat('powerHp', v)} onBlur={saveStats} />
+                <RowStatInput label="Torque" value={stats.torqueFtLb} onChange={(v) => updateStat('torqueFtLb', v)} onBlur={saveStats} />
+                <RowStatInput label="Weight" value={stats.weightLb} onChange={(v) => updateStat('weightLb', v)} onBlur={saveStats} />
+                <RowStatInput label="F.Wt %" value={stats.frontWeight} min={0} max={100} onChange={(v) => updateStat('frontWeight', v)} onBlur={saveStats} />
+                <RowStatInput label="Disp (L)" value={stats.displacementL} step={0.1} onChange={(v) => updateStat('displacementL', v)} onBlur={saveStats} />
+                <div className="min-w-0">
+                  <div className="text-[10px] text-gray-600 mb-0.5">Rarity</div>
+                  <select
+                    value={stats.rarity}
+                    onChange={(e) => updateStat('rarity', e.target.value)}
+                    onBlur={saveStats}
+                    className="w-full bg-[#161b22] border border-[#30363d] rounded px-1.5 py-0.5 text-[10px] text-gray-300 focus:outline-none focus:border-cyan-500/60"
+                  >
+                    <option value="">—</option>
+                    {RARITY_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </td>
     </tr>
+  )
+}
+
+function RowStatInput({
+  label, value, step, min, max, onChange, onBlur,
+}: {
+  label: string
+  value: string
+  step?: number
+  min?: number
+  max?: number
+  onChange: (v: string) => void
+  onBlur: () => void
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="text-[10px] text-gray-600 mb-0.5">{label}</div>
+      <input
+        type="number"
+        value={value}
+        step={step ?? 1}
+        min={min}
+        max={max}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
+        placeholder="—"
+        className="w-full bg-[#161b22] border border-[#30363d] rounded px-1.5 py-0.5 text-[10px] text-gray-300 focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
+    </div>
   )
 }
 
@@ -324,6 +483,10 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
 
   const handleNotesChange = useCallback((carId: number, notes: string) => {
     setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, notes } : c)))
+  }, [])
+
+  const handleStatsChange = useCallback((carId: number, partial: Partial<Car>) => {
+    setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, ...partial } : c)))
   }, [])
 
   const toggleExpanded = useCallback((carId: number) => {
@@ -619,6 +782,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
                           car={car}
                           onTagDetailsChange={handleTagDetailsChange}
                           onNotesChange={handleNotesChange}
+                          onStatsChange={handleStatsChange}
                         />
                       )}
                     </Fragment>
@@ -635,6 +799,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
       car={drawerCar}
       onClose={() => setDrawerCar(null)}
       onTagDetailsChange={handleTagDetailsChange}
+      onStatsChange={handleStatsChange}
     />
     </>
   )

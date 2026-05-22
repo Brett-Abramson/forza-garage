@@ -18,6 +18,25 @@ export interface Car {
   engineCC: number | null
   cylinders: number | null
   bodyStyle: string | null
+
+  // Page 1 — bar stats (0–10 scale, sourced from in-game stat screen)
+  statSpeed: number | null
+  statHandling: number | null
+  statAcceleration: number | null
+  statLaunch: number | null
+  statBraking: number | null
+  statOffroad: number | null
+
+  // Page 2 — raw specs
+  powerHp: number | null
+  torqueFtLb: number | null
+  weightLb: number | null
+  frontWeight: number | null  // weight distribution % — e.g. 40 means 40/60 F/R
+  displacementL: number | null
+
+  // Identity
+  rarity: string | null  // Common | Rare | Legendary | Forza Edition
+
   owned: boolean
   tags?: string[]
   tagDetails?: { tag: string; source: string }[]
