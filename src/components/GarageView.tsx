@@ -6,7 +6,9 @@ import { SortKey, SortDir, compareRows, defaultSort, PI_CLASS_INDEX } from '@/li
 import CarCard from './CarCard'
 import CarRow from './CarRow'
 import FilterBar from './FilterBar'
+import DivisionGroupFilter from './DivisionGroupFilter'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
+import { getDivisionsForGroup } from '@/lib/divisionGroups'
 
 type ViewMode = 'grid' | 'table'
 
@@ -42,6 +44,7 @@ export default function GarageView({ initialCars }: Props) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [view, setView] = useState<ViewMode>('grid')
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
 
   const options = useMemo(() => buildOptions(cars), [cars])
@@ -58,7 +61,18 @@ export default function GarageView({ initialCars }: Props) {
           return false
       }
       if (filters.piClass && car.piClass !== filters.piClass) return false
-      if (filters.division && car.division !== filters.division) return false
+      // Group + division filter — group is OR across its divisions; selecting a
+      // sub-chip narrows to that specific division within the group
+      if (selectedGroupId) {
+        const groupDivisions = getDivisionsForGroup(selectedGroupId)
+        if (filters.division) {
+          if (car.division !== filters.division) return false
+        } else {
+          if (!groupDivisions.includes(car.division)) return false
+        }
+      } else if (filters.division) {
+        if (car.division !== filters.division) return false
+      }
       if (filters.make && car.make !== filters.make) return false
       if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false
       if (filters.country && car.country !== filters.country) return false
@@ -79,6 +93,15 @@ export default function GarageView({ initialCars }: Props) {
       key,
       dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc',
     }))
+  }, [])
+
+  const handleGroupChange = useCallback((groupId: string | null) => {
+    setSelectedGroupId(groupId)
+    setFilters((f) => ({ ...f, division: '' }))
+  }, [])
+
+  const handleDivisionChange = useCallback((division: string) => {
+    setFilters((f) => ({ ...f, division }))
   }, [])
 
   const toggleOwned = useCallback(async (id: number, owned: boolean) => {
@@ -148,13 +171,23 @@ export default function GarageView({ initialCars }: Props) {
         </div>
       </div>
 
-      {/* Filter bar */}
+      {/* Division group filter */}
+      <DivisionGroupFilter
+        selectedGroupId={selectedGroupId}
+        selectedDivision={filters.division}
+        availableDivisions={options.divisions}
+        onGroupChange={handleGroupChange}
+        onDivisionChange={handleDivisionChange}
+      />
+
+      {/* Filter bar — division handled by group chips above */}
       <FilterBar
         filters={filters}
         options={options}
         onChange={setFilters}
         totalCount={cars.length}
         filteredCount={filteredCars.length}
+        hideDivision
       />
 
       {/* Results */}

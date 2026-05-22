@@ -12,7 +12,9 @@ import { splitTagsBySource } from '@/lib/autotags'
 import { RACE_TYPES } from '@/lib/races'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
 import { getTuningGuide } from '@/lib/tuningGuides'
+import { getDivisionsForGroup } from '@/lib/divisionGroups'
 import GarageDrawer from './GarageDrawer'
+import DivisionGroupFilter from './DivisionGroupFilter'
 import Link from 'next/link'
 
 type ViewMode = 'grid' | 'table'
@@ -217,6 +219,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(initialTagFilter ?? []))
   const [selectedRace, setSelectedRace] = useState<string | null>(null)
   const [displayedRaceId, setDisplayedRaceId] = useState<string | null>(null)
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
   const [expandedCarId, setExpandedCarId] = useState<number | null>(null)
@@ -244,7 +247,16 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
           return false
       }
       if (filters.piClass && car.piClass !== filters.piClass) return false
-      if (filters.division && car.division !== filters.division) return false
+      if (selectedGroupId) {
+        const groupDivisions = getDivisionsForGroup(selectedGroupId)
+        if (filters.division) {
+          if (car.division !== filters.division) return false
+        } else {
+          if (!groupDivisions.includes(car.division)) return false
+        }
+      } else if (filters.division) {
+        if (car.division !== filters.division) return false
+      }
       if (filters.make && car.make !== filters.make) return false
       if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false
       if (filters.country && car.country !== filters.country) return false
@@ -273,6 +285,15 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
       key,
       dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc',
     }))
+  }, [])
+
+  const handleGroupChange = useCallback((groupId: string | null) => {
+    setSelectedGroupId(groupId)
+    setFilters((f) => ({ ...f, division: '' }))
+  }, [])
+
+  const handleDivisionChange = useCallback((division: string) => {
+    setFilters((f) => ({ ...f, division }))
   }, [])
 
   const switchMode = useCallback((mode: FilterMode) => {
@@ -402,7 +423,16 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
           ))}
       </div>
 
-      {/* Filter bar */}
+      {/* Division group filter */}
+      <DivisionGroupFilter
+        selectedGroupId={selectedGroupId}
+        selectedDivision={filters.division}
+        availableDivisions={options.divisions}
+        onGroupChange={handleGroupChange}
+        onDivisionChange={handleDivisionChange}
+      />
+
+      {/* Filter bar — division handled by group chips above */}
       <FilterBar
         filters={filters}
         options={options}
@@ -410,6 +440,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
         totalCount={cars.length}
         filteredCount={filteredCars.length}
         hideOwned
+        hideDivision
       />
 
       {/* Filter mode toggle + chip row */}

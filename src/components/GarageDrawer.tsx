@@ -7,6 +7,7 @@ import { CAR_TAGS } from '@/lib/tags'
 import { splitTagsBySource } from '@/lib/autotags'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
 import { getTuningGuide } from '@/lib/tuningGuides'
+import { getGroupForDivision } from '@/lib/divisionGroups'
 
 type TagDetail = { tag: string; source: string }
 
@@ -96,6 +97,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
   const sourceColor = displayCar ? getSourceColor(displayCar.source) : ''
   const classBadge = displayCar ? (PI_CLASS_COLORS[displayCar.piClass] ?? 'bg-gray-600 text-white') : ''
 
+  const divisionGroup = displayCar ? getGroupForDivision(displayCar.division) : null
+
   // Race type recommendations based on all tags (auto + user)
   const rankedRaces = displayCar
     ? getRankedRaceTypes(
@@ -164,6 +167,11 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
                 </Stat>
                 <Stat label="Division">
                   <span className="text-gray-300 text-xs">{displayCar.division}</span>
+                  {divisionGroup && (
+                    <span className="text-[10px] text-gray-600 ml-1">
+                      {divisionGroup.icon} {divisionGroup.name}
+                    </span>
+                  )}
                 </Stat>
                 <Stat label="Country">
                   <span className="text-gray-300 text-xs">{displayCar.country}</span>
