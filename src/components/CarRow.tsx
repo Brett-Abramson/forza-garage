@@ -7,9 +7,10 @@ interface Props {
   onToggleOwned: (id: number, owned: boolean) => void
   isPending?: boolean
   onCardClick?: (car: Car) => void
+  isExpanded?: boolean
 }
 
-export default function CarRow({ car, onToggleOwned, isPending, onCardClick }: Props) {
+export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
 
@@ -17,9 +18,9 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick }: P
     <tr
       onClick={() => onCardClick?.(car)}
       className={`
-        border-b border-[#21262d] hover:bg-[#161b22] transition-colors text-sm
+        border-b border-[#21262d] transition-colors text-sm
         ${onCardClick ? 'cursor-pointer' : ''}
-        ${car.owned ? 'bg-cyan-950/20' : ''}
+        ${isExpanded ? 'bg-[#1c2330]' : car.owned ? 'bg-cyan-950/20 hover:bg-[#161b22]' : 'hover:bg-[#161b22]'}
         ${isPending ? 'opacity-60 pointer-events-none' : ''}
       `}
     >

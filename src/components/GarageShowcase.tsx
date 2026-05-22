@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, Fragment } from 'react'
 import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS } from '@/types/car'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
 import CarCard from './CarCard'
@@ -43,6 +43,89 @@ const DEFAULT_FILTERS: FilterState = {
   owned: 'all',
 }
 
+// ─── Inline expansion row for list view ──────────────────────────────────────
+
+function ExpandedRow({
+  car,
+  onTagsChange,
+  onNotesChange,
+}: {
+  car: Car
+  onTagsChange: (carId: number, tags: string[]) => void
+  onNotesChange: (carId: number, notes: string) => void
+}) {
+  const [tags, setTags] = useState<string[]>(car.tags ?? [])
+  const [notes, setNotes] = useState(car.notes ?? '')
+  const [notesDirty, setNotesDirty] = useState(false)
+
+  async function patchTags(next: string[]) {
+    setTags(next)
+    onTagsChange(car.id, next)
+    await fetch(`/api/garage/${car.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tags: next }),
+    })
+  }
+
+  async function saveNotes() {
+    if (!notesDirty) return
+    setNotesDirty(false)
+    onNotesChange(car.id, notes)
+    await fetch(`/api/garage/${car.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes }),
+    })
+  }
+
+  const available = (CAR_TAGS as readonly string[]).filter((t) => !tags.includes(t))
+
+  return (
+    <tr className="border-b border-[#21262d] bg-[#0d1117]">
+      <td colSpan={10} className="px-5 py-3">
+        <div className="flex flex-col gap-3 max-w-2xl">
+          <div>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {tags.length === 0 && <span className="text-xs text-gray-600">No tags — add one below</span>}
+              {tags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => patchTags(tags.filter((t) => t !== tag))}
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30 transition-colors"
+                >
+                  {tag} <span className="opacity-70">×</span>
+                </button>
+              ))}
+            </div>
+            {available.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {available.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => patchTags([...tags, tag])}
+                    className="px-2.5 py-0.5 rounded-full text-xs border border-dashed border-[#30363d] text-gray-600 hover:text-gray-300 hover:border-[#484f58] transition-colors"
+                  >
+                    + {tag}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <textarea
+            value={notes}
+            onChange={(e) => { setNotes(e.target.value); setNotesDirty(true) }}
+            onBlur={saveNotes}
+            placeholder="Notes..."
+            rows={2}
+            className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-xs text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/60 resize-none"
+          />
+        </div>
+      </td>
+    </tr>
+  )
+}
+
 export default function GarageShowcase({ initialCars, initialTagFilter }: Props) {
   const [cars, setCars] = useState<Car[]>(initialCars)
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
@@ -54,6 +137,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
   const [displayedRaceId, setDisplayedRaceId] = useState<string | null>(null)
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
+  const [expandedCarId, setExpandedCarId] = useState<number | null>(null)
 
   useEffect(() => { if (selectedRace) setDisplayedRaceId(selectedRace) }, [selectedRace])
 
@@ -129,6 +213,14 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
 
   const handleTagsChange = useCallback((carId: number, tags: string[]) => {
     setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, tags } : c)))
+  }, [])
+
+  const handleNotesChange = useCallback((carId: number, notes: string) => {
+    setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, notes } : c)))
+  }, [])
+
+  const toggleExpanded = useCallback((carId: number) => {
+    setExpandedCarId((prev) => (prev === carId ? null : carId))
   }, [])
 
   const handleToggle = useCallback(async (id: number, owned: boolean) => {
@@ -397,7 +489,22 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
                 </thead>
                 <tbody>
                   {sortedCars.map((car) => (
-                    <CarRow key={car.id} car={car} onToggleOwned={handleToggle} isPending={pendingIds.has(car.id)} onCardClick={setDrawerCar} />
+                    <Fragment key={car.id}>
+                      <CarRow
+                        car={car}
+                        onToggleOwned={handleToggle}
+                        isPending={pendingIds.has(car.id)}
+                        isExpanded={expandedCarId === car.id}
+                        onCardClick={(c) => toggleExpanded(c.id)}
+                      />
+                      {expandedCarId === car.id && (
+                        <ExpandedRow
+                          car={car}
+                          onTagsChange={handleTagsChange}
+                          onNotesChange={handleNotesChange}
+                        />
+                      )}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
