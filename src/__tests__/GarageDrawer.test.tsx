@@ -193,6 +193,75 @@ describe('GarageDrawer — add tags', () => {
   })
 })
 
+// ─── Race types ───────────────────────────────────────────────────────────────
+
+describe('GarageDrawer — race types', () => {
+  it('shows the Race types section when the car has matching tags', () => {
+    renderDrawer()
+    expect(screen.getByText('Race types')).toBeInTheDocument()
+  })
+
+  it('shows "Best for" with the top-scoring race type linked to its page', () => {
+    renderDrawer()
+    // Modern Sports Cars + asphalt + grip → Road Racing scores highest
+    const link = screen.getByRole('link', { name: /Road Racing/i })
+    expect(link).toBeInTheDocument()
+    expect(link).toHaveAttribute('href', '/races/road')
+  })
+
+  it('shows "Also suits" rows for secondary race types', () => {
+    renderDrawer()
+    // Street Racing also scores 2 for this car
+    expect(screen.getAllByText(/Also suits/i).length).toBeGreaterThan(0)
+    expect(screen.getByRole('link', { name: /Street Racing/i })).toBeInTheDocument()
+  })
+
+  it('does not show Race types when the car has no tag matches', () => {
+    // A division not in DIVISION_TAGS returns no auto tags; with no user
+    // tags either, every race type scores 0 and the section is hidden
+    const emptyTagsCar = { ...baseCar, tags: [], tagDetails: [], division: 'Unknown Division' }
+    renderDrawer(emptyTagsCar)
+    expect(screen.queryByText('Race types')).not.toBeInTheDocument()
+  })
+})
+
+// ─── Tuning guide ─────────────────────────────────────────────────────────────
+
+describe('GarageDrawer — tuning guide', () => {
+  it('shows the Tuning guide section when a race type matches', () => {
+    renderDrawer()
+    expect(screen.getByText('Tuning guide')).toBeInTheDocument()
+  })
+
+  it('shows the philosophy paragraph for a matched guide', () => {
+    renderDrawer()
+    expect(screen.getByText(/Modern sports cars are the most varied division/i)).toBeInTheDocument()
+  })
+
+  it('shows the spectrum note', () => {
+    renderDrawer()
+    expect(screen.getByText(/lightweight naturally-aspirated coupes/i)).toBeInTheDocument()
+  })
+
+  it('shows numbered priorities', () => {
+    renderDrawer()
+    expect(screen.getByText(/Identify your car's weak point first/i)).toBeInTheDocument()
+  })
+
+  it('shows the Watch out callout with its text', () => {
+    renderDrawer()
+    expect(screen.getByText(/Watch out/i)).toBeInTheDocument()
+    expect(screen.getByText(/AWD conversion eats PI/i)).toBeInTheDocument()
+  })
+
+  it('shows "coming soon" when race matches but no guide exists for the division', () => {
+    // Modern Muscle has no tuning guide for Road Racing
+    const noGuideCar = { ...baseCar, division: 'Modern Muscle' }
+    renderDrawer(noGuideCar)
+    expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
+  })
+})
+
 // ─── Notes ────────────────────────────────────────────────────────────────────
 
 describe('GarageDrawer — notes', () => {

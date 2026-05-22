@@ -336,6 +336,49 @@ describe('GarageShowcase — list view expansion', () => {
   })
 })
 
+// ─── Expanded row — tuning content ───────────────────────────────────────────
+
+describe('GarageShowcase — expanded row tuning content', () => {
+  it('shows a "Best for" race type line when the car has matching tags', async () => {
+    const user = userEvent.setup()
+    render(<GarageShowcase initialCars={mockCars} />)
+    await user.click(screen.getByText('911 GT3').closest('tr')!)
+    // Modern Sports Cars + asphalt + grip → Road Racing
+    expect(screen.getByText(/Best for:/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Road Racing/i })).toBeInTheDocument()
+  })
+
+  it('shows the tuning guide philosophy in the expanded row', async () => {
+    const user = userEvent.setup()
+    render(<GarageShowcase initialCars={mockCars} />)
+    await user.click(screen.getByText('911 GT3').closest('tr')!)
+    expect(screen.getByText(/Modern sports cars are the most varied division/i)).toBeInTheDocument()
+  })
+
+  it('shows the spectrum note in the expanded row', async () => {
+    const user = userEvent.setup()
+    render(<GarageShowcase initialCars={mockCars} />)
+    await user.click(screen.getByText('911 GT3').closest('tr')!)
+    expect(screen.getByText(/lightweight naturally-aspirated coupes/i)).toBeInTheDocument()
+  })
+
+  it('shows the Watch out callout in the expanded row', async () => {
+    const user = userEvent.setup()
+    render(<GarageShowcase initialCars={mockCars} />)
+    await user.click(screen.getByText('911 GT3').closest('tr')!)
+    expect(screen.getByText(/AWD conversion eats PI/i)).toBeInTheDocument()
+  })
+
+  it('shows "coming soon" for a car whose division has no guide for its best race type', async () => {
+    const user = userEvent.setup()
+    render(<GarageShowcase initialCars={mockCars} />)
+    // Silvia: Retro Sports Cars + drift/asphalt → best match is Drift Zones
+    // No tuning guide exists for Drift Zones + Retro Sports Cars
+    await user.click(screen.getByText('Silvia').closest('tr')!)
+    expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
+  })
+})
+
 // ─── initialTagFilter ─────────────────────────────────────────────────────────
 
 describe('GarageShowcase — initialTagFilter', () => {
