@@ -20,6 +20,7 @@ export interface Car {
   bodyStyle: string | null
   owned: boolean
   tags?: string[]
+  tagDetails?: { tag: string; source: string }[]
   notes?: string | null
 }
 

@@ -25,7 +25,8 @@ export default async function GaragePage({ searchParams }: Props) {
   const cars: Car[] = entries.map(({ car, tags, notes }) => ({
     ...car,
     owned: true,
-    tags: tags.map((t) => t.tag),
+    tags: [...new Set(tags.map((t) => t.tag))],
+    tagDetails: tags.map((t) => ({ tag: t.tag, source: t.source })),
     notes,
   }))
 

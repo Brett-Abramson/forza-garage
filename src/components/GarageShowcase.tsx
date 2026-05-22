@@ -8,6 +8,7 @@ import CarRow from './CarRow'
 import FilterBar from './FilterBar'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
 import { CAR_TAGS } from '@/lib/tags'
+import { splitTagsBySource } from '@/lib/autotags'
 import { RACE_TYPES } from '@/lib/races'
 import GarageDrawer from './GarageDrawer'
 import Link from 'next/link'
@@ -45,22 +46,29 @@ const DEFAULT_FILTERS: FilterState = {
 
 // ─── Inline expansion row for list view ──────────────────────────────────────
 
+type TagDetail = { tag: string; source: string }
+
 function ExpandedRow({
   car,
-  onTagsChange,
+  onTagDetailsChange,
   onNotesChange,
 }: {
   car: Car
-  onTagsChange: (carId: number, tags: string[]) => void
+  onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
   onNotesChange: (carId: number, notes: string) => void
 }) {
-  const [tags, setTags] = useState<string[]>(car.tags ?? [])
+  const { auto: autoTags, user: initUserTags } = splitTagsBySource(car.tagDetails ?? [])
+  const [userTags, setUserTags] = useState<string[]>(initUserTags)
   const [notes, setNotes] = useState(car.notes ?? '')
   const [notesDirty, setNotesDirty] = useState(false)
 
-  async function patchTags(next: string[]) {
-    setTags(next)
-    onTagsChange(car.id, next)
+  async function patchUserTags(next: string[]) {
+    setUserTags(next)
+    const nextDetails: TagDetail[] = [
+      ...autoTags.map((tag) => ({ tag, source: 'auto' })),
+      ...next.map((tag) => ({ tag, source: 'user' })),
+    ]
+    onTagDetailsChange(car.id, nextDetails)
     await fetch(`/api/garage/${car.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -79,7 +87,9 @@ function ExpandedRow({
     })
   }
 
-  const available = (CAR_TAGS as readonly string[]).filter((t) => !tags.includes(t))
+  const available = (CAR_TAGS as readonly string[]).filter(
+    (t) => !userTags.includes(t) && !autoTags.includes(t)
+  )
 
   return (
     <tr className="border-b border-[#21262d] bg-[#0d1117]">
@@ -87,11 +97,23 @@ function ExpandedRow({
         <div className="flex flex-col gap-3 max-w-2xl">
           <div>
             <div className="flex flex-wrap gap-1.5 mb-2">
-              {tags.length === 0 && <span className="text-xs text-gray-600">No tags — add one below</span>}
-              {tags.map((tag) => (
+              {autoTags.length === 0 && userTags.length === 0 && (
+                <span className="text-xs text-gray-600">No tags — add one below</span>
+              )}
+              {/* Auto tags — muted, no remove button */}
+              {autoTags.map((tag) => (
+                <span
+                  key={`auto-${tag}`}
+                  className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 opacity-60"
+                >
+                  {tag}
+                </span>
+              ))}
+              {/* User tags — full color, removable */}
+              {userTags.map((tag) => (
                 <button
-                  key={tag}
-                  onClick={() => patchTags(tags.filter((t) => t !== tag))}
+                  key={`user-${tag}`}
+                  onClick={() => patchUserTags(userTags.filter((t) => t !== tag))}
                   className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30 transition-colors"
                 >
                   {tag} <span className="opacity-70">×</span>
@@ -103,7 +125,7 @@ function ExpandedRow({
                 {available.map((tag) => (
                   <button
                     key={tag}
-                    onClick={() => patchTags([...tags, tag])}
+                    onClick={() => patchUserTags([...userTags, tag])}
                     className="px-2.5 py-0.5 rounded-full text-xs border border-dashed border-[#30363d] text-gray-600 hover:text-gray-300 hover:border-[#484f58] transition-colors"
                   >
                     + {tag}
@@ -211,8 +233,12 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
     })
   }, [])
 
-  const handleTagsChange = useCallback((carId: number, tags: string[]) => {
-    setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, tags } : c)))
+  const handleTagDetailsChange = useCallback((carId: number, tagDetails: TagDetail[]) => {
+    setCars((prev) => prev.map((c) => c.id === carId ? {
+      ...c,
+      tags: [...new Set(tagDetails.map((t) => t.tag))],
+      tagDetails,
+    } : c))
   }, [])
 
   const handleNotesChange = useCallback((carId: number, notes: string) => {
@@ -500,7 +526,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
                       {expandedCarId === car.id && (
                         <ExpandedRow
                           car={car}
-                          onTagsChange={handleTagsChange}
+                          onTagDetailsChange={handleTagDetailsChange}
                           onNotesChange={handleNotesChange}
                         />
                       )}
@@ -517,7 +543,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
     <GarageDrawer
       car={drawerCar}
       onClose={() => setDrawerCar(null)}
-      onTagsChange={handleTagsChange}
+      onTagDetailsChange={handleTagDetailsChange}
     />
     </>
   )

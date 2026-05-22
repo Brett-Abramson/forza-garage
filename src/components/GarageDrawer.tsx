@@ -4,14 +4,17 @@ import { useEffect, useRef, useState } from 'react'
 import type { Car } from '@/types/car'
 import { PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { CAR_TAGS } from '@/lib/tags'
+import { splitTagsBySource } from '@/lib/autotags'
+
+type TagDetail = { tag: string; source: string }
 
 interface Props {
   car: Car | null
   onClose: () => void
-  onTagsChange: (carId: number, tags: string[]) => void
+  onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
 }
 
-export default function GarageDrawer({ car, onClose, onTagsChange }: Props) {
+export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props) {
   // Keep a stale copy so the drawer content doesn't vanish during slide-out
   const [displayCar, setDisplayCar] = useState<Car | null>(car)
   useEffect(() => {
@@ -20,8 +23,9 @@ export default function GarageDrawer({ car, onClose, onTagsChange }: Props) {
 
   const open = car !== null
 
-  // Sync local tag + note state whenever the selected car changes
-  const [tags, setTags] = useState<string[]>(displayCar?.tags ?? [])
+  // Derive auto/user split from displayCar's tagDetails
+  const { auto: autoTags, user: initUserTags } = splitTagsBySource(displayCar?.tagDetails ?? [])
+  const [userTags, setUserTags] = useState<string[]>(initUserTags)
   const [notes, setNotes] = useState<string>(displayCar?.notes ?? '')
   const [notesDirty, setNotesDirty] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -29,7 +33,8 @@ export default function GarageDrawer({ car, onClose, onTagsChange }: Props) {
   const prevId = useRef<number | undefined>(undefined)
   useEffect(() => {
     if (displayCar && displayCar.id !== prevId.current) {
-      setTags(displayCar.tags ?? [])
+      const { user } = splitTagsBySource(displayCar.tagDetails ?? [])
+      setUserTags(user)
       setNotes(displayCar.notes ?? '')
       setNotesDirty(false)
       prevId.current = displayCar.id
@@ -53,16 +58,24 @@ export default function GarageDrawer({ car, onClose, onTagsChange }: Props) {
   }
 
   async function addTag(tag: string) {
-    const next = [...tags, tag]
-    setTags(next)
-    onTagsChange(displayCar!.id, next)
+    const next = [...userTags, tag]
+    setUserTags(next)
+    const nextDetails: TagDetail[] = [
+      ...autoTags.map((t) => ({ tag: t, source: 'auto' })),
+      ...next.map((t) => ({ tag: t, source: 'user' })),
+    ]
+    onTagDetailsChange(displayCar!.id, nextDetails)
     await patchGarage({ tags: next })
   }
 
   async function removeTag(tag: string) {
-    const next = tags.filter((t) => t !== tag)
-    setTags(next)
-    onTagsChange(displayCar!.id, next)
+    const next = userTags.filter((t) => t !== tag)
+    setUserTags(next)
+    const nextDetails: TagDetail[] = [
+      ...autoTags.map((t) => ({ tag: t, source: 'auto' })),
+      ...next.map((t) => ({ tag: t, source: 'user' })),
+    ]
+    onTagDetailsChange(displayCar!.id, nextDetails)
     await patchGarage({ tags: next })
   }
 
@@ -74,7 +87,10 @@ export default function GarageDrawer({ car, onClose, onTagsChange }: Props) {
     setNotesDirty(false)
   }
 
-  const availableTags = CAR_TAGS.filter((t) => !tags.includes(t))
+  // Only offer tags not already applied (either source)
+  const availableTags = CAR_TAGS.filter(
+    (t) => !userTags.includes(t) && !autoTags.includes(t)
+  )
   const sourceColor = displayCar ? getSourceColor(displayCar.source) : ''
   const classBadge = displayCar ? (PI_CLASS_COLORS[displayCar.piClass] ?? 'bg-gray-600 text-white') : ''
 
@@ -156,13 +172,23 @@ export default function GarageDrawer({ car, onClose, onTagsChange }: Props) {
               {/* Current tags */}
               <div className="p-5 border-b border-[#21262d]">
                 <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Tags</div>
-                {tags.length === 0 ? (
+                {autoTags.length === 0 && userTags.length === 0 ? (
                   <p className="text-xs text-gray-600 italic">No tags yet — add some below.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {tags.map((tag) => (
+                    {/* Auto tags — muted, no remove */}
+                    {autoTags.map((tag) => (
                       <span
-                        key={tag}
+                        key={`auto-${tag}`}
+                        className="px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 opacity-60"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {/* User tags — full color, removable */}
+                    {userTags.map((tag) => (
+                      <span
+                        key={`user-${tag}`}
                         className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30"
                       >
                         {tag}
@@ -201,12 +227,8 @@ export default function GarageDrawer({ car, onClose, onTagsChange }: Props) {
               <div className="p-5">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-xs text-gray-500 uppercase tracking-wide">Notes</div>
-                  {saving && (
-                    <span className="text-xs text-gray-600">Saving…</span>
-                  )}
-                  {!saving && !notesDirty && notes && (
-                    <span className="text-xs text-gray-600">Saved</span>
-                  )}
+                  {saving && <span className="text-xs text-gray-600">Saving…</span>}
+                  {!saving && !notesDirty && notes && <span className="text-xs text-gray-600">Saved</span>}
                 </div>
                 <textarea
                   value={notes}

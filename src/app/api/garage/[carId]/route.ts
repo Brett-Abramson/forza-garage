@@ -23,10 +23,11 @@ export async function PATCH(
 
   if ('tags' in body) {
     const tags: string[] = body.tags ?? []
-    await prisma.carTag.deleteMany({ where: { userGarageId: entry.id } })
+    // Only replace user tags — auto tags are managed by the system and never wiped
+    await prisma.carTag.deleteMany({ where: { userGarageId: entry.id, source: 'user' } })
     if (tags.length > 0) {
       await prisma.carTag.createMany({
-        data: tags.map((tag) => ({ userGarageId: entry.id, tag })),
+        data: tags.map((tag) => ({ userGarageId: entry.id, tag, source: 'user' })),
       })
     }
   }

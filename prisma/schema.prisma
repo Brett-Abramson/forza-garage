@@ -47,4 +47,5 @@ model CarTag {
   userGarageId  Int
   userGarage    UserGarage @relation(fields: [userGarageId], references: [id])
   tag           String
+  source        String     @default("user") // "auto" | "user"
 }

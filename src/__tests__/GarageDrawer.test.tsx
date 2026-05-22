@@ -5,6 +5,7 @@ import GarageDrawer from '@/components/GarageDrawer'
 import type { Car } from '@/types/car'
 import { CAR_TAGS } from '@/lib/tags'
 
+// baseCar has 'asphalt' as an auto tag and 'grip' as a user tag
 const baseCar: Car = {
   id: 42,
   make: 'Porsche',
@@ -22,17 +23,23 @@ const baseCar: Car = {
   source: 'Autoshow',
   sourceInfo: null,
   owned: true,
-  tags: ['grip', 'asphalt'],
+  tags: ['asphalt', 'grip'],
+  tagDetails: [
+    { tag: 'asphalt', source: 'auto' },
+    { tag: 'grip',    source: 'user' },
+  ],
   notes: null,
 }
 
 function renderDrawer(
   car: Car | null = baseCar,
-  extra: { onClose?: () => void; onTagsChange?: (id: number, tags: string[]) => void } = {}
+  extra: { onClose?: () => void; onTagDetailsChange?: (id: number, tags: { tag: string; source: string }[]) => void } = {}
 ) {
   const onClose = extra.onClose ?? vi.fn()
-  const onTagsChange = extra.onTagsChange ?? vi.fn()
-  return { onClose, onTagsChange, ...render(<GarageDrawer car={car} onClose={onClose} onTagsChange={onTagsChange} />) }
+  const onTagDetailsChange = extra.onTagDetailsChange ?? vi.fn()
+  return { onClose, onTagDetailsChange, ...render(
+    <GarageDrawer car={car} onClose={onClose} onTagDetailsChange={onTagDetailsChange} />
+  )}
 }
 
 beforeEach(() => {
@@ -109,26 +116,35 @@ describe('GarageDrawer — close', () => {
   })
 })
 
-// ─── Tags ─────────────────────────────────────────────────────────────────────
+// ─── Tag display ──────────────────────────────────────────────────────────────
 
-describe('GarageDrawer — current tags', () => {
-  it('shows current tags as pills', () => {
+describe('GarageDrawer — tag display', () => {
+  it('shows both auto and user tags', () => {
     renderDrawer()
-    expect(screen.getByText('grip')).toBeInTheDocument()
-    expect(screen.getByText('asphalt')).toBeInTheDocument()
+    expect(screen.getByText('asphalt')).toBeInTheDocument() // auto
+    expect(screen.getByText('grip')).toBeInTheDocument()    // user
   })
 
-  it('shows "No tags yet" message when car has no tags', () => {
-    renderDrawer({ ...baseCar, tags: [] })
+  it('user tag has a remove button; auto tag does not', () => {
+    renderDrawer()
+    expect(screen.getByRole('button', { name: 'Remove grip' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Remove asphalt' })).not.toBeInTheDocument()
+  })
+
+  it('shows "No tags yet" when tagDetails is empty', () => {
+    renderDrawer({ ...baseCar, tags: [], tagDetails: [] })
     expect(screen.getByText(/No tags yet/i)).toBeInTheDocument()
   })
 
-  it('removes a tag and notifies parent when × is clicked', async () => {
+  it('removing a user tag notifies parent with updated TagDetail[]', async () => {
     const user = userEvent.setup()
-    const onTagsChange = vi.fn()
-    renderDrawer(baseCar, { onTagsChange })
+    const onTagDetailsChange = vi.fn()
+    renderDrawer(baseCar, { onTagDetailsChange })
     await user.click(screen.getByRole('button', { name: 'Remove grip' }))
-    expect(onTagsChange).toHaveBeenCalledWith(baseCar.id, ['asphalt'])
+    expect(onTagDetailsChange).toHaveBeenCalledWith(
+      baseCar.id,
+      [{ tag: 'asphalt', source: 'auto' }]
+    )
     expect(fetch).toHaveBeenCalledWith(
       `/api/garage/${baseCar.id}`,
       expect.objectContaining({ method: 'PATCH' })
@@ -136,30 +152,40 @@ describe('GarageDrawer — current tags', () => {
   })
 })
 
+// ─── Add tags ─────────────────────────────────────────────────────────────────
+
 describe('GarageDrawer — add tags', () => {
-  it('shows tags not yet on the car as addable', () => {
+  it('shows tags not yet applied as addable', () => {
     renderDrawer()
-    // 'dirt' is not in baseCar.tags
+    // 'dirt' is in neither auto nor user tags
     expect(screen.getByRole('button', { name: '+ dirt' })).toBeInTheDocument()
   })
 
-  it('does not show already-applied tags as addable', () => {
+  it('does not offer already-applied tags (auto or user) as addable', () => {
     renderDrawer()
     expect(screen.queryByRole('button', { name: '+ grip' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ asphalt' })).not.toBeInTheDocument()
   })
 
   it('hides the add section when all tags are applied', () => {
-    renderDrawer({ ...baseCar, tags: [...CAR_TAGS] })
+    const allTagDetails = CAR_TAGS.map((tag) => ({ tag, source: 'user' }))
+    renderDrawer({ ...baseCar, tags: [...CAR_TAGS], tagDetails: allTagDetails })
     expect(screen.queryByText('Add tags')).not.toBeInTheDocument()
   })
 
-  it('adds a tag and notifies parent when + button is clicked', async () => {
+  it('adding a tag notifies parent with updated TagDetail[]', async () => {
     const user = userEvent.setup()
-    const onTagsChange = vi.fn()
-    renderDrawer(baseCar, { onTagsChange })
+    const onTagDetailsChange = vi.fn()
+    renderDrawer(baseCar, { onTagDetailsChange })
     await user.click(screen.getByRole('button', { name: '+ dirt' }))
-    expect(onTagsChange).toHaveBeenCalledWith(baseCar.id, ['grip', 'asphalt', 'dirt'])
+    expect(onTagDetailsChange).toHaveBeenCalledWith(
+      baseCar.id,
+      [
+        { tag: 'asphalt', source: 'auto' },
+        { tag: 'grip',    source: 'user' },
+        { tag: 'dirt',    source: 'user' },
+      ]
+    )
     expect(fetch).toHaveBeenCalledWith(
       `/api/garage/${baseCar.id}`,
       expect.objectContaining({ method: 'PATCH' })
@@ -201,7 +227,7 @@ describe('GarageDrawer — notes', () => {
     renderDrawer({ ...baseCar, notes: 'unchanged' })
     const textarea = screen.getByRole('textbox')
     await user.click(textarea)
-    await user.tab() // blur without typing
+    await user.tab()
     expect(fetch).not.toHaveBeenCalled()
   })
 })
