@@ -6,6 +6,7 @@ import { PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { CAR_TAGS } from '@/lib/tags'
 import { splitTagsBySource } from '@/lib/autotags'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
+import { getTuningGuide } from '@/lib/tuningGuides'
 
 type TagDetail = { tag: string; source: string }
 
@@ -103,6 +104,12 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
         displayCar.drivetrain ?? undefined
       )
     : []
+
+  // Tuning guide for the best-matching race type
+  const tuningGuide =
+    displayCar && rankedRaces.length > 0
+      ? getTuningGuide(rankedRaces[0].race.id, displayCar.division)
+      : null
 
   return (
     <>
@@ -261,6 +268,37 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange }: Props
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Tuning guide */}
+              {rankedRaces.length > 0 && (
+                <div className="p-5 border-b border-[#21262d]">
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Tuning guide</div>
+                  {tuningGuide ? (
+                    <div className="flex flex-col gap-4">
+                      <p className="text-xs text-gray-400 leading-relaxed">{tuningGuide.philosophy}</p>
+                      <div>
+                        <div className="text-[10px] text-gray-600 uppercase tracking-wide mb-2">Priorities</div>
+                        <ol className="space-y-1.5">
+                          {tuningGuide.priorities.map((p, i) => (
+                            <li key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                              <span className="text-cyan-500/60 font-mono shrink-0 w-4">{i + 1}.</span>
+                              {p}
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
+                        <div className="text-[10px] text-amber-500/70 uppercase tracking-wide mb-1">Watch out</div>
+                        <p className="text-xs text-amber-200/70 leading-relaxed">{tuningGuide.watchOut}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-600 italic">
+                      Tuning guide coming soon for this combination.
+                    </p>
+                  )}
                 </div>
               )}
 

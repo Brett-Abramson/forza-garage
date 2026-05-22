@@ -11,6 +11,7 @@ import { CAR_TAGS } from '@/lib/tags'
 import { splitTagsBySource } from '@/lib/autotags'
 import { RACE_TYPES } from '@/lib/races'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
+import { getTuningGuide } from '@/lib/tuningGuides'
 import GarageDrawer from './GarageDrawer'
 import Link from 'next/link'
 
@@ -68,6 +69,10 @@ function ExpandedRow({
     [...autoTags, ...userTags],
     car.drivetrain ?? undefined
   )
+  const tuningGuide =
+    rankedRaces.length > 0
+      ? getTuningGuide(rankedRaces[0].race.id, car.division)
+      : null
 
   async function patchUserTags(next: string[]) {
     setUserTags(next)
@@ -169,6 +174,31 @@ function ExpandedRow({
                   </a>
                 </span>
               ))}
+            </div>
+          )}
+
+          {/* Tuning guide */}
+          {rankedRaces.length > 0 && (
+            <div className="border-t border-[#21262d] pt-3 flex flex-col gap-3">
+              {tuningGuide ? (
+                <>
+                  <p className="text-xs text-gray-500 leading-relaxed">{tuningGuide.philosophy}</p>
+                  <ol className="space-y-1">
+                    {tuningGuide.priorities.map((p, i) => (
+                      <li key={i} className="flex items-start gap-1.5 text-xs">
+                        <span className="text-cyan-500/50 font-mono shrink-0 w-4">{i + 1}.</span>
+                        <span className="text-gray-400">{p}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <div className="rounded border border-amber-500/20 bg-amber-500/5 px-2.5 py-2">
+                    <span className="text-[10px] text-amber-500/70 uppercase tracking-wide mr-1.5">Watch out:</span>
+                    <span className="text-xs text-amber-200/60 leading-relaxed">{tuningGuide.watchOut}</span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-gray-600 italic">Tuning guide coming soon for this combination.</p>
+              )}
             </div>
           )}
         </div>
