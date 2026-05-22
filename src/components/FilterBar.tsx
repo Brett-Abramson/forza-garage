@@ -13,6 +13,7 @@ interface Props {
   totalCount: number
   filteredCount: number
   hideOwned?: boolean
+  hideDivision?: boolean
 }
 
 function Select({
@@ -44,13 +45,13 @@ function Select({
   )
 }
 
-export default function FilterBar({ filters, options, onChange, totalCount, filteredCount, hideOwned = false }: Props) {
+export default function FilterBar({ filters, options, onChange, totalCount, filteredCount, hideOwned = false, hideDivision = false }: Props) {
   const set = (key: keyof FilterState) => (value: string) =>
     onChange({ ...filters, [key]: value })
 
   const hasActiveFilters =
     filters.piClass !== '' ||
-    filters.division !== '' ||
+    (!hideDivision && filters.division !== '') ||
     filters.make !== '' ||
     filters.drivetrain !== '' ||
     filters.country !== '' ||
@@ -68,15 +69,17 @@ export default function FilterBar({ filters, options, onChange, totalCount, filt
           ]}
           onChange={set('piClass')}
         />
-        <Select
-          label="Division"
-          value={filters.division}
-          options={[
-            { value: '', label: 'All Divisions' },
-            ...options.divisions.map((d) => ({ value: d, label: d })),
-          ]}
-          onChange={set('division')}
-        />
+        {!hideDivision && (
+          <Select
+            label="Division"
+            value={filters.division}
+            options={[
+              { value: '', label: 'All Divisions' },
+              ...options.divisions.map((d) => ({ value: d, label: d })),
+            ]}
+            onChange={set('division')}
+          />
+        )}
         <Select
           label="Make"
           value={filters.make}
