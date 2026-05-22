@@ -8,6 +8,7 @@ import CarRow from './CarRow'
 import FilterBar from './FilterBar'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
 import { CAR_TAGS } from '@/lib/tags'
+import { RACE_TYPES } from '@/lib/races'
 import GarageDrawer from './GarageDrawer'
 import Link from 'next/link'
 
@@ -47,6 +48,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
   const [view, setView] = useState<ViewMode>('grid')
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(initialTagFilter ?? []))
+  const [selectedRace, setSelectedRace] = useState<string | null>(null)
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
 
@@ -92,6 +94,10 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
       key,
       dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc',
     }))
+  }, [])
+
+  const toggleRace = useCallback((id: string) => {
+    setSelectedRace((prev) => (prev === id ? null : id))
   }, [])
 
   const toggleTag = useCallback((tag: string) => {
@@ -150,6 +156,29 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
   return (
     <>
     <div className="flex flex-col gap-6">
+      {/* Race type pills */}
+      <div>
+        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Race type</p>
+        <div className="flex flex-wrap gap-2">
+          {RACE_TYPES.map((race) => (
+            <button
+              key={race.id}
+              onClick={() => toggleRace(race.id)}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                selectedRace === race.id
+                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                  : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+              }`}
+            >
+              <span>{race.icon}</span>
+              {race.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-[#21262d]" />
+
       {/* Search + view toggle */}
       <div className="flex gap-3 items-center">
         <input
