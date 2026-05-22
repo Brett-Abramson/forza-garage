@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 
 const links = [
   { href: '/', label: 'My Garage', icon: GarageIcon },
+  { href: '/races', label: 'Races', icon: RacesIcon },
   { href: '/cars', label: 'Car Database', icon: DatabaseIcon },
 ]
 
@@ -48,6 +49,14 @@ function DatabaseIcon() {
       <path d="M2 4v3c0 1.1 2.7 2 6 2s6-.9 6-2V4" />
       <path d="M2 7v3c0 1.1 2.7 2 6 2s6-.9 6-2V7" />
       <path d="M2 10v2c0 1.1 2.7 2 6 2s6-.9 6-2v-2" />
+    </svg>
+  )
+}
+
+function RacesIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M0 2h16v2H0zM0 7h10v2H0zM0 12h13v2H0z" />
     </svg>
   )
 }

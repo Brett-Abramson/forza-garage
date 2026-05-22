@@ -20,6 +20,7 @@ interface SortState {
 
 interface Props {
   initialCars: Car[]
+  initialTagFilter?: string[]
 }
 
 function buildOptions(cars: Car[]) {
@@ -40,12 +41,12 @@ const DEFAULT_FILTERS: FilterState = {
   owned: 'all',
 }
 
-export default function GarageShowcase({ initialCars }: Props) {
+export default function GarageShowcase({ initialCars, initialTagFilter }: Props) {
   const [cars, setCars] = useState<Car[]>(initialCars)
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [view, setView] = useState<ViewMode>('grid')
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(initialTagFilter ?? []))
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
 
