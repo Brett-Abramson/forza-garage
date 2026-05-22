@@ -25,7 +25,7 @@ const baseCar: Car = {
 
 function renderRow(
   car: Car,
-  extra: { onToggleOwned?: () => void; isPending?: boolean; onCardClick?: (car: Car) => void } = {}
+  extra: { onToggleOwned?: () => void; isPending?: boolean; onCardClick?: (car: Car) => void; isExpanded?: boolean } = {}
 ) {
   const onToggleOwned = extra.onToggleOwned ?? vi.fn()
   return render(
@@ -36,6 +36,7 @@ function renderRow(
           onToggleOwned={onToggleOwned}
           isPending={extra.isPending}
           onCardClick={extra.onCardClick}
+          isExpanded={extra.isExpanded}
         />
       </tbody>
     </table>
@@ -92,6 +93,20 @@ describe('CarRow', () => {
     renderRow(baseCar, { isPending: false })
     const row = screen.getByRole('row')
     expect(row.className).not.toContain('opacity-60')
+  })
+})
+
+// ─── isExpanded ──────────────────────────────────────────────────────────────
+
+describe('CarRow — isExpanded', () => {
+  it('applies expanded bg when isExpanded is true', () => {
+    renderRow(baseCar, { isExpanded: true })
+    expect(screen.getByRole('row').className).toContain('bg-[#1c2330]')
+  })
+
+  it('does not apply expanded bg when isExpanded is false', () => {
+    renderRow(baseCar, { isExpanded: false })
+    expect(screen.getByRole('row').className).not.toContain('bg-[#1c2330]')
   })
 })
 
