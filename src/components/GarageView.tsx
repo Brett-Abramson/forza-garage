@@ -7,6 +7,7 @@ import CarCard from './CarCard'
 import CarRow from './CarRow'
 import FilterBar from './FilterBar'
 import DivisionGroupFilter from './DivisionGroupFilter'
+import GarageDrawer from './GarageDrawer'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
 import { getDivisionsForGroup } from '@/lib/divisionGroups'
 
@@ -46,6 +47,7 @@ export default function GarageView({ initialCars }: Props) {
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
+  const [drawerCar, setDrawerCar] = useState<Car | null>(null)
 
   const options = useMemo(() => buildOptions(cars), [cars])
 
@@ -115,6 +117,8 @@ export default function GarageView({ initialCars }: Props) {
       if (!res.ok) throw new Error('Failed to update')
       const updated: Car = await res.json()
       setCars((prev) => prev.map((c) => (c.id === updated.id ? updated : c)))
+      // Keep drawer in sync if the toggled car is currently open
+      setDrawerCar((prev) => (prev?.id === updated.id ? { ...prev, ...updated } : prev))
     } catch (err) {
       console.error(err)
     } finally {
@@ -126,9 +130,14 @@ export default function GarageView({ initialCars }: Props) {
     }
   }, [])
 
+  const handleStatsChange = useCallback((carId: number, partial: Partial<Car>) => {
+    setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, ...partial } : c)))
+  }, [])
+
   const ownedCount = cars.filter((c) => c.owned).length
 
   return (
+    <>
     <div className="flex flex-col gap-6">
       {/* Stats bar */}
       <div className="flex items-center gap-6 text-sm">
@@ -201,7 +210,7 @@ export default function GarageView({ initialCars }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {sortedCars.map((car) => (
             <div key={car.id} className={pendingIds.has(car.id) ? 'opacity-60 pointer-events-none' : ''}>
-              <CarCard car={car} onToggleOwned={toggleOwned} />
+              <CarCard car={car} onToggleOwned={toggleOwned} onCardClick={setDrawerCar} />
             </div>
           ))}
         </div>
@@ -224,13 +233,25 @@ export default function GarageView({ initialCars }: Props) {
             </thead>
             <tbody>
               {sortedCars.map((car) => (
-                <CarRow key={car.id} car={car} onToggleOwned={toggleOwned} isPending={pendingIds.has(car.id)} />
+                <CarRow
+                  key={car.id}
+                  car={car}
+                  onToggleOwned={toggleOwned}
+                  isPending={pendingIds.has(car.id)}
+                  onCardClick={setDrawerCar}
+                />
               ))}
             </tbody>
           </table>
         </div>
       )}
     </div>
+
+    <GarageDrawer
+      car={drawerCar}
+      onClose={() => setDrawerCar(null)}
+      onStatsChange={handleStatsChange}
+    />
+    </>
   )
 }
-

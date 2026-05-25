@@ -78,11 +78,11 @@ const RARITY_OPTIONS = ['Common', 'Rare', 'Legendary', 'Forza Edition']
 interface Props {
   car: Car | null
   onClose: () => void
-  onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
+  onTagDetailsChange?: (carId: number, tagDetails: TagDetail[]) => void
   onStatsChange?: (carId: number, partial: Partial<Car>) => void
 }
 
-export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStatsChange }: Props) {
+export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => {}, onStatsChange }: Props) {
   // Keep a stale copy so the drawer content doesn't vanish during slide-out
   const [displayCar, setDisplayCar] = useState<Car | null>(car)
   useEffect(() => {
@@ -300,44 +300,46 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                 <StatBars car={displayCar} />
               </div>
 
-              {/* Current tags */}
-              <div className="p-5 border-b border-[#21262d]">
-                <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Tags</div>
-                {autoTags.length === 0 && userTags.length === 0 ? (
-                  <p className="text-xs text-gray-600 italic">No tags yet — add some below.</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {/* Auto tags — muted, no remove */}
-                    {autoTags.map((tag) => (
-                      <span
-                        key={`auto-${tag}`}
-                        className="px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 opacity-60"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                    {/* User tags — full color, removable */}
-                    {userTags.map((tag) => (
-                      <span
-                        key={`user-${tag}`}
-                        className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30"
-                      >
-                        {tag}
-                        <button
-                          onClick={() => removeTag(tag)}
-                          className="hover:text-red-400 transition-colors leading-none"
-                          aria-label={`Remove ${tag}`}
+              {/* Current tags — only for owned cars */}
+              {displayCar.owned && (
+                <div className="p-5 border-b border-[#21262d]">
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Tags</div>
+                  {autoTags.length === 0 && userTags.length === 0 ? (
+                    <p className="text-xs text-gray-600 italic">No tags yet — add some below.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {/* Auto tags — muted, no remove */}
+                      {autoTags.map((tag) => (
+                        <span
+                          key={`auto-${tag}`}
+                          className="px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 opacity-60"
                         >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+                          {tag}
+                        </span>
+                      ))}
+                      {/* User tags — full color, removable */}
+                      {userTags.map((tag) => (
+                        <span
+                          key={`user-${tag}`}
+                          className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30"
+                        >
+                          {tag}
+                          <button
+                            onClick={() => removeTag(tag)}
+                            className="hover:text-red-400 transition-colors leading-none"
+                            aria-label={`Remove ${tag}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
-              {/* Add tags */}
-              {availableTags.length > 0 && (
+              {/* Add tags — only for owned cars */}
+              {displayCar.owned && availableTags.length > 0 && (
                 <div className="p-5 border-b border-[#21262d]">
                   <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Add tags</div>
                   <div className="flex flex-wrap gap-2">
@@ -437,8 +439,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                 </div>
               )}
 
-              {/* Notes */}
-              <div className="p-5 border-b border-[#21262d]">
+              {/* Notes — only for owned cars */}
+              {displayCar.owned && <div className="p-5 border-b border-[#21262d]">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-xs text-gray-500 uppercase tracking-wide">Notes</div>
                   {saving && <span className="text-xs text-gray-600">Saving…</span>}
@@ -452,7 +454,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                   rows={5}
                   className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-[#e6edf3] focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600 resize-none"
                 />
-              </div>
+              </div>}
 
               {/* Stat entry */}
               <div className="p-5">
