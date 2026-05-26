@@ -164,7 +164,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
   const [toggling, setToggling] = useState(false)
   const [showStatEntry, setShowStatEntry] = useState(false)
 
-  const statCallouts = displayCar ? getStatCallouts(displayCar) : []
+  const statCallouts = displayCar ? getStatCallouts(displayCar, [...autoTags, ...userTags]) : []
 
   return (
     <>

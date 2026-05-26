@@ -88,7 +88,7 @@ function ExpandedRow({
     rankedRaces.length > 0
       ? getTuningGuide(rankedRaces[0].race.id, car.division)
       : null
-  const statCallouts = getStatCallouts(car)
+  const statCallouts = getStatCallouts(car, car.tags ?? [])
 
   async function patchUserTags(next: string[]) {
     setUserTags(next)
