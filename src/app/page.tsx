@@ -1,23 +1,11 @@
+import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import GarageShowcase from '@/components/GarageShowcase'
 import type { Car } from '@/types/car'
-import { CAR_TAGS } from '@/lib/tags'
 
 export const dynamic = 'force-dynamic'
 
-interface Props {
-  searchParams: Promise<{ tags?: string }>
-}
-
-export default async function GaragePage({ searchParams }: Props) {
-  const { tags: tagsParam } = await searchParams
-
-  // Validate each tag against CAR_TAGS so arbitrary query params can't pollute state
-  const validTags = new Set<string>(CAR_TAGS)
-  const initialTagFilter = tagsParam
-    ? tagsParam.split(',').map((t) => t.trim()).filter((t) => validTags.has(t))
-    : []
-
+export default async function GaragePage() {
   const entries = await prisma.userGarage.findMany({
     include: { car: true, tags: true },
     orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
@@ -42,7 +30,9 @@ export default async function GaragePage({ searchParams }: Props) {
         <p className="text-gray-500 text-sm mt-1">Your personal collection.</p>
       </header>
 
-      <GarageShowcase initialCars={cars} initialTagFilter={initialTagFilter} />
+      <Suspense fallback={null}>
+        <GarageShowcase initialCars={cars} />
+      </Suspense>
     </main>
   )
 }

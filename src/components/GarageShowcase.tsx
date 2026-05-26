@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect, Fragment } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef, Fragment } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS, SOURCE_CHIPS } from '@/types/car'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
 import CarCard from './CarCard'
@@ -8,6 +9,7 @@ import CarRow from './CarRow'
 import FilterBar from './FilterBar'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
 import { CAR_TAGS } from '@/lib/tags'
+const ALL_TAGS = new Set<string>(CAR_TAGS)
 import { splitTagsBySource } from '@/lib/autotags'
 import { RACE_TYPES } from '@/lib/races'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
@@ -30,7 +32,6 @@ interface SortState {
 
 interface Props {
   initialCars: Car[]
-  initialTagFilter?: string[]
 }
 
 function buildOptions(cars: Car[]) {
@@ -365,21 +366,88 @@ function RowStatInput({
   )
 }
 
-export default function GarageShowcase({ initialCars, initialTagFilter }: Props) {
+export default function GarageShowcase({ initialCars }: Props) {
+  const searchParams = useSearchParams()
+  const searchRef = useRef<HTMLInputElement>(null)
+
   const [cars, setCars] = useState<Car[]>(initialCars)
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
-  const [view, setView] = useState<ViewMode>('table')
+  const [filters, setFilters] = useState<FilterState>({
+    search: searchParams.get('q') ?? '',
+    piClass: searchParams.get('class') ?? '',
+    division: searchParams.get('div') ?? '',
+    make: searchParams.get('make') ?? '',
+    drivetrain: searchParams.get('drive') ?? '',
+    country: searchParams.get('country') ?? '',
+    source: searchParams.get('src') ?? '',
+    owned: 'all',
+  })
+  const [view, setView] = useState<ViewMode>(
+    (searchParams.get('view') as ViewMode) ?? 'table'
+  )
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
-  const [filterMode, setFilterMode] = useState<FilterMode>('tags')
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(initialTagFilter ?? []))
-  const [selectedRace, setSelectedRace] = useState<string | null>(null)
-  const [displayedRaceId, setDisplayedRaceId] = useState<string | null>(null)
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
+  const [filterMode, setFilterMode] = useState<FilterMode>(
+    (searchParams.get('mode') as FilterMode) ?? 'tags'
+  )
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(
+    () => new Set((searchParams.get('tags')?.split(',') ?? []).filter((t) => ALL_TAGS.has(t)))
+  )
+  const [selectedRace, setSelectedRace] = useState<string | null>(
+    searchParams.get('race') ?? null
+  )
+  const [displayedRaceId, setDisplayedRaceId] = useState<string | null>(
+    searchParams.get('race') ?? null
+  )
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(
+    searchParams.get('group') ?? null
+  )
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
   const [expandedCarId, setExpandedCarId] = useState<number | null>(null)
 
   useEffect(() => { if (selectedRace) setDisplayedRaceId(selectedRace) }, [selectedRace])
+
+  // Press / to focus search (skips when cursor is already in a form field)
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      if (
+        e.key === '/' &&
+        !(e.target instanceof HTMLInputElement) &&
+        !(e.target instanceof HTMLTextAreaElement) &&
+        !(e.target instanceof HTMLSelectElement)
+      ) {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
+  // Sync filter/view state to URL — debounced 300 ms
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (filters.search) params.set('q', filters.search)
+    if (filters.piClass) params.set('class', filters.piClass)
+    if (selectedGroupId) params.set('group', selectedGroupId)
+    if (filters.division) params.set('div', filters.division)
+    if (filters.make) params.set('make', filters.make)
+    if (filters.drivetrain) params.set('drive', filters.drivetrain)
+    if (filters.country) params.set('country', filters.country)
+    if (filters.source) params.set('src', filters.source)
+    if (selectedTags.size > 0) params.set('tags', [...selectedTags].sort().join(','))
+    if (selectedRace) params.set('race', selectedRace)
+    if (filterMode !== 'tags') params.set('mode', filterMode)
+    if (view !== 'table') params.set('view', view)
+    const qs = params.toString()
+    const timer = setTimeout(() => {
+      window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [
+    filters.search, filters.piClass, filters.division, filters.make,
+    filters.drivetrain, filters.country, filters.source,
+    selectedGroupId, selectedTags, selectedRace, filterMode, view,
+  ])
 
   const options = useMemo(() => buildOptions(cars), [cars])
   const activeRace = useMemo(() => RACE_TYPES.find((r) => r.id === selectedRace) ?? null, [selectedRace])
@@ -428,7 +496,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
       }
       return true
     })
-  }, [cars, filters, activeRace, selectedTags])
+  }, [cars, filters, activeRace, selectedGroupId, selectedTags])
 
   const sortedCars = useMemo(() => {
     const copy = [...filteredCars]
@@ -486,6 +554,25 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
     setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, ...partial } : c)))
   }, [])
 
+  const clearAllFilters = useCallback(() => {
+    setFilters(DEFAULT_FILTERS)
+    setSelectedGroupId(null)
+    setSelectedTags(new Set())
+    setSelectedRace(null)
+    setFilterMode('tags')
+  }, [])
+
+  const activeFilterCount = [
+    filters.piClass !== '',
+    filters.division !== '' || selectedGroupId !== null,
+    filters.make !== '',
+    filters.drivetrain !== '',
+    filters.country !== '',
+    filters.source !== '',
+    selectedTags.size > 0,
+    selectedRace !== null,
+  ].filter(Boolean).length
+
   const toggleExpanded = useCallback((carId: number) => {
     setExpandedCarId((prev) => (prev === carId ? null : carId))
   }, [])
@@ -533,15 +620,24 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
   return (
     <>
     <div className="flex flex-col gap-6">
-      {/* Search + view toggle */}
+      {/* Search + active filter badge + view toggle */}
       <div className="flex gap-3 items-center">
         <input
+          ref={searchRef}
           type="text"
-          placeholder="Search make, model, division..."
+          placeholder="Search make, model, division... (press / to focus)"
           value={filters.search}
           onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
           className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600"
         />
+        {activeFilterCount > 0 && (
+          <button
+            onClick={clearAllFilters}
+            className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-colors whitespace-nowrap"
+          >
+            {activeFilterCount} active · clear
+          </button>
+        )}
         <div className="flex bg-[#161b22] border border-[#30363d] rounded-lg overflow-hidden shrink-0">
           <button
             onClick={() => setView('grid')}
@@ -748,7 +844,15 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
         <div className="flex flex-col items-center justify-center py-24 text-gray-600">
           <div className="text-4xl mb-3">🔍</div>
           <div className="text-lg font-medium">No cars match</div>
-          <div className="text-sm">Try adjusting your filters</div>
+          <div className="text-sm mt-1">Try adjusting your filters</div>
+          {activeFilterCount > 0 && (
+            <button
+              onClick={clearAllFilters}
+              className="mt-4 px-4 py-2 rounded-lg text-sm border border-[#30363d] text-gray-500 hover:border-[#484f58] hover:text-gray-200 transition-colors"
+            >
+              Clear all filters
+            </button>
+          )}
         </div>
       ) : (
         <>

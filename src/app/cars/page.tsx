@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import GarageView from '@/components/GarageView'
 import type { Car } from '@/types/car'
@@ -23,7 +24,9 @@ export default async function CarsPage() {
         </p>
       </header>
 
-      <GarageView initialCars={cars} />
+      <Suspense fallback={null}>
+        <GarageView initialCars={cars} />
+      </Suspense>
     </main>
   )
 }

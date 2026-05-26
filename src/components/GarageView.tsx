@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Car, FilterState, SOURCE_CHIPS } from '@/types/car'
 import { CAR_TAGS } from '@/lib/tags'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
@@ -31,6 +32,8 @@ function buildOptions(cars: Car[]) {
   }
 }
 
+const ALL_TAGS = new Set<string>(CAR_TAGS)
+
 const DEFAULT_FILTERS: FilterState = {
   search: '',
   piClass: '',
@@ -43,16 +46,76 @@ const DEFAULT_FILTERS: FilterState = {
 }
 
 export default function GarageView({ initialCars }: Props) {
+  const searchParams = useSearchParams()
+  const searchRef = useRef<HTMLInputElement>(null)
+
   const [cars, setCars] = useState<Car[]>(initialCars)
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
-  const [view, setView] = useState<ViewMode>('grid')
+  const [filters, setFilters] = useState<FilterState>({
+    search: searchParams.get('q') ?? '',
+    piClass: searchParams.get('class') ?? '',
+    division: searchParams.get('div') ?? '',
+    make: searchParams.get('make') ?? '',
+    drivetrain: searchParams.get('drive') ?? '',
+    country: searchParams.get('country') ?? '',
+    source: searchParams.get('src') ?? '',
+    owned: (searchParams.get('owned') as FilterState['owned']) ?? 'all',
+  })
+  const [view, setView] = useState<ViewMode>(
+    (searchParams.get('view') as ViewMode) ?? 'grid'
+  )
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(
+    searchParams.get('group') ?? null
+  )
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(
+    () => new Set((searchParams.get('tags')?.split(',') ?? []).filter((t) => ALL_TAGS.has(t)))
+  )
 
   const options = useMemo(() => buildOptions(cars), [cars])
+
+  // Press / to focus search (skips when cursor is already in a form field)
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      if (
+        e.key === '/' &&
+        !(e.target instanceof HTMLInputElement) &&
+        !(e.target instanceof HTMLTextAreaElement) &&
+        !(e.target instanceof HTMLSelectElement)
+      ) {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
+  // Sync filter/view state to URL — debounced 300 ms so typing doesn't thrash history
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (filters.search) params.set('q', filters.search)
+    if (filters.piClass) params.set('class', filters.piClass)
+    if (selectedGroupId) params.set('group', selectedGroupId)
+    if (filters.division) params.set('div', filters.division)
+    if (filters.make) params.set('make', filters.make)
+    if (filters.drivetrain) params.set('drive', filters.drivetrain)
+    if (filters.country) params.set('country', filters.country)
+    if (filters.source) params.set('src', filters.source)
+    if (filters.owned !== 'all') params.set('owned', filters.owned)
+    if (selectedTags.size > 0) params.set('tags', [...selectedTags].sort().join(','))
+    if (view !== 'grid') params.set('view', view)
+    const qs = params.toString()
+    const timer = setTimeout(() => {
+      window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [
+    filters.search, filters.piClass, filters.division, filters.make,
+    filters.drivetrain, filters.country, filters.source, filters.owned,
+    selectedGroupId, selectedTags, view,
+  ])
 
   const filteredCars = useMemo(() => {
     return cars.filter((car) => {
@@ -66,8 +129,7 @@ export default function GarageView({ initialCars }: Props) {
           return false
       }
       if (filters.piClass && car.piClass !== filters.piClass) return false
-      // Group + division filter — group is OR across its divisions; selecting a
-      // sub-chip narrows to that specific division within the group
+      // Group + division filter
       if (selectedGroupId) {
         const groupDivisions = getDivisionsForGroup(selectedGroupId)
         if (filters.division) {
@@ -91,7 +153,7 @@ export default function GarageView({ initialCars }: Props) {
       }
       return true
     })
-  }, [cars, filters])
+  }, [cars, filters, selectedGroupId, selectedTags])
 
   const sortedCars = useMemo(() => {
     const copy = [...filteredCars]
@@ -114,6 +176,23 @@ export default function GarageView({ initialCars }: Props) {
   const handleDivisionChange = useCallback((division: string) => {
     setFilters((f) => ({ ...f, division }))
   }, [])
+
+  const clearAllFilters = useCallback(() => {
+    setFilters(DEFAULT_FILTERS)
+    setSelectedGroupId(null)
+    setSelectedTags(new Set())
+  }, [])
+
+  const activeFilterCount = [
+    filters.piClass !== '',
+    filters.division !== '' || selectedGroupId !== null,
+    filters.make !== '',
+    filters.drivetrain !== '',
+    filters.country !== '',
+    filters.source !== '',
+    filters.owned !== 'all',
+    selectedTags.size > 0,
+  ].filter(Boolean).length
 
   const toggleOwned = useCallback(async (id: number, owned: boolean) => {
     setPendingIds((s) => new Set(s).add(id))
@@ -170,15 +249,24 @@ export default function GarageView({ initialCars }: Props) {
         </div>
       </div>
 
-      {/* Search + view toggle row */}
+      {/* Search + active filter badge + view toggle */}
       <div className="flex gap-3 items-center">
         <input
+          ref={searchRef}
           type="text"
-          placeholder="Search make, model, division..."
+          placeholder="Search make, model, division... (press / to focus)"
           value={filters.search}
           onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
           className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600"
         />
+        {activeFilterCount > 0 && (
+          <button
+            onClick={clearAllFilters}
+            className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-colors whitespace-nowrap"
+          >
+            {activeFilterCount} active · clear
+          </button>
+        )}
         <div className="flex bg-[#161b22] border border-[#30363d] rounded-lg overflow-hidden shrink-0">
           <button
             onClick={() => setView('grid')}
@@ -263,7 +351,15 @@ export default function GarageView({ initialCars }: Props) {
         <div className="flex flex-col items-center justify-center py-24 text-gray-600">
           <div className="text-4xl mb-3">🚗</div>
           <div className="text-lg font-medium">No cars found</div>
-          <div className="text-sm">Try adjusting your filters</div>
+          <div className="text-sm mt-1">Try adjusting your filters</div>
+          {activeFilterCount > 0 && (
+            <button
+              onClick={clearAllFilters}
+              className="mt-4 px-4 py-2 rounded-lg text-sm border border-[#30363d] text-gray-500 hover:border-[#484f58] hover:text-gray-200 transition-colors"
+            >
+              Clear all filters
+            </button>
+          )}
         </div>
       ) : view === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">

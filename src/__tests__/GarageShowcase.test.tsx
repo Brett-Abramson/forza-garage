@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import GarageShowcase from '@/components/GarageShowcase'
 import { RACE_TYPES } from '@/lib/races'
 import type { Car } from '@/types/car'
+import { useSearchParams } from 'next/navigation'
 
 const mockCars: Car[] = [
   {
@@ -101,14 +102,16 @@ describe('GarageShowcase — tag filter chips', () => {
     render(<GarageShowcase initialCars={mockCars} />)
     expect(screen.queryByRole('button', { name: /clear/i })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'grip' }))
-    expect(screen.getByRole('button', { name: /clear/i })).toBeInTheDocument()
+    // Both the tag-chip "✕ clear" and the active filter badge should appear
+    expect(screen.getByRole('button', { name: /✕ clear/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /active · clear/i })).toBeInTheDocument()
   })
 
   it('clear pill removes all tag filters and shows all cars', async () => {
     const user = userEvent.setup()
     render(<GarageShowcase initialCars={mockCars} />)
     await user.click(screen.getByRole('button', { name: 'grip' }))
-    await user.click(screen.getByRole('button', { name: /clear/i }))
+    await user.click(screen.getByRole('button', { name: /✕ clear/i }))
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.getByText('Silvia')).toBeInTheDocument()
     expect(screen.getByText('Jimmy')).toBeInTheDocument()
@@ -388,36 +391,40 @@ describe('GarageShowcase — expanded row tuning content', () => {
   })
 })
 
-// ─── initialTagFilter ─────────────────────────────────────────────────────────
+// ─── URL param tag init ────────────────────────────────────────────────────────
 
-describe('GarageShowcase — initialTagFilter', () => {
-  it('pre-activates the specified tag chips on mount', () => {
-    render(<GarageShowcase initialCars={mockCars} initialTagFilter={['grip']} />)
+describe('GarageShowcase — URL param tag init', () => {
+  it('pre-activates tag chips from ?tags= URL param', () => {
+    vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=grip') as ReturnType<typeof useSearchParams>)
+    render(<GarageShowcase initialCars={mockCars} />)
     const gripChip = screen.getByRole('button', { name: 'grip' })
     expect(gripChip.className).toContain('text-cyan-400')
   })
 
-  it('pre-filters the car list based on initialTagFilter', () => {
-    render(<GarageShowcase initialCars={mockCars} initialTagFilter={['grip']} />)
+  it('pre-filters the car list from ?tags= URL param', () => {
+    vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=grip') as ReturnType<typeof useSearchParams>)
+    render(<GarageShowcase initialCars={mockCars} />)
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.queryByText('Silvia')).not.toBeInTheDocument()
     expect(screen.queryByText('Jimmy')).not.toBeInTheDocument()
   })
 
-  it('applies AND logic when multiple tags are passed via initialTagFilter', () => {
-    render(<GarageShowcase initialCars={mockCars} initialTagFilter={['asphalt', 'grip']} />)
+  it('applies AND logic for comma-separated URL param tags', () => {
+    vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=asphalt%2Cgrip') as ReturnType<typeof useSearchParams>)
+    render(<GarageShowcase initialCars={mockCars} />)
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.queryByText('Silvia')).not.toBeInTheDocument()
   })
 
-  it('shows all cars when initialTagFilter is empty', () => {
-    render(<GarageShowcase initialCars={mockCars} initialTagFilter={[]} />)
+  it('shows all cars when no tag URL params', () => {
+    render(<GarageShowcase initialCars={mockCars} />)
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.getByText('Silvia')).toBeInTheDocument()
     expect(screen.getByText('Jimmy')).toBeInTheDocument()
   })
 
-  it('shows all cars when initialTagFilter is omitted', () => {
+  it('ignores unknown tags in URL params', () => {
+    vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=notarealtag') as ReturnType<typeof useSearchParams>)
     render(<GarageShowcase initialCars={mockCars} />)
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.getByText('Silvia')).toBeInTheDocument()
