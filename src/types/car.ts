@@ -66,13 +66,13 @@ export const SOURCE_CHIPS = [
 export const PI_CLASS_ORDER: PiClass[] = ['D', 'C', 'B', 'A', 'S1', 'S2', 'R']
 
 export const PI_CLASS_COLORS: Record<string, string> = {
-  D: 'bg-gray-500 text-white',
-  C: 'bg-green-600 text-white',
-  B: 'bg-blue-600 text-white',
-  A: 'bg-purple-600 text-white',
-  S1: 'bg-orange-500 text-white',
-  S2: 'bg-red-600 text-white',
-  R: 'bg-yellow-400 text-black',
+  D:  'bg-sky-400 text-black',
+  C:  'bg-yellow-400 text-black',
+  B:  'bg-orange-500 text-white',
+  A:  'bg-red-600 text-white',
+  S1: 'bg-purple-600 text-white',
+  S2: 'bg-blue-600 text-white',
+  R:  'bg-cyan-400 text-black',   // R class — confirm colour if wrong
 }
 
 // Color the source badge by how hard the car is to obtain
