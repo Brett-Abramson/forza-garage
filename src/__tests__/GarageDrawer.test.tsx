@@ -307,9 +307,9 @@ describe('GarageDrawer — notes', () => {
 // ─── Stat entry ───────────────────────────────────────────────────────────────
 
 describe('GarageDrawer — stat entry', () => {
-  it('renders the Stats section heading', () => {
+  it('renders the stat entry toggle button', () => {
     renderDrawer()
-    expect(screen.getByText('Stats')).toBeInTheDocument()
+    expect(screen.getByText(/enter stats manually/i)).toBeInTheDocument()
   })
 
   it('renders performance sub-heading', () => {
@@ -393,10 +393,9 @@ describe('GarageDrawer — non-owned car', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   })
 
-  it('still renders the Stats entry section for a non-owned car', () => {
+  it('still renders the stat entry toggle for a non-owned car', () => {
     renderDrawer(unownedCar)
-    expect(screen.getByText('Stats')).toBeInTheDocument()
-    expect(screen.getByRole('spinbutton', { name: 'Speed' })).toBeInTheDocument()
+    expect(screen.getByText(/enter stats manually/i)).toBeInTheDocument()
   })
 
   it('still renders car info for a non-owned car', () => {
