@@ -384,6 +384,7 @@ function RowStatInput({
       <div className="text-[10px] text-gray-600 mb-0.5">{label}</div>
       <input
         type="number"
+        aria-label={label}
         value={value}
         step={step ?? 1}
         min={min}

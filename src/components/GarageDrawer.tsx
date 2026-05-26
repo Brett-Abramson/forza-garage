@@ -583,6 +583,7 @@ function StatInput({ label, value, type, min, max, step, onChange, onBlur }: Sta
       <div className="text-[10px] text-gray-600 mb-1">{label}</div>
       <input
         type="number"
+        aria-label={label}
         value={value}
         min={min}
         max={max}
