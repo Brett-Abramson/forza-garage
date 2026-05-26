@@ -1,25 +1,46 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Static tuning guidance content keyed by race type + division.
 // Based on FH6 community meta as of May 2026.
+// Sources: fh6guide.com, gamingpromax.com, games.gg, keengamer.com, ggwtb.com
 // Update this file as the meta shifts with patches.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface TuningGuide {
-  raceTypeId: string   // matches RaceType.id in races.ts
-  division:   string   // matches Car.division
-  philosophy: string   // what this car+race combo fundamentally demands
-  spectrum:   string   // honest note about variation within the division
-  priorities: string[] // ordered — most impactful first
-  watchOut:   string   // the single most common mistake for this combo
+  raceTypeId:  string    // matches RaceType.id in races.ts
+  division:    string    // matches Car.division
+  philosophy:  string    // what this car+race combo fundamentally demands
+  spectrum:    string    // honest note about variation within the division
+  priorities:  string[]  // ordered — most impactful first
+  watchOut:    string    // the single most common mistake for this combo
+  parameters?: TuningParameters  // reference starting values where known
+}
+
+export interface TuningParameters {
+  tirePressurePSI?:    string   // e.g. "32–34 PSI warm"
+  camberFront?:        string   // e.g. "-1.5°"
+  camberRear?:         string   // e.g. "-1.0°"
+  caster?:             string
+  antiRollBars?:       string   // descriptive e.g. "Stiff front, medium rear"
+  springs?:            string   // descriptive e.g. "Medium-stiff"
+  rideHeight?:         string
+  diffAccel?:          string   // percentage e.g. "60%"
+  diffDecel?:          string
+  brakeBalance?:       string   // e.g. "52% front"
+  aero?:               string
+  damping?:            string
+  note?:               string   // caveat on the numbers
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FH6 META NOTES (May 2026)
 // - Chassis first, power last. FH6 punishes power builds that skip grip.
 // - Tire width now matters — 1-2 notches up front is often worth the PI.
-// - Brakes are actually valuable in FH6. At least one tier above stock.
+// - Brakes are genuinely valuable in FH6. At least one tier above stock.
+// - Tire pressure telemetry matters — 2 PSI change transforms handling.
 // - Weight reduction should be maxed before adding power.
 // - AWD has an inherent understeer bias — compensate with diff and ARB.
+// - Bump < Rebound rule: on mountain/uneven roads set bump at 60-70% of rebound.
+// - FH6 Japan rains frequently — AWD has an advantage over FH5 Mexico meta.
 // - Class cap: A class tops at 700 PI, S1 starts at 701.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -31,7 +52,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     raceTypeId: 'road',
     division:   'Hot Hatch',
     philosophy:
-      "Hot hatches punch above their weight on road circuits because of low mass and nimble handling. The goal is maximizing that natural advantage — not chasing power that the chassis can't use cleanly.",
+      "Hot hatches punch above their weight on road circuits because of low mass and nimble handling. The goal is maximizing that natural advantage — not chasing power that the chassis can't use cleanly. Most road pace comes from confidence under braking and clean corner exits, not top speed.",
     spectrum:
       "This division ranges from featherweight front-drivers to the heavier all-wheel-drive hot hatches. FWD cars need to manage understeer through fast corners. AWD cars have more traction but need diff tuning to avoid pushing wide. Know which end your car sits on.",
     priorities: [
@@ -43,13 +64,24 @@ export const TUNING_GUIDES: TuningGuide[] = [
     ],
     watchOut:
       "Adding power before upgrading grip. A hot hatch with 50 extra horsepower and stock tires is slower than one with race tires and stock power.",
+    parameters: {
+      tirePressurePSI: "32–34 PSI warm",
+      camberFront:     "-1.5°",
+      camberRear:      "-1.0°",
+      caster:          "5.5°–6.0°",
+      antiRollBars:    "Stiff front, medium rear",
+      diffAccel:       "60%",
+      diffDecel:       "30%",
+      brakeBalance:    "52% front",
+      note:            "Starting values — adjust based on your specific car's behavior.",
+    },
   },
 
   {
     raceTypeId: 'road',
     division:   'Super Hot Hatch',
     philosophy:
-      "Higher PI and more power than a standard hot hatch but the philosophy is the same — the chassis is the weapon. At this PI level aero starts to matter and is worth investing in for faster road layouts.",
+      "Higher PI and more power than a standard hot hatch but the philosophy is the same — the chassis is the weapon. At this PI level aero starts to matter and is worth investing in for faster road layouts. Fix braking confidence before chasing any other metric.",
     spectrum:
       "At the top end of this division you're approaching proper sports car territory in terms of power. Lighter cars in this division tune like hot hatches. Heavier, more powerful ones need brake upgrades earlier and more careful diff tuning.",
     priorities: [
@@ -61,24 +93,45 @@ export const TUNING_GUIDES: TuningGuide[] = [
     ],
     watchOut:
       "Overtuning aero for tight sections. Max downforce hurts straight-line speed and isn't needed unless the layout has sustained high-speed corners.",
+    parameters: {
+      tirePressurePSI: "32–34 PSI warm",
+      camberFront:     "-1.5°",
+      camberRear:      "-1.0°",
+      antiRollBars:    "Stiff front, medium rear",
+      diffAccel:       "60%",
+      diffDecel:       "30%",
+      brakeBalance:    "52% front",
+      note:            "Starting values only.",
+    },
   },
 
   {
     raceTypeId: 'road',
     division:   'Modern Sports Cars',
     philosophy:
-      "Modern sports cars are the most varied division for road racing. The common thread is that they're built for this discipline — balanced, grippy, and capable of sustained pace. Work with the car's natural balance rather than fighting it.",
+      "Modern sports cars are the most varied division for road racing. The common thread is that they're built for this discipline — balanced, grippy, and capable of sustained pace. Work with the car's natural balance rather than fighting it. Most players lose more time to hesitation and braking mistakes than to raw speed.",
     spectrum:
       "This division contains lightweight naturally-aspirated coupes (GR86, BRZ), heavy turbocharged machines (Supra, Z4), and AWD all-rounders (Audi TT RS). A lightweight RWD in this division tunes very differently from a heavy AWD. If your car feels planted and predictable, tune conservatively. If it feels nervous or understeers, start with ARB before anything else.",
     priorities: [
       "Identify your car's weak point first — understeer or oversteer",
       "Race suspension — standard for road racing",
       "Tire compound — race or semi-slick depending on PI budget",
-      "Differential tuning — accel 25-40%, decel 15-25% as a starting point for RWD",
+      "Differential tuning — accel 60%, decel 30% as a starting point for RWD",
       "Aero if PI allows — even small amounts of rear downforce stabilize corner exit",
     ],
     watchOut:
-      "Swapping to AWD without checking PI cost. On many cars in this division the AWD conversion eats PI that's better spent on tires and brakes.",
+      "Swapping to AWD without checking PI cost. On many cars in this division the AWD conversion eats PI that's better spent on tires and brakes. RWD is faster on dry tarmac in skilled hands — lighter weight and better rotation equals faster lap times.",
+    parameters: {
+      tirePressurePSI: "32–34 PSI warm (RWD: 32.0F / 30.0R for more rear contact)",
+      camberFront:     "-1.5° to -3.0° (more for RWD)",
+      camberRear:      "-1.0° to -1.5°",
+      caster:          "5.5°–6.0°",
+      antiRollBars:    "RWD: stiffer rear. AWD: stiffer front",
+      diffAccel:       "RWD: 85% / AWD: 75%",
+      diffDecel:       "RWD: 15% / AWD: 20%",
+      brakeBalance:    "RWD: 55% front / AWD: 52% front",
+      note:            "RWD and AWD tune meaningfully differently in this division.",
+    },
   },
 
   {
@@ -97,6 +150,14 @@ export const TUNING_GUIDES: TuningGuide[] = [
     ],
     watchOut:
       "Ignoring brake balance. GT cars that lock up under heavy braking lose more time than almost any other tuning mistake.",
+    parameters: {
+      tirePressurePSI: "32–34 PSI warm",
+      antiRollBars:    "Stiff front, medium rear",
+      diffAccel:       "60%",
+      diffDecel:       "30%",
+      brakeBalance:    "52% front",
+      note:            "Starting values — heavier GTs may need stiffer springs.",
+    },
   },
 
   {
@@ -121,7 +182,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     raceTypeId: 'road',
     division:   'Modern Supercars',
     philosophy:
-      "Modern supercars have the power, grip, and aero to be competitive everywhere on a road circuit — the tune is about balance and stability, not chasing any single metric. These cars can win on feel if you get the basics right.",
+      "Modern supercars have the power, grip, and aero to be competitive everywhere on a road circuit — the tune is about balance and stability, not chasing any single metric. These cars can win on feel if you get the basics right. Over-tuning power is the most common mistake.",
     spectrum:
       "Some modern supercars are mid-engine RWD monsters that need careful rear management. Others are front-engine AWD machines that understeer until properly tuned. The in-game handling stat is your best signal for which camp your car sits in before you drive it.",
     priorities: [
@@ -133,6 +194,18 @@ export const TUNING_GUIDES: TuningGuide[] = [
     ],
     watchOut:
       "Over-tuning power. At this PI level you almost certainly have enough power. Adding more without grip upgrades makes the car harder to drive and slower in corners.",
+    parameters: {
+      tirePressurePSI: "32–34 PSI warm",
+      camberFront:     "-1.5°",
+      camberRear:      "-1.0°",
+      caster:          "5.5°–6.0°",
+      antiRollBars:    "Stiff front, medium rear",
+      diffAccel:       "60%",
+      diffDecel:       "30%",
+      brakeBalance:    "52% front",
+      aero:            "Balanced front and rear — avoid max rear without matching front",
+      note:            "Starting values — adjust aero balance first for this class.",
+    },
   },
 
   {
@@ -198,7 +271,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
       "Some extreme track toys are essentially race cars with number plates. Others are road-legal sports cars with race upgrades. The former need very little tuning. The latter benefit from full chassis treatment.",
     priorities: [
       "Aero — most track toys have adjustable downforce; find the balance point",
-      "Tire pressure — critical on slick or semi-slick tires",
+      "Tire pressure — critical on slick or semi-slick tires, telemetry is your friend",
       "Differential — these cars reward precise diff tuning more than most",
       "Leave suspension close to default — it was engineered for this",
       "Brake bias — often needs small forward adjustment in FH6",
@@ -222,7 +295,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
       "Weight reduction over power adds",
     ],
     watchOut:
-      "Ignoring tire pressure. On high-grip cars with sticky tires, pressure has more effect than many other settings.",
+      "Ignoring tire pressure. On high-grip cars with sticky tires, pressure has more effect than many other settings. Use telemetry and target 32–34 PSI warm.",
   },
 
   {
@@ -249,7 +322,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     raceTypeId: 'street',
     division:   'Hot Hatch',
     philosophy:
-      "Street racing is where hot hatches genuinely belong. Tight layouts, short straights, quick direction changes — these cars were built for exactly this. The tune should maximize that natural advantage.",
+      "Street racing is where hot hatches genuinely belong. Tight layouts, short straights, quick direction changes — these cars were built for exactly this. The tune should maximize that natural advantage. A stable beginner tune wins more than an aggressive nervous one.",
     spectrum:
       "FWD hot hatches need front grip and controlled understeer for street racing. AWD ones need diff tuning to rotate without pushing wide through tight corners. A stock FWD hot hatch on race tires will often beat a poorly tuned AWD one.",
     priorities: [
@@ -335,6 +408,16 @@ export const TUNING_GUIDES: TuningGuide[] = [
     ],
     watchOut:
       "Tuning for grip like it's a road car. Dirt racing rewards controlled slides. A car that fights the slide is slower than one that works with it.",
+    parameters: {
+      tirePressurePSI: "26–28 PSI",
+      camberFront:     "-1.0°",
+      camberRear:      "-0.5°",
+      antiRollBars:    "Soft front and rear",
+      diffAccel:       "50%",
+      diffDecel:       "20%",
+      rideHeight:      "Raised — near maximum",
+      note:            "Loose surfaces need flat contact patches, not aggressive camber.",
+    },
   },
 
   {
@@ -409,6 +492,18 @@ export const TUNING_GUIDES: TuningGuide[] = [
     ],
     watchOut:
       "Lowering ride height for any reason. Cross country terrain will destroy a low-clearance car. Prioritize clearance over everything including lap time.",
+    parameters: {
+      tirePressurePSI: "26–28 PSI",
+      camberFront:     "-1.0°",
+      camberRear:      "-0.5°",
+      antiRollBars:    "Soft front and rear — lets wheels move independently over bumps",
+      springs:         "Soft — absorbs jumps without bouncing offline",
+      rideHeight:      "Maximum or near-maximum",
+      diffAccel:       "50%",
+      diffDecel:       "20%",
+      damping:         "Soft rebound, medium bump — fast rebound keeps tires on ground",
+      note:            "Landing recovery is a major pace factor — don't sacrifice it for any other setting.",
+    },
   },
 
   {
@@ -453,18 +548,30 @@ export const TUNING_GUIDES: TuningGuide[] = [
     raceTypeId: 'drift',
     division:   'Drift Cars',
     philosophy:
-      "These cars were built for one thing. The tune isn't about making them drift — they already do that. It's about making the drift controllable, sustained, and scored well. Angle, speed, and smoothness win points.",
+      "These cars were built for one thing. The tune isn't about making them drift — they already do that. It's about making the drift controllable, sustained, and scored well. Angle, speed, and smoothness win points. Beginners should not chase huge angle or maximum power first — predictability scores more than drama.",
     spectrum:
-      "Purpose-built drift cars in FH6 range from classic JDM (S13, S14, AE86) to modern big-power machines (R35, Supra builds). The classics are more forgiving and easier to control. The high-power builds score more when controlled but punish mistakes harder.",
+      "Purpose-built drift cars in FH6 range from classic JDM (S13, S14, AE86) to modern big-power machines (R35, Supra builds). The classics are more forgiving and easier to control. The high-power builds score more when controlled but punish mistakes harder. Longer wheelbase means smoother drifts. Shorter wheelbase means faster transitions.",
     priorities: [
-      "Drift differential — high accel, low decel",
+      "Differential — 95% accel, 0% decel (locked on power, open on lift-off for transitions)",
       "Rear tire compound softer than front — helps maintain slide",
-      "Soft rear springs — keeps rear planted during sustained slides",
-      "Rear ARB softer than front — initiates drift more easily",
-      "Brake bias slightly rear — helps initiate with trail braking",
+      "Soft rear springs — weight transfer to rear helps maintain drift angle",
+      "Rear ARB softer than front — front grips, rear slides",
+      "Disable TCS and STM — driver aids kill drift angle instantly",
     ],
     watchOut:
       "Too much power without control. A drift that snaps and recovers scores poorly. A sustained controlled slide at moderate angle scores much better than a violent snap at high angle.",
+    parameters: {
+      tirePressurePSI: "28–30 PSI rear (lower = more contact patch for smoother drift)",
+      camberFront:     "-5.0°",
+      camberRear:      "-1.0°",
+      caster:          "7.0° (maximum — best self-steer for transitions)",
+      antiRollBars:    "Stiff front, soft rear",
+      springs:         "Medium front, soft rear",
+      diffAccel:       "95%",
+      diffDecel:       "0%",
+      aero:            "Minimal or removed — downforce fights drift angle",
+      note:            "RWD mandatory for competitive drift. AWD can drift but never feels natural.",
+    },
   },
 
   {
@@ -476,7 +583,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
       "The GR86, BRZ, and Z are natural drift platforms. Heavier RWD sports cars (Supra, GT86 variants) need more power to initiate but hold angle better once sliding. Keep stock drivetrain — AWD conversion kills the drift potential.",
     priorities: [
       "Keep RWD — no AWD conversion",
-      "Drift or race differential — high accel percentage",
+      "Drift or race differential — high accel percentage (95%), near zero decel",
       "Rear ARB softer, front ARB stiffer",
       "Rear spring rate softer than front",
       "Power upgrade before aero — drift doesn't need downforce",
@@ -493,7 +600,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     spectrum:
       "Big-block classics (Chevelle, Charger, Mustang Mach 1) have massive torque that initiates drifts violently. Small-block classics are more controllable. Tune the big blocks with lower diff accel to smooth out the power delivery.",
     priorities: [
-      "Differential accel — lower than you'd think to manage torque",
+      "Differential accel — lower than you'd think to manage torque (start around 65%)",
       "Rear ARB very soft — classic muscle chassis flex is part of the character",
       "Brake bias slightly rear for initiation",
       "Softer rear springs",
@@ -504,6 +611,13 @@ export const TUNING_GUIDES: TuningGuide[] = [
   },
 
   // ─── TOUGE RACING ─────────────────────────────────────────────────────────
+  // Key FH6 touge principles:
+  // - Bump < Rebound rule: set bump at 60-70% of rebound value (rebound must be stiffer)
+  // - Springs 20-25% softer than road racing baseline
+  // - AWD is the rain meta — FH6 Japan rains frequently, RWD loses rear grip on wet downhill
+  // - Short gearing — mountain passes have no long straights
+  // - Brake balance 50-52% front for downhill trail braking
+  // ─────────────────────────────────────────────────────────────────────────
 
   {
     raceTypeId: 'touge',
@@ -517,10 +631,24 @@ export const TUNING_GUIDES: TuningGuide[] = [
       "Brake bias forward — hairpin braking is where touge is won",
       "Sport or race tires — compound matters hugely on mountain passes",
       "Short final drive gearing — straights are too short to need top speed",
-      "Softest appropriate spring rate — mechanical grip over everything",
+      "Springs 20-25% softer than road baseline — mountain roads are uneven",
     ],
     watchOut:
       "Overtuning for power. The AE86 at 200hp on race tires beats a 400hp swap on street tires every time on touge. The roads are too narrow for power to matter as much as control.",
+    parameters: {
+      tirePressurePSI: "30–32 PSI warm (lower than road for cold mountain surfaces)",
+      camberFront:     "-2.0° (more aggressive than road for tight hairpin turn-in)",
+      camberRear:      "-1.5°",
+      caster:          "5.5°–6.5° (strong self-centering helps on downhill sections)",
+      antiRollBars:    "Soft front, medium rear",
+      springs:         "20-25% softer than road racing baseline",
+      rideHeight:      "Medium — not slammed (drainage dips drop inside wheel)",
+      diffAccel:       "70% (higher than road — uphill exits need more drive grip)",
+      diffDecel:       "25% (lower than road — lets car rotate freely on downhill entry)",
+      brakeBalance:    "50–52% front (neutral for downhill trail braking)",
+      damping:         "Bump at 60-70% of rebound value — the Bump < Rebound rule",
+      note:            "A stiff road tune bounces off-line on every drainage dip and cracked surface. Touge needs its own baseline.",
+    },
   },
 
   {
@@ -529,16 +657,28 @@ export const TUNING_GUIDES: TuningGuide[] = [
     philosophy:
       "Modern sports cars on touge routes have more power than the lightweight classics but still reward precision over aggression. The goal is making a faster car feel as confidence-inspiring as a lighter one — that means brakes, tires, and suspension before anything else.",
     spectrum:
-      "The GR86, BRZ, and Z are natural touge picks — RWD, balanced, and lightweight enough to rotate cleanly. Heavier turbocharged modern sports cars (Supra, Z4) need more careful brake tuning and carry more risk on tight hairpins. Keep RWD — AWD conversions add understeer that hurts on narrow mountain roads.",
+      "The GR86, BRZ, and Z are natural touge picks — RWD, balanced, and lightweight enough to rotate cleanly. Heavier turbocharged modern sports cars (Supra, Z4) need more careful brake tuning and carry more risk on tight hairpins. Keep RWD — AWD conversions add understeer that hurts on narrow mountain roads. However, in wet conditions AWD cars (R34 GT-R, Celica GT-Four) are significantly safer.",
     priorities: [
       "Race brakes — non-negotiable on downhill touge sections",
-      "Brake bias forward 2-3% from default",
+      "Brake bias 50-52% front — neutral for downhill trail braking",
       "Race tires — grip is the limiting factor not power",
       "Short gearing — tight final drive ratio",
-      "Differential decel tuning — stability under braking into hairpins",
+      "Springs softer than road baseline — apply Bump < Rebound damping rule",
     ],
     watchOut:
-      "AWD conversion for touge. It adds understeer through the tightest hairpins and costs PI that's better spent on tires and brakes. RWD and a clean tune wins touge.",
+      "Using your road racing tune without changes. A stiff circuit setup bounces off-line on mountain drainage dips and cracked asphalt. Touge needs softer springs and stiffer rebound than road racing.",
+    parameters: {
+      tirePressurePSI: "30–32 PSI warm",
+      camberFront:     "-2.0°",
+      camberRear:      "-1.5°",
+      caster:          "5.5°–6.5°",
+      antiRollBars:    "Soft front, medium rear",
+      diffAccel:       "70%",
+      diffDecel:       "25%",
+      brakeBalance:    "50–52% front",
+      damping:         "Rebound 1.4–1.7× stiffer than bump (if bump is 4.0, rebound should be 6.0–7.0)",
+      note:            "AWD recommended if rain is expected. RWD is faster in dry conditions.",
+    },
   },
 
   {
@@ -547,16 +687,26 @@ export const TUNING_GUIDES: TuningGuide[] = [
     philosophy:
       "Retro sports cars from the 80s and 90s sit in a sweet spot for touge — more power and technology than classics but still light and communicative. The RX-7, Silvia, and MR2 are all competitive here. Tune for the hairpins and the downhill sections will take care of themselves.",
     spectrum:
-      "Mid-engine retro sports cars (MR2, AW11) have naturally planted rear ends but can snap if pushed past the limit on downhill hairpins. FR cars (Silvia, RX-7) are more forgiving and easier to rotate. Both tune well for touge with the right approach.",
+      "Mid-engine retro sports cars (MR2, AW11) have naturally planted rear ends but can snap if pushed past the limit on downhill hairpins. FR cars (Silvia, RX-7) are more forgiving and easier to rotate. Both tune well for touge. The Silvia S13 in particular has the long wheelbase stability that helps on predictable downhill control.",
     priorities: [
       "Race brakes — critical for consistent downhill hairpin braking",
       "Tire compound upgrade first — bigger than any other gain",
-      "Brake balance forward for stability",
-      "Conservative spring rates — mountain roads are uneven",
-      "Short gearing suited to the route's longest straight",
+      "Brake balance 50-52% front for downhill stability",
+      "Springs 20-25% softer than road baseline",
+      "Apply Bump < Rebound damping rule",
     ],
     watchOut:
       "Big engine swaps on mid-engine cars. The MR2 and AW11 are balanced specifically around their stock power range. A 500hp swap makes them difficult to control at the hairpin limits.",
+    parameters: {
+      tirePressurePSI: "30–32 PSI warm",
+      camberFront:     "-2.0°",
+      camberRear:      "-1.5°",
+      diffAccel:       "70%",
+      diffDecel:       "25%",
+      brakeBalance:    "50–52% front",
+      damping:         "Rebound stiffer than bump — prevents packing down through consecutive corners",
+      note:            "Test on a full downhill run, not just flat corners. If steering response degrades mid-corner sequence, increase rebound.",
+    },
   },
 
   {
@@ -565,13 +715,13 @@ export const TUNING_GUIDES: TuningGuide[] = [
     philosophy:
       "Hot hatches are underrated for touge at lower PI classes. Their light weight and short wheelbase help them rotate through tight hairpins faster than larger cars. FWD models need trail braking technique to rotate but are very competitive at B class.",
     spectrum:
-      "FWD hot hatches (Polo GTI, Fiesta ST, 208 GTi) use trail braking to generate rotation where they'd otherwise understeer. AWD hot hatches (Golf R, Focus RS) are more consistent but may push wide through the tightest hairpins. Both work well tuned.",
+      "FWD hot hatches (Polo GTI, Fiesta ST, 208 GTi) use trail braking to generate rotation where they'd otherwise understeer. AWD hot hatches (Golf R, Focus RS) are more consistent and benefit from the rain meta — Japan's mountain roads are frequently wet. Both work well tuned.",
     priorities: [
       "Race tires — biggest single gain",
-      "Brake upgrade and forward bias",
+      "Brake upgrade and forward bias (50-52%)",
       "Rear ARB slightly softer — helps FWD cars rotate",
       "Short gearing",
-      "Weight reduction before power adds",
+      "Springs softer than road baseline — apply Bump < Rebound rule",
     ],
     watchOut:
       "Expecting grip-car behavior from FWD builds on downhill hairpins. You need to trail brake to rotate a FWD hot hatch through a tight touge hairpin. If you're not using that technique the car will understeer every time.",
@@ -585,11 +735,11 @@ export const TUNING_GUIDES: TuningGuide[] = [
     spectrum:
       "Purpose-built drift cars dialed back slightly — less diff accel, more decel, slightly stiffer rear ARB — make excellent touge machines for experienced drivers. The rotation is there naturally, the task is controlling it on narrow mountain roads where the consequences of getting it wrong are bigger.",
     priorities: [
-      "Dial back differential accel from drift setup — less aggressive on tight roads",
-      "Increase differential decel for stability under braking",
+      "Dial back differential accel from drift setup — start around 65% not 95%",
+      "Increase differential decel to 25-30% for stability under braking",
       "Race brakes — more important here than in drift zones",
       "Slightly stiffer rear ARB than your drift tune",
-      "Keep tire compound the same as drift setup",
+      "Apply Bump < Rebound damping rule — mountain roads punish packed suspension",
     ],
     watchOut:
       "Using a pure drift tune on touge. The aggressive rotation that scores in drift zones will put you off the road on downhill hairpins. Tune it back toward balance while keeping the natural rotation.",
@@ -601,18 +751,29 @@ export const TUNING_GUIDES: TuningGuide[] = [
     raceTypeId: 'drag',
     division:   'Modern Muscle',
     philosophy:
-      "Modern muscle cars are natural drag builds — high torque, rear or all-wheel drive, and chassis tuned for straight-line stability. The tune is simple: maximize launch, gear for the powerband, remove anything that adds drag without adding power.",
+      "Modern muscle cars are natural drag builds — high torque, rear or all-wheel drive, and chassis tuned for straight-line stability. The tune is simple: maximize launch, gear for the powerband, remove anything that adds drag without adding power. Most drag builds lose more time in the first seconds and between gears than at maximum speed.",
     spectrum:
-      "The Camaro ZL1, Mustang GT500, Corvette ZR1, and Dodge Hellcat variants are the top drag performers in this division. AWD muscle (Cadillac CT5-V Blackwing) has the traction advantage. RWD muscle has more top-end but needs better launch control. Know which you're working with.",
+      "The Camaro ZL1, Mustang GT500, Corvette ZR1, and Dodge Hellcat variants are the top drag performers in this division. AWD muscle (Cadillac CT5-V Blackwing) has the traction advantage off the line. RWD muscle has more top-end but needs more skill to launch cleanly.",
     priorities: [
-      "Drag tires — the most important upgrade for launch traction",
-      "AWD conversion if RWD stock — traction wins drag races",
+      "Drag slicks rear — mandatory for launch traction",
+      "AWD conversion if RWD stock — AWD consistently beats RWD off the line",
       "Final drive tuning — gear the car to hit the finish line before running out of revs",
       "Weight reduction — every kg costs time",
-      "Remove aero — downforce adds drag on a straight",
+      "Remove all aero — downforce adds drag on a straight",
     ],
     watchOut:
       "Poor final drive ratio. Most muscle cars have gearing that's too long or too short for their powerband at drag strip length. If you're pulling ahead then getting caught late, lengthen the final drive. If you're hitting the limiter before the finish, shorten it.",
+    parameters: {
+      tirePressurePSI: "18–22 PSI rear (maximum sidewall flex for launch bite)",
+      camberFront:     "0.0°",
+      camberRear:      "0.0° (maximum straight-line contact patch)",
+      antiRollBars:    "Softest everywhere — no cornering loads in drag",
+      springs:         "Softest rear, medium front — rear squats on launch for weight transfer",
+      diffAccel:       "95%",
+      diffDecel:       "0%",
+      aero:            "Remove all — downforce is drag",
+      note:            "Launch RPM too high causes wheelspin which loses more time than a slow launch. AWD meta for drag in FH6.",
+    },
   },
 
   {
@@ -630,7 +791,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
       "Weight reduction — classic muscle is heavy from the factory",
     ],
     watchOut:
-      "Wheelspin through the first two gears. Classic muscle lost more drag races to wheelspin than any other issue. If you're spinning, run drag tires before any other change.",
+      "Wheelspin through the first two gears. Classic muscle lost more drag races to wheelspin than any other issue. If you're spinning, run drag tires before any other change. Stock gearing is almost always too long for quarter-mile distances.",
   },
 
   {
@@ -655,9 +816,9 @@ export const TUNING_GUIDES: TuningGuide[] = [
     raceTypeId: 'drag',
     division:   'Hypercars',
     philosophy:
-      "Hypercars are the top tier of drag racing in FH6. At this PI level it's almost entirely about gearing, launch, and clean shifting. The car has enough power — the tune is about deploying it perfectly.",
+      "Hypercars are the top tier of drag racing in FH6. Electric and hybrid hypercars (Rimac Nevera) dominate because of instant torque from zero RPM. For combustion builds, gearing and launch control are the deciding factors.",
     spectrum:
-      "AWD hypercars (Bugatti Chiron, Rimac Nevera, Koenigsegg Gemera) launch more consistently. RWD hypercars (Koenigsegg Jesko) have higher top-end speed but riskier launches. The Jesko in particular is a top-speed machine rather than a 0-60 king — better on longer drag strips.",
+      "AWD hypercars (Bugatti Chiron, Rimac Nevera, Koenigsegg Gemera) launch more consistently. RWD hypercars (Koenigsegg Jesko) have higher top-end speed but riskier launches. The Jesko is a top-speed machine rather than a 0-60 king — better on longer drag strips.",
     priorities: [
       "Gearing tuned specifically for the drag strip length",
       "Maximum weight reduction — non-negotiable at this level",
@@ -696,7 +857,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
 
 export function getTuningGuide(
   raceTypeId: string,
-  division: string
+  division:   string
 ): TuningGuide | null {
   return (
     TUNING_GUIDES.find(
@@ -707,7 +868,7 @@ export function getTuningGuide(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Returns all guides written for a given race type — used on the races detail
-// drawer to surface division-specific advice in one place.
+// page to surface division-specific advice in one place.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function getGuidesByRaceType(raceTypeId: string): TuningGuide[] {
