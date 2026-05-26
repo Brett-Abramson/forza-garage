@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { Car, FilterState } from '@/types/car'
-import { SortKey, SortDir, compareRows, defaultSort, PI_CLASS_INDEX } from '@/lib/sort'
+import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
 import FilterBar from './FilterBar'

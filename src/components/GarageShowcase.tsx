@@ -17,6 +17,7 @@ import GarageDrawer from './GarageDrawer'
 import DivisionGroupFilter from './DivisionGroupFilter'
 import StatBars from './StatBars'
 import { getStatCallouts } from '@/lib/statCallouts'
+import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS } from '@/lib/statUtils'
 import Link from 'next/link'
 
 type ViewMode = 'grid' | 'table'
@@ -53,40 +54,6 @@ const DEFAULT_FILTERS: FilterState = {
 // ─── Inline expansion row for list view ──────────────────────────────────────
 
 type TagDetail = { tag: string; source: string }
-
-interface StatFields {
-  statSpeed: string
-  statHandling: string
-  statAcceleration: string
-  statLaunch: string
-  statBraking: string
-  statOffroad: string
-  powerHp: string
-  torqueFtLb: string
-  weightLb: string
-  frontWeight: string
-  displacementL: string
-  rarity: string
-}
-
-function carToStats(car: Car): StatFields {
-  return {
-    statSpeed:        car.statSpeed        != null ? String(car.statSpeed)        : '',
-    statHandling:     car.statHandling     != null ? String(car.statHandling)     : '',
-    statAcceleration: car.statAcceleration != null ? String(car.statAcceleration) : '',
-    statLaunch:       car.statLaunch       != null ? String(car.statLaunch)       : '',
-    statBraking:      car.statBraking      != null ? String(car.statBraking)      : '',
-    statOffroad:      car.statOffroad      != null ? String(car.statOffroad)      : '',
-    powerHp:          car.powerHp          != null ? String(car.powerHp)          : '',
-    torqueFtLb:       car.torqueFtLb       != null ? String(car.torqueFtLb)       : '',
-    weightLb:         car.weightLb         != null ? String(car.weightLb)         : '',
-    frontWeight:      car.frontWeight      != null ? String(car.frontWeight)      : '',
-    displacementL:    car.displacementL    != null ? String(car.displacementL)    : '',
-    rarity:           car.rarity           ?? '',
-  }
-}
-
-const RARITY_OPTIONS = ['Common', 'Rare', 'Legendary', 'Forza Edition']
 
 function ExpandedRow({
   car,
@@ -148,20 +115,7 @@ function ExpandedRow({
   async function saveStats() {
     if (!statsDirty) return
     setSavingStats(true)
-    const payload: Record<string, number | string | null> = {
-      statSpeed:        stats.statSpeed        !== '' ? parseFloat(stats.statSpeed)        : null,
-      statHandling:     stats.statHandling     !== '' ? parseFloat(stats.statHandling)     : null,
-      statAcceleration: stats.statAcceleration !== '' ? parseFloat(stats.statAcceleration) : null,
-      statLaunch:       stats.statLaunch       !== '' ? parseFloat(stats.statLaunch)       : null,
-      statBraking:      stats.statBraking      !== '' ? parseFloat(stats.statBraking)      : null,
-      statOffroad:      stats.statOffroad      !== '' ? parseFloat(stats.statOffroad)      : null,
-      powerHp:          stats.powerHp          !== '' ? parseInt(stats.powerHp)            : null,
-      torqueFtLb:       stats.torqueFtLb       !== '' ? parseInt(stats.torqueFtLb)         : null,
-      weightLb:         stats.weightLb         !== '' ? parseInt(stats.weightLb)           : null,
-      frontWeight:      stats.frontWeight      !== '' ? parseInt(stats.frontWeight)        : null,
-      displacementL:    stats.displacementL    !== '' ? parseFloat(stats.displacementL)    : null,
-      rarity:           stats.rarity           !== '' ? stats.rarity                       : null,
-    }
+    const payload = statsToPayload(stats)
     await fetch(`/api/cars/${car.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
