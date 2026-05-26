@@ -55,6 +55,7 @@ export default function FilterBar({ filters, options, onChange, totalCount, filt
     filters.make !== '' ||
     filters.drivetrain !== '' ||
     filters.country !== '' ||
+    filters.source !== '' ||
     (!hideOwned && filters.owned !== 'all')
 
   return (
@@ -125,7 +126,7 @@ export default function FilterBar({ filters, options, onChange, totalCount, filt
         {hasActiveFilters && (
           <button
             onClick={() =>
-              onChange({ search: filters.search, piClass: '', division: '', make: '', drivetrain: '', country: '', owned: 'all' })
+              onChange({ search: filters.search, piClass: '', division: '', make: '', drivetrain: '', country: '', source: '', owned: 'all' })
             }
             className="text-xs text-gray-500 hover:text-gray-300 underline pb-1.5 transition-colors"
           >

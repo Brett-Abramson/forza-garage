@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect, Fragment } from 'react'
-import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS } from '@/types/car'
+import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS, SOURCE_CHIPS } from '@/types/car'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
@@ -48,6 +48,7 @@ const DEFAULT_FILTERS: FilterState = {
   make: '',
   drivetrain: '',
   country: '',
+  source: '',
   owned: 'all',
 }
 
@@ -333,6 +334,18 @@ function RowStatInput({
   onChange: (v: string) => void
   onBlur: () => void
 }) {
+  function handleBlur() {
+    if (value !== '' && min != null && max != null) {
+      const isFloat = step != null && step < 1
+      const num = isFloat ? parseFloat(value) : parseInt(value)
+      if (!isNaN(num)) {
+        const clamped = Math.min(Math.max(num, min), max)
+        if (clamped !== num) onChange(String(clamped))
+      }
+    }
+    onBlur()
+  }
+
   return (
     <div className="min-w-0">
       <div className="text-[10px] text-gray-600 mb-0.5">{label}</div>
@@ -344,7 +357,7 @@ function RowStatInput({
         min={min}
         max={max}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
+        onBlur={handleBlur}
         placeholder="—"
         className="w-full bg-[#161b22] border border-[#30363d] rounded px-1.5 py-0.5 text-[10px] text-gray-300 focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
@@ -402,6 +415,7 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
       if (filters.make && car.make !== filters.make) return false
       if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false
       if (filters.country && car.country !== filters.country) return false
+      if (filters.source && !car.source.includes(filters.source)) return false
       // Race filter: OR — car matches any of the recommended tags
       if (activeRace) {
         const carTags = car.tags ?? []
@@ -588,6 +602,23 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
         hideOwned
         hideDivision
       />
+
+      {/* Source chips */}
+      <div className="flex flex-wrap gap-2">
+        {SOURCE_CHIPS.map(({ label, match }) => (
+          <button
+            key={match}
+            onClick={() => setFilters((f) => ({ ...f, source: f.source === match ? '' : match }))}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              filters.source === match
+                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
+                : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {/* Filter mode toggle + chip row */}
       <div>
@@ -783,6 +814,10 @@ export default function GarageShowcase({ initialCars, initialTagFilter }: Props)
       onClose={() => setDrawerCar(null)}
       onTagDetailsChange={handleTagDetailsChange}
       onStatsChange={handleStatsChange}
+      onToggleOwned={async (id, owned) => {
+        await handleToggle(id, owned)
+        if (!owned) setDrawerCar(null)
+      }}
     />
     </>
   )

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
-import { Car, FilterState } from '@/types/car'
+import { Car, FilterState, SOURCE_CHIPS } from '@/types/car'
+import { CAR_TAGS } from '@/lib/tags'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
@@ -37,6 +38,7 @@ const DEFAULT_FILTERS: FilterState = {
   make: '',
   drivetrain: '',
   country: '',
+  source: '',
   owned: 'all',
 }
 
@@ -48,6 +50,7 @@ export default function GarageView({ initialCars }: Props) {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
 
   const options = useMemo(() => buildOptions(cars), [cars])
 
@@ -78,8 +81,14 @@ export default function GarageView({ initialCars }: Props) {
       if (filters.make && car.make !== filters.make) return false
       if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false
       if (filters.country && car.country !== filters.country) return false
+      if (filters.source && !car.source.includes(filters.source)) return false
       if (filters.owned === 'owned' && !car.owned) return false
       if (filters.owned === 'not-owned' && car.owned) return false
+      // Tag filter — AND logic; non-owned cars have no tags so they won't match
+      if (selectedTags.size > 0) {
+        const carTags = car.tags ?? []
+        if (![...selectedTags].every((t) => carTags.includes(t))) return false
+      }
       return true
     })
   }, [cars, filters])
@@ -132,6 +141,14 @@ export default function GarageView({ initialCars }: Props) {
 
   const handleStatsChange = useCallback((carId: number, partial: Partial<Car>) => {
     setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, ...partial } : c)))
+  }, [])
+
+  const toggleTag = useCallback((tag: string) => {
+    setSelectedTags((prev) => {
+      const next = new Set(prev)
+      next.has(tag) ? next.delete(tag) : next.add(tag)
+      return next
+    })
   }, [])
 
   const ownedCount = cars.filter((c) => c.owned).length
@@ -199,6 +216,48 @@ export default function GarageView({ initialCars }: Props) {
         hideDivision
       />
 
+      {/* Source chips */}
+      <div className="flex flex-wrap gap-2">
+        {SOURCE_CHIPS.map(({ label, match }) => (
+          <button
+            key={match}
+            onClick={() => setFilters((f) => ({ ...f, source: f.source === match ? '' : match }))}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              filters.source === match
+                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
+                : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tag chips — AND filter; only owned cars carry tags */}
+      <div className="flex flex-wrap gap-2">
+        {CAR_TAGS.map((tag) => (
+          <button
+            key={tag}
+            onClick={() => toggleTag(tag)}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              selectedTags.has(tag)
+                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
+                : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+            }`}
+          >
+            {tag}
+          </button>
+        ))}
+        {selectedTags.size > 0 && (
+          <button
+            onClick={() => setSelectedTags(new Set())}
+            className="px-3 py-1 rounded-full text-xs font-medium border border-[#30363d] text-gray-500 hover:text-gray-300 hover:border-[#484f58] transition-colors"
+          >
+            ✕ clear
+          </button>
+        )}
+      </div>
+
       {/* Results */}
       {sortedCars.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-gray-600">
@@ -251,6 +310,7 @@ export default function GarageView({ initialCars }: Props) {
       car={drawerCar}
       onClose={() => setDrawerCar(null)}
       onStatsChange={handleStatsChange}
+      onToggleOwned={toggleOwned}
     />
     </>
   )

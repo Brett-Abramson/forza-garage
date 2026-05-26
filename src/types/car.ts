@@ -50,8 +50,18 @@ export interface FilterState {
   make: string
   drivetrain: string
   country: string
+  source: string   // empty = all; non-empty = car.source.includes(value)
   owned: 'all' | 'owned' | 'not-owned'
 }
+
+// Broad acquisition-method categories used for source chips
+export const SOURCE_CHIPS = [
+  { label: 'Autoshow',  match: 'Autoshow'            },
+  { label: 'DLC',       match: 'DLC'                 },
+  { label: 'Seasonal',  match: 'Seasonal'             },
+  { label: 'Loyalty',   match: 'Loyalty'              },
+  { label: 'Journal',   match: 'Collection Journal'   },
+] as const
 
 export const PI_CLASS_ORDER: PiClass[] = ['D', 'C', 'B', 'A', 'S1', 'S2', 'R']
 

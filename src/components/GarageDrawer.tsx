@@ -29,9 +29,10 @@ interface Props {
   onClose: () => void
   onTagDetailsChange?: (carId: number, tagDetails: TagDetail[]) => void
   onStatsChange?: (carId: number, partial: Partial<Car>) => void
+  onToggleOwned?: (id: number, owned: boolean) => Promise<void> | void
 }
 
-export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => {}, onStatsChange }: Props) {
+export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => {}, onStatsChange, onToggleOwned }: Props) {
   // Keep a stale copy so the drawer content doesn't vanish during slide-out
   const [displayCar, setDisplayCar] = useState<Car | null>(car)
   useEffect(() => {
@@ -160,6 +161,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
       : null
 
   const hasAnyStats = Object.values(stats).some((v) => v !== '')
+  const [toggling, setToggling] = useState(false)
 
   const statCallouts = displayCar ? getStatCallouts(displayCar) : []
 
@@ -242,6 +244,27 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                   </Stat>
                 )}
               </div>
+
+              {/* Owned toggle — shown when parent can handle it */}
+              {onToggleOwned && (
+                <div className="px-5 py-3 border-b border-[#21262d]">
+                  <button
+                    disabled={toggling}
+                    onClick={async () => {
+                      setToggling(true)
+                      await onToggleOwned(displayCar.id, !displayCar.owned)
+                      setToggling(false)
+                    }}
+                    className={`w-full py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                      displayCar.owned
+                        ? 'bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20'
+                        : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-cyan-500/30'
+                    }`}
+                  >
+                    {toggling ? '…' : displayCar.owned ? 'Remove from garage' : 'Add to garage'}
+                  </button>
+                </div>
+              )}
 
               {/* Stat bars */}
               <div className="p-5 border-b border-[#21262d]">
@@ -527,6 +550,18 @@ interface StatInputProps {
 }
 
 function StatInput({ label, value, type, min, max, step, onChange, onBlur }: StatInputProps) {
+  function handleBlur() {
+    // Clamp to [min, max] when both bounds are defined
+    if (value !== '' && min != null && max != null) {
+      const num = type === 'float' ? parseFloat(value) : parseInt(value)
+      if (!isNaN(num)) {
+        const clamped = Math.min(Math.max(num, min), max)
+        if (clamped !== num) onChange(String(clamped))
+      }
+    }
+    onBlur()
+  }
+
   return (
     <div className="min-w-0">
       <div className="text-[10px] text-gray-600 mb-1">{label}</div>
@@ -538,7 +573,7 @@ function StatInput({ label, value, type, min, max, step, onChange, onBlur }: Sta
         max={max}
         step={type === 'float' ? (step ?? 0.1) : 1}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
+        onBlur={handleBlur}
         placeholder="—"
         className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
