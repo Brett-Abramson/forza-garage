@@ -74,6 +74,13 @@ body::before {
   scrollbar-color: var(--fh-border) var(--fh-bg);
 }
 
+/* ── Clipped-corner button ───────────────────────────────────────────────────
+   Diagonal cut on top-right and bottom-left corners — used across CTA buttons. */
+
+.btn-clip {
+  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+}
+
 /* ── Nav ────────────────────────────────────────────────────────────────────── */
 
 .fh-nav-link {
