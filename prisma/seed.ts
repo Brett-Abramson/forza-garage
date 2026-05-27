@@ -29,12 +29,6 @@ function parseCSV(content: string): string[][] {
   return rows
 }
 
-const STARTER_CARS = [
-  { year: 1989, make: 'Nissan',  model: "Silvia K's" },
-  { year: 1994, make: 'Toyota',  model: 'Celica GT-Four ST205' },
-  { year: 1970, make: 'GMC',     model: 'Jimmy' },
-]
-
 async function main() {
   const csv = readFileSync(join(__dirname, 'fh6-cars.csv'), 'utf-8')
   const [_header, ...rows] = parseCSV(csv)
@@ -66,18 +60,6 @@ async function main() {
   await prisma.userGarage.deleteMany()
   await prisma.car.deleteMany()
   await prisma.car.createMany({ data: carData })
-
-  // Seed starter cars into UserGarage
-  for (const starter of STARTER_CARS) {
-    const car = await prisma.car.findFirst({
-      where: { year: starter.year, make: starter.make, model: starter.model },
-    })
-    if (car) {
-      await prisma.userGarage.create({ data: { carId: car.id } })
-    } else {
-      console.warn(`Starter car not found: ${starter.year} ${starter.make} ${starter.model}`)
-    }
-  }
 
   console.log('Done.')
 }

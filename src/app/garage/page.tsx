@@ -7,9 +7,36 @@ import type { Car } from '@/types/car'
 
 export const dynamic = 'force-dynamic'
 
+// Cars the game gives every player at the start
+const STARTER_CARS = [
+  { year: 1989, make: 'Nissan',  model: "Silvia K's" },
+  { year: 1994, make: 'Toyota',  model: 'Celica GT-Four ST205' },
+  { year: 1970, make: 'GMC',     model: 'Jimmy' },
+]
+
+async function ensureStarterCars(userId: string) {
+  const count = await prisma.userGarage.count({ where: { userId } })
+  if (count > 0) return
+
+  const cars = await prisma.car.findMany({
+    where: {
+      OR: STARTER_CARS.map(({ year, make, model }) => ({ year, make, model })),
+    },
+  })
+
+  if (cars.length === 0) return
+
+  await prisma.userGarage.createMany({
+    data: cars.map((car) => ({ userId, carId: car.id })),
+    skipDuplicates: true,
+  })
+}
+
 export default async function GaragePage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
+
+  await ensureStarterCars(userId)
 
   const entries = await prisma.userGarage.findMany({
     where: { userId },
