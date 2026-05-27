@@ -3,39 +3,60 @@
 import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { getBestRaceType } from '@/lib/raceMatch'
 
-const DIVISION_GRADIENTS: Record<string, string> = {
-  'Hypercars':             'from-red-900/60 to-orange-900/40',
-  'Super GT':              'from-orange-900/60 to-red-900/40',
-  'Modern Supercars':      'from-orange-900/60 to-yellow-900/40',
-  'Retro Supercars':       'from-amber-900/60 to-yellow-900/40',
-  'Modern Muscle':         'from-blue-900/60 to-indigo-900/40',
-  'Retro Muscle':          'from-zinc-800/60 to-stone-800/40',
-  'Modern Sports Cars':    'from-cyan-900/60 to-blue-900/40',
-  'Retro Sports Cars':     'from-teal-900/60 to-cyan-900/40',
-  'GT Cars':               'from-purple-900/60 to-violet-900/40',
-  'Modern Super Saloons':  'from-indigo-900/60 to-blue-900/40',
-  'Retro Super Saloons':   'from-slate-800/60 to-indigo-900/40',
-  'Hot Hatch':             'from-green-900/60 to-emerald-900/40',
-  'Retro Hot Hatch':       'from-lime-900/60 to-green-900/40',
-  'Super Hot Hatch':       'from-emerald-900/60 to-green-900/40',
-  'Classic Racers':        'from-yellow-900/60 to-amber-900/40',
-  'Retro Racers':          'from-amber-900/60 to-orange-900/40',
-  'Rare Classics':         'from-yellow-900/60 to-orange-900/40',
-  'Cult Cars':             'from-violet-900/60 to-purple-900/40',
-  'Eclectic Domestics':    'from-gray-800/60 to-slate-800/40',
-  'Sports Utility Heroes': 'from-slate-800/60 to-gray-800/40',
-  'Utility Heroes':        'from-stone-800/60 to-gray-800/40',
-  'Extreme Track Toys':    'from-pink-900/60 to-rose-900/40',
-  'Track Toys':            'from-rose-900/60 to-pink-900/40',
-  'Classic Rally':         'from-stone-800/60 to-amber-900/40',
-  'Rally Monsters':        'from-green-900/60 to-stone-800/40',
-  'Unlimited Buggies':     'from-stone-800/60 to-zinc-800/40',
-  'Unlimited Offroad':     'from-zinc-800/60 to-stone-800/40',
-  'UTVs':                  'from-stone-900/60 to-zinc-900/40',
+const DIVISION_ACCENT: Record<string, string> = {
+  // Supercars / hypercars
+  'Hypercars':             'border-t-[var(--fh-red)]',
+  'Modern Supercars':      'border-t-[var(--fh-red)]',
+  'Retro Supercars':       'border-t-[var(--fh-red)]',
+
+  // GT / Saloons
+  'GT Cars':               'border-t-[var(--fh-purple)]',
+  'Super GT':              'border-t-[var(--fh-purple)]',
+  'Modern Super Saloons':  'border-t-[var(--fh-purple)]',
+  'Retro Super Saloons':   'border-t-[var(--fh-purple)]',
+  'Classic Racers':        'border-t-[var(--fh-purple)]',
+  'Retro Racers':          'border-t-[var(--fh-purple)]',
+
+  // Muscle
+  'Classic Muscle':        'border-t-[var(--fh-amber)]',
+  'Retro Muscle':          'border-t-[var(--fh-amber)]',
+  'Modern Muscle':         'border-t-[var(--fh-amber)]',
+
+  // Hot Hatch / Sports
+  'Hot Hatch':             'border-t-[var(--fh-blue)]',
+  'Super Hot Hatch':       'border-t-[var(--fh-blue)]',
+  'Retro Hot Hatch':       'border-t-[var(--fh-blue)]',
+  'Classic Sports Cars':   'border-t-[var(--fh-blue)]',
+  'Retro Sports Cars':     'border-t-[var(--fh-blue)]',
+  'Modern Sports Cars':    'border-t-[var(--fh-blue)]',
+
+  // Track
+  'Track Toys':            'border-t-[var(--fh-pink)]',
+  'Extreme Track Toys':    'border-t-[var(--fh-pink)]',
+
+  // Rally / Offroad
+  'Classic Rally':         'border-t-green-600',
+  'Retro Rally':           'border-t-green-600',
+  'Rally Monsters':        'border-t-green-600',
+  'Unlimited Offroad':     'border-t-green-700',
+  'Unlimited Buggies':     'border-t-green-700',
+  "Pickups & 4x4's":       'border-t-green-700',
+  "UTV's":                 'border-t-green-700',
+  'Sports Utility Heroes': 'border-t-green-700',
+
+  // Drift
+  'Drift Cars':            'border-t-[var(--fh-pink)]',
+
+  // Misc
+  'Rare Classics':         'border-t-[var(--fh-amber)]',
+  'Cult Cars':             'border-t-[var(--fh-muted2)]',
+  'Eclectic Domestics':    'border-t-[var(--fh-muted2)]',
+  'Rods and Customs':      'border-t-[var(--fh-muted2)]',
+  'Utility Heroes':        'border-t-[var(--fh-muted2)]',
 }
 
-function getDivisionGradient(division: string) {
-  return DIVISION_GRADIENTS[division] ?? 'from-gray-800/60 to-gray-900/40'
+function getDivisionAccent(division: string): string {
+  return DIVISION_ACCENT[division] ?? 'border-t-[var(--fh-border)]'
 }
 
 interface Props {
@@ -47,7 +68,7 @@ interface Props {
 export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
-  const gradient = getDivisionGradient(car.division)
+  const accent = getDivisionAccent(car.division)
   const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined)
 
   return (
@@ -62,8 +83,8 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
         }
       `}
     >
-      {/* Visual header */}
-      <div className={`h-24 bg-gradient-to-br ${gradient} flex items-end px-3 pb-2`}>
+      {/* Division accent header */}
+      <div className={`border-t-2 ${accent} bg-[var(--fh-panel2)] flex items-end px-3 pb-2 pt-3`}>
         <div className="flex items-center gap-2">
           <span className={`text-xs font-bold px-2 py-0.5 rounded ${classBadge}`}>
             {car.piClass}
