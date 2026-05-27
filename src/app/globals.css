@@ -7,29 +7,25 @@
 :root {
   color-scheme: light;
 
-  /* Brand accents (shared across themes) */
   --fh-red:         #CC0000;
+  --fh-red-dim:     #991000;
+  --fh-red-pale:    rgba(204,0,0,0.07);
   --fh-red-border:  rgba(204,0,0,0.2);
-  --fh-red-pale:    rgba(204,0,0,0.06);
   --fh-pink:        #C45570;
   --fh-pink-pale:   rgba(196,85,112,0.08);
-  --fh-amber:       #B87010;
-  --fh-blue:        #1A5FA0;
-  --fh-purple:      #6600CC;
-
-  /* Light / parchment surfaces */
   --fh-bg:          #F0E8D8;
   --fh-bg2:         #E8DCC8;
   --fh-panel:       #F7F0E3;
   --fh-panel2:      #EFE6D2;
-
-  /* Light text & borders */
   --fh-dark:        #1E1A14;
   --fh-dark2:       #32291C;
   --fh-muted:       #7A6E5C;
   --fh-muted2:      #A09080;
   --fh-border:      rgba(30,26,20,0.12);
   --fh-border2:     rgba(30,26,20,0.07);
+  --fh-amber:       #B87010;
+  --fh-blue:        #1A5FA0;
+  --fh-purple:      #6600CC;
 }
 
 [data-theme="dark"] {
