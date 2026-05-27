@@ -68,7 +68,8 @@ function ExpandedRow({
   onNotesChange: (carId: number, notes: string) => void
   onStatsChange: (carId: number, partial: Partial<Car>) => void
 }) {
-  const { auto: autoTags, user: initUserTags } = splitTagsBySource(car.tagDetails ?? [])
+  const { auto: initAutoTags, user: initUserTags } = splitTagsBySource(car.tagDetails ?? [])
+  const [autoTags, setAutoTags] = useState<string[]>(initAutoTags)
   const [userTags, setUserTags] = useState<string[]>(initUserTags)
   const [notes, setNotes] = useState(car.notes ?? '')
   const [notesDirty, setNotesDirty] = useState(false)
@@ -90,17 +91,18 @@ function ExpandedRow({
       : null
   const statCallouts = getStatCallouts(car, car.tags ?? [])
 
-  async function patchUserTags(next: string[]) {
-    setUserTags(next)
+  async function patchTags(nextAuto: string[], nextUser: string[]) {
+    setAutoTags(nextAuto)
+    setUserTags(nextUser)
     const nextDetails: TagDetail[] = [
-      ...autoTags.map((tag) => ({ tag, source: 'auto' })),
-      ...next.map((tag) => ({ tag, source: 'user' })),
+      ...nextAuto.map((tag) => ({ tag, source: 'auto' })),
+      ...nextUser.map((tag) => ({ tag, source: 'user' })),
     ]
     onTagDetailsChange(car.id, nextDetails)
     await fetch(`/api/garage/${car.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tags: next }),
+      body: JSON.stringify({ tags: { auto: nextAuto, user: nextUser } }),
     })
   }
 
@@ -149,20 +151,22 @@ function ExpandedRow({
               {autoTags.length === 0 && userTags.length === 0 && (
                 <span className="text-xs text-gray-600">No tags — add one below</span>
               )}
-              {/* Auto tags — muted, no remove button */}
+              {/* Auto tags — muted by default, removable */}
               {autoTags.map((tag) => (
-                <span
+                <button
                   key={`auto-${tag}`}
-                  className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 opacity-60"
+                  onClick={() => patchTags(autoTags.filter((t) => t !== tag), userTags)}
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--fh-red-pale)] text-[var(--fh-red)] border border-[var(--fh-red-border)] opacity-60 hover:opacity-100 hover:bg-red-500/20 transition-opacity"
+                  title="Default tag from division — click to remove"
                 >
-                  {tag}
-                </span>
+                  {tag} <span className="opacity-70">×</span>
+                </button>
               ))}
               {/* User tags — full color, removable */}
               {userTags.map((tag) => (
                 <button
                   key={`user-${tag}`}
-                  onClick={() => patchUserTags(userTags.filter((t) => t !== tag))}
+                  onClick={() => patchTags(autoTags, userTags.filter((t) => t !== tag))}
                   className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30 transition-colors"
                 >
                   {tag} <span className="opacity-70">×</span>
@@ -174,7 +178,7 @@ function ExpandedRow({
                 {available.map((tag) => (
                   <button
                     key={tag}
-                    onClick={() => patchUserTags([...userTags, tag])}
+                    onClick={() => patchTags(autoTags, [...userTags, tag])}
                     className="px-2.5 py-0.5 rounded-full text-xs border border-dashed border-[#30363d] text-gray-600 hover:text-gray-300 hover:border-[#484f58] transition-colors"
                   >
                     + {tag}

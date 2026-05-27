@@ -26,14 +26,15 @@ export async function PATCH(
   }
 
   if ('tags' in body) {
-    const tags: string[] = body.tags ?? []
-    // Only replace user tags — auto tags are managed by the system and never wiped
-    await prisma.carTag.deleteMany({ where: { userGarageId: entry.id, source: 'user' } })
-    if (tags.length > 0) {
-      await prisma.carTag.createMany({
-        data: tags.map((tag) => ({ userGarageId: entry.id, tag, source: 'user' })),
-      })
-    }
+    // Replace the full tag set — client sends { auto: string[], user: string[] }
+    // so we can preserve source labels while allowing auto-tags to be removed.
+    const { auto: autoTags = [], user: userTags = [] }: { auto?: string[]; user?: string[] } = body.tags ?? {}
+    await prisma.carTag.deleteMany({ where: { userGarageId: entry.id } })
+    const all = [
+      ...autoTags.map((tag: string) => ({ userGarageId: entry.id, tag, source: 'auto' })),
+      ...userTags.map((tag: string) => ({ userGarageId: entry.id, tag, source: 'user' })),
+    ]
+    if (all.length > 0) await prisma.carTag.createMany({ data: all })
   }
 
   if ('pinned' in body) {

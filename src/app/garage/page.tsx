@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { getAutoTags } from '@/lib/autotags'
 import GarageShowcase from '@/components/GarageShowcase'
 import type { Car } from '@/types/car'
 
@@ -26,10 +27,15 @@ async function ensureStarterCars(userId: string) {
 
   if (cars.length === 0) return
 
-  await prisma.userGarage.createMany({
-    data: cars.map((car) => ({ userId, carId: car.id })),
-    skipDuplicates: true,
-  })
+  for (const car of cars) {
+    const entry = await prisma.userGarage.create({ data: { userId, carId: car.id } })
+    const autoTags = getAutoTags(car.division, car.drivetrain ?? undefined)
+    if (autoTags.length > 0) {
+      await prisma.carTag.createMany({
+        data: autoTags.map((tag) => ({ userGarageId: entry.id, tag, source: 'auto' })),
+      })
+    }
+  }
 }
 
 export default async function GaragePage() {

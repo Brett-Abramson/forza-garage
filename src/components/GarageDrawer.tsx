@@ -42,7 +42,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
   const open = car !== null
 
   // Derive auto/user split from displayCar's tagDetails
-  const { auto: autoTags, user: initUserTags } = splitTagsBySource(displayCar?.tagDetails ?? [])
+  const { auto: initAutoTags, user: initUserTags } = splitTagsBySource(displayCar?.tagDetails ?? [])
+  const [autoTags, setAutoTags] = useState<string[]>(initAutoTags)
   const [userTags, setUserTags] = useState<string[]>(initUserTags)
   const [notes, setNotes] = useState<string>(displayCar?.notes ?? '')
   const [notesDirty, setNotesDirty] = useState(false)
@@ -56,7 +57,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
   const prevId = useRef<number | undefined>(undefined)
   useEffect(() => {
     if (displayCar && displayCar.id !== prevId.current) {
-      const { user } = splitTagsBySource(displayCar.tagDetails ?? [])
+      const { auto, user } = splitTagsBySource(displayCar.tagDetails ?? [])
+      setAutoTags(auto)
       setUserTags(user)
       setNotes(displayCar.notes ?? '')
       setNotesDirty(false)
@@ -91,26 +93,27 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
     })
   }
 
-  async function addTag(tag: string) {
-    const next = [...userTags, tag]
-    setUserTags(next)
+  async function patchTags(nextAuto: string[], nextUser: string[]) {
+    setAutoTags(nextAuto)
+    setUserTags(nextUser)
     const nextDetails: TagDetail[] = [
-      ...autoTags.map((t) => ({ tag: t, source: 'auto' })),
-      ...next.map((t) => ({ tag: t, source: 'user' })),
+      ...nextAuto.map((t) => ({ tag: t, source: 'auto' })),
+      ...nextUser.map((t) => ({ tag: t, source: 'user' })),
     ]
     onTagDetailsChange(displayCar!.id, nextDetails)
-    await patchGarage({ tags: next })
+    await patchGarage({ tags: { auto: nextAuto, user: nextUser } })
   }
 
-  async function removeTag(tag: string) {
-    const next = userTags.filter((t) => t !== tag)
-    setUserTags(next)
-    const nextDetails: TagDetail[] = [
-      ...autoTags.map((t) => ({ tag: t, source: 'auto' })),
-      ...next.map((t) => ({ tag: t, source: 'user' })),
-    ]
-    onTagDetailsChange(displayCar!.id, nextDetails)
-    await patchGarage({ tags: next })
+  async function addTag(tag: string) {
+    await patchTags(autoTags, [...userTags, tag])
+  }
+
+  async function removeAutoTag(tag: string) {
+    await patchTags(autoTags.filter((t) => t !== tag), userTags)
+  }
+
+  async function removeUserTag(tag: string) {
+    await patchTags(autoTags, userTags.filter((t) => t !== tag))
   }
 
   async function saveNotes() {
@@ -281,16 +284,24 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                     <p className="text-xs text-[var(--fh-muted)] italic">No tags yet — add some below.</p>
                   ) : (
                     <div className="flex flex-wrap gap-2">
-                      {/* Auto tags — muted, no remove */}
+                      {/* Auto tags — muted by default, removable */}
                       {autoTags.map((tag) => (
                         <span
                           key={`auto-${tag}`}
-                          className="px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--fh-red-pale)] text-[var(--fh-red)] border border-[var(--fh-red-border)] opacity-60"
+                          className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-[var(--fh-red-pale)] text-[var(--fh-red)] border border-[var(--fh-red-border)] opacity-60 hover:opacity-100 transition-opacity"
                         >
                           {tag}
+                          <button
+                            onClick={() => removeAutoTag(tag)}
+                            className="hover:opacity-60 transition-opacity leading-none"
+                            aria-label={`Remove ${tag}`}
+                            title="Default tag from division — click to remove"
+                          >
+                            ×
+                          </button>
                         </span>
                       ))}
-                      {/* User tags — full color, removable */}
+                      {/* User tags — full opacity, removable */}
                       {userTags.map((tag) => (
                         <span
                           key={`user-${tag}`}
@@ -298,7 +309,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                         >
                           {tag}
                           <button
-                            onClick={() => removeTag(tag)}
+                            onClick={() => removeUserTag(tag)}
                             className="hover:opacity-60 transition-opacity leading-none"
                             aria-label={`Remove ${tag}`}
                           >
