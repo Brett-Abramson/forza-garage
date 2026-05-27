@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface ClassCount { piClass: string; _count: { id: number } }
+interface ClassCount { piClass: string; _count_id: number }
 
 interface PinnedCar {
   car: { id: number; make: string; model: string; year: number; piClass: string; piRating: number; division: string }
@@ -66,7 +66,7 @@ export default async function LandingPage() {
   // Map piClass → count for quick lookup
   const classMap: Record<string, number> = {}
   if (stats) {
-    for (const row of stats.byClass as Array<{ piClass: string; _count_id: number }>) {
+    for (const row of stats.byClass) {
       classMap[row.piClass] = Number(row._count_id)
     }
   }

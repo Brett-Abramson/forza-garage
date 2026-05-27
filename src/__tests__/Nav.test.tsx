@@ -97,7 +97,7 @@ describe('Nav — loading', () => {
       isSignedIn: false,
       user: null,
       isLoaded: false,
-    } as ReturnType<typeof useUser>)
+    } as unknown as ReturnType<typeof useUser>)
     renderNav()
     expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /user menu/i })).not.toBeInTheDocument()
