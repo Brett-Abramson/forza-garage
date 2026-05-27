@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 import Nav from '@/components/Nav'
 import KeyboardNav from '@/components/KeyboardNav'
 import './globals.css'
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <KeyboardNav />
           {children}
           <SpeedInsights />
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
