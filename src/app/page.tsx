@@ -3,6 +3,8 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { PI_CLASS_ORDER, PI_CLASS_COLORS } from '@/types/car'
 import { FujiSvg, BlossomSvg, ToriiSvg } from '@/components/JapanDecor'
+import { getRandomFeaturedCar } from '@/lib/featuredCars'
+import { RACE_TYPES } from '@/lib/races'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,20 +26,13 @@ async function getGarageStats(userId: string) {
   const [total, byClass, pinned, recent] = await Promise.all([
     prisma.userGarage.count({ where: { userId } }),
 
-    prisma.userGarage.groupBy({
-      by: ['carId'],
-      where: { userId },
-      _count: { id: true },
-    }).then(async () =>
-      // groupBy doesn't join — query car.piClass via a raw aggregate
-      prisma.$queryRaw<ClassCount[]>`
-        SELECT c."piClass", COUNT(ug.id)::int AS "_count_id"
-        FROM "UserGarage" ug
-        JOIN "Car" c ON c.id = ug."carId"
-        WHERE ug."userId" = ${userId}
-        GROUP BY c."piClass"
-      `
-    ),
+    prisma.$queryRaw<ClassCount[]>`
+      SELECT c."piClass", COUNT(ug.id)::int AS "_count_id"
+      FROM "UserGarage" ug
+      JOIN "Car" c ON c.id = ug."carId"
+      WHERE ug."userId" = ${userId}
+      GROUP BY c."piClass"
+    `,
 
     prisma.userGarage.findMany({
       where: { userId, pinned: true },
@@ -62,6 +57,7 @@ async function getGarageStats(userId: string) {
 export default async function LandingPage() {
   const { userId } = await auth()
   const stats = userId ? await getGarageStats(userId) : null
+  const featured = getRandomFeaturedCar()
 
   // Map piClass → count for quick lookup
   const classMap: Record<string, number> = {}
@@ -70,6 +66,11 @@ export default async function LandingPage() {
       classMap[row.piClass] = Number(row._count_id)
     }
   }
+
+  // Resolve race type name for the featured car link
+  const featuredRace = featured.raceType
+    ? RACE_TYPES.find((r) => r.id === featured.raceType)
+    : null
 
   return (
     <div>
@@ -161,28 +162,58 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* ── Garage by class ───────────────────────────────────────────────── */}
-        {stats && stats.total > 0 && (
-          <section>
-            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
-              Garage by class
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {PI_CLASS_ORDER.filter((cls) => classMap[cls] > 0).map((cls) => (
-                <Link
-                  key={cls}
-                  href={`/garage?class=${cls}`}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-fh-border bg-fh-panel text-sm transition-opacity hover:opacity-75"
-                >
-                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[cls] ?? 'bg-gray-600 text-white'}`}>
-                    {cls}
-                  </span>
-                  <span className="text-fh-dark">{classMap[cls]}</span>
-                </Link>
-              ))}
+        {/* ── Featured car ──────────────────────────────────────────────────── */}
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
+            Featured car
+          </h2>
+          <div className="max-w-lg rounded-xl border border-fh-border bg-fh-panel p-5 flex flex-col gap-3">
+            {/* Badge + title */}
+            <div className="flex items-start gap-3">
+              <span className="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-fh-red text-white">
+                {featured.badge}
+              </span>
+              <div>
+                <div className="text-base font-bold leading-tight">
+                  {featured.make} {featured.model}
+                </div>
+                <div className="text-xs text-fh-muted mt-0.5">{featured.year}</div>
+              </div>
+              {/* PI class + rating */}
+              <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[featured.piClass] ?? 'bg-gray-600 text-white'}`}>
+                  {featured.piClass}
+                </span>
+                <span className="text-xs tabular-nums text-fh-muted">{featured.piRating}</span>
+              </div>
             </div>
-          </section>
-        )}
+
+            {/* Reason */}
+            <p className="text-xs text-fh-dark-2 leading-relaxed">{featured.reason}</p>
+
+            {/* Race type link */}
+            {featuredRace && (
+              <Link
+                href="/races"
+                className="inline-flex items-center gap-1.5 text-xs text-fh-muted hover:text-fh-dark transition-colors"
+              >
+                <span>🏁</span>
+                <span>Best for: <span className="text-fh-dark">{featuredRace.name}</span></span>
+              </Link>
+            )}
+
+            {/* Actions + footnote */}
+            <div className="flex items-center justify-between pt-1 border-t border-fh-border">
+              <Link
+                href={userId ? '/garage' : '/sign-in'}
+                className="btn-clip inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-fh-red transition-opacity hover:opacity-80"
+              >
+                {userId ? 'Open Garage' : 'Sign in to add'}
+              </Link>
+              <span className="text-[10px] text-fh-muted-2">meta as of May 2026</span>
+            </div>
+          </div>
+        </section>
 
         {/* ── Pinned cars ───────────────────────────────────────────────────── */}
         {stats && stats.pinned.length > 0 && (
