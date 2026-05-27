@@ -20,9 +20,13 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
     <tr
       onClick={() => onCardClick?.(car)}
       className={`
-        border-b border-[#21262d] transition-colors text-sm
+        border-b border-[var(--fh-border)] transition-colors text-sm
         ${onCardClick ? 'cursor-pointer' : ''}
-        ${isExpanded ? 'bg-[#1c2330]' : car.owned ? 'bg-cyan-950/20 hover:bg-[#161b22]' : 'hover:bg-[#161b22]'}
+        ${isExpanded
+          ? 'bg-[var(--fh-panel2)]'
+          : car.owned
+          ? 'bg-[var(--fh-red-pale)] hover:bg-[var(--fh-panel2)]'
+          : 'hover:bg-[var(--fh-panel2)]'}
         ${isPending ? 'opacity-60 pointer-events-none' : ''}
       `}
     >
@@ -31,18 +35,18 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
           {car.piClass}
         </span>
       </td>
-      <td className="py-2.5 px-3 text-gray-400 tabular-nums">{car.piRating}</td>
-      <td className="py-2.5 px-3 text-gray-400">{car.year}</td>
+      <td className="py-2.5 px-3 text-[var(--fh-dark2)] tabular-nums">{car.piRating}</td>
+      <td className="py-2.5 px-3 text-[var(--fh-dark2)]">{car.year}</td>
       <td className="py-2.5 px-3 font-medium">{car.make}</td>
       <td className="py-2.5 px-3">{car.model}</td>
-      <td className="py-2.5 px-3 text-gray-400 hidden md:table-cell">
+      <td className="py-2.5 px-3 text-[var(--fh-dark2)] hidden md:table-cell">
         <div>{car.division}</div>
         {bestRace && (
-          <div className="text-xs text-gray-600 mt-0.5">{bestRace.icon} {bestRace.name}</div>
+          <div className="text-xs text-[var(--fh-muted)] mt-0.5">{bestRace.icon} {bestRace.name}</div>
         )}
       </td>
-      <td className="py-2.5 px-3 text-gray-400 hidden lg:table-cell">{car.drivetrain ?? '—'}</td>
-      <td className="py-2.5 px-3 text-gray-400 hidden lg:table-cell">{car.country}</td>
+      <td className="py-2.5 px-3 text-[var(--fh-dark2)] hidden lg:table-cell">{car.drivetrain ?? '—'}</td>
+      <td className="py-2.5 px-3 text-[var(--fh-dark2)] hidden lg:table-cell">{car.country}</td>
       <td className={`py-2.5 px-3 hidden xl:table-cell text-xs font-medium ${sourceColor}`}>
         {car.source}
       </td>
@@ -52,8 +56,8 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
           className={`
             px-3 py-1 rounded text-xs font-semibold transition-colors whitespace-nowrap
             ${car.owned
-              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/40'
-              : 'bg-[#21262d] text-gray-400 border border-[#30363d] hover:bg-cyan-500/20 hover:text-cyan-400 hover:border-cyan-500/40'
+              ? 'bg-[var(--fh-red)] text-white border border-[var(--fh-red)] hover:opacity-80'
+              : 'bg-transparent border border-[var(--fh-border)] text-[var(--fh-muted)] hover:border-[var(--fh-red-border)] hover:text-[var(--fh-red)]'
             }
           `}
         >

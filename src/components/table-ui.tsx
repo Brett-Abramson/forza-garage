@@ -28,7 +28,9 @@ export function SortTh({
       aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
     >
       <span
-        className={`flex items-center gap-1 ${active ? 'text-cyan-400' : 'text-gray-500 hover:text-gray-300'} transition-colors`}
+        className={`flex items-center gap-1 transition-colors ${
+          active ? 'text-[var(--fh-red)]' : 'text-[var(--fh-muted)] hover:text-[var(--fh-dark)]'
+        }`}
       >
         {label}
         <span className="text-[10px] leading-none">

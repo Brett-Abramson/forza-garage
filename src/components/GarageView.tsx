@@ -238,12 +238,12 @@ export default function GarageView({ initialCars }: Props) {
       {/* Stats bar */}
       <div className="flex items-center gap-6 text-sm">
         <div>
-          <span className="text-2xl font-bold text-cyan-400">{ownedCount}</span>
-          <span className="text-gray-500 ml-1.5">/ {cars.length} owned</span>
+          <span className="text-2xl font-bold text-[var(--fh-red)]">{ownedCount}</span>
+          <span className="text-[var(--fh-muted)] ml-1.5">/ {cars.length} owned</span>
         </div>
-        <div className="h-1.5 flex-1 bg-[#21262d] rounded-full overflow-hidden">
+        <div className="h-1.5 flex-1 bg-[var(--fh-panel2)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-cyan-500 rounded-full transition-all duration-500"
+            className="h-full bg-[var(--fh-red)] rounded-full transition-all duration-500"
             style={{ width: `${cars.length > 0 ? (ownedCount / cars.length) * 100 : 0}%` }}
           />
         </div>
@@ -257,28 +257,28 @@ export default function GarageView({ initialCars }: Props) {
           placeholder="Search make, model, division... (press / to focus)"
           value={filters.search}
           onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-          className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600"
+          className="flex-1 bg-[var(--fh-panel)] border border-[var(--fh-border)] rounded-lg px-3 py-2 text-sm text-[var(--fh-dark)] focus:outline-none focus:border-[var(--fh-red)] placeholder:text-[var(--fh-muted2)]"
         />
         {activeFilterCount > 0 && (
           <button
             onClick={clearAllFilters}
-            className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-colors whitespace-nowrap"
+            className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--fh-red-pale)] text-[var(--fh-red)] border border-[var(--fh-red-border)] hover:opacity-80 transition-opacity whitespace-nowrap"
           >
             {activeFilterCount} active · clear
           </button>
         )}
-        <div className="flex bg-[#161b22] border border-[#30363d] rounded-lg overflow-hidden shrink-0">
+        <div className="flex bg-[var(--fh-panel)] border border-[var(--fh-border)] rounded-lg overflow-hidden shrink-0">
           <button
             onClick={() => setView('grid')}
             title="Grid view"
-            className={`px-3 py-2 transition-colors ${view === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`px-3 py-2 transition-colors ${view === 'grid' ? 'bg-[var(--fh-red-pale)] text-[var(--fh-red)]' : 'text-[var(--fh-muted)] hover:text-[var(--fh-dark)]'}`}
           >
             <GridIcon />
           </button>
           <button
             onClick={() => setView('table')}
             title="Table view"
-            className={`px-3 py-2 transition-colors ${view === 'table' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`px-3 py-2 transition-colors ${view === 'table' ? 'bg-[var(--fh-red-pale)] text-[var(--fh-red)]' : 'text-[var(--fh-muted)] hover:text-[var(--fh-dark)]'}`}
           >
             <TableIcon />
           </button>
@@ -312,8 +312,8 @@ export default function GarageView({ initialCars }: Props) {
             onClick={() => setFilters((f) => ({ ...f, source: f.source === match ? '' : match }))}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               filters.source === match
-                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+                ? 'bg-[var(--fh-red-pale)] text-[var(--fh-red)] border-[var(--fh-red-border)]'
+                : 'bg-[var(--fh-panel)] text-[var(--fh-muted)] border-[var(--fh-border)] hover:text-[var(--fh-dark)]'
             }`}
           >
             {label}
@@ -329,8 +329,8 @@ export default function GarageView({ initialCars }: Props) {
             onClick={() => toggleTag(tag)}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               selectedTags.has(tag)
-                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+                ? 'bg-[var(--fh-red-pale)] text-[var(--fh-red)] border-[var(--fh-red-border)]'
+                : 'bg-[var(--fh-panel)] text-[var(--fh-muted)] border-[var(--fh-border)] hover:text-[var(--fh-dark)]'
             }`}
           >
             {tag}
@@ -339,7 +339,7 @@ export default function GarageView({ initialCars }: Props) {
         {selectedTags.size > 0 && (
           <button
             onClick={() => setSelectedTags(new Set())}
-            className="px-3 py-1 rounded-full text-xs font-medium border border-[#30363d] text-gray-500 hover:text-gray-300 hover:border-[#484f58] transition-colors"
+            className="px-3 py-1 rounded-full text-xs font-medium border border-[var(--fh-border)] text-[var(--fh-muted)] hover:text-[var(--fh-dark)] hover:border-[var(--fh-red-border)] transition-colors"
           >
             ✕ clear
           </button>
@@ -348,14 +348,14 @@ export default function GarageView({ initialCars }: Props) {
 
       {/* Results */}
       {sortedCars.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-gray-600">
+        <div className="flex flex-col items-center justify-center py-24 text-[var(--fh-muted)]">
           <div className="text-4xl mb-3">🚗</div>
-          <div className="text-lg font-medium">No cars found</div>
+          <div className="text-lg font-medium text-[var(--fh-dark)]">No cars found</div>
           <div className="text-sm mt-1">Try adjusting your filters</div>
           {activeFilterCount > 0 && (
             <button
               onClick={clearAllFilters}
-              className="mt-4 px-4 py-2 rounded-lg text-sm border border-[#30363d] text-gray-500 hover:border-[#484f58] hover:text-gray-200 transition-colors"
+              className="mt-4 px-4 py-2 rounded-lg text-sm border border-[var(--fh-border)] text-[var(--fh-muted)] hover:border-[var(--fh-red-border)] hover:text-[var(--fh-red)] transition-colors"
             >
               Clear all filters
             </button>
@@ -370,10 +370,10 @@ export default function GarageView({ initialCars }: Props) {
           ))}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-[#30363d]">
+        <div className="overflow-x-auto rounded-xl border border-[var(--fh-border)]">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#161b22] border-b border-[#30363d] text-xs uppercase tracking-wide select-none">
+              <tr className="bg-[var(--fh-panel2)] border-b border-[var(--fh-border)] text-xs uppercase tracking-wide select-none">
                 <SortTh label="Class" sortKey="piClass" sort={sort} onSort={handleSort} />
                 <SortTh label="PI" sortKey="piRating" sort={sort} onSort={handleSort} />
                 <SortTh label="Year" sortKey="year" sort={sort} onSort={handleSort} />
@@ -383,7 +383,7 @@ export default function GarageView({ initialCars }: Props) {
                 <SortTh label="Drive" sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
                 <SortTh label="Country" sortKey="country" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
                 <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
-                <th className="text-left py-2.5 px-3 text-gray-500">Garage</th>
+                <th className="text-left py-2.5 px-3 text-[var(--fh-muted)]">Garage</th>
               </tr>
             </thead>
             <tbody>

@@ -12,8 +12,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} bg-[#0d1117] text-[#e6edf3] min-h-screen`}>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Apply saved theme before first paint to prevent flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('fh-theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t;}catch(e){}`,
+          }}
+        />
+      </head>
+      <body className={`${inter.className} min-h-screen`}>
         <Nav />
         {children}
       </body>

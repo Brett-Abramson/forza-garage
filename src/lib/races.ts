@@ -34,7 +34,7 @@ export const RACE_TYPES: RaceType[] = [
       "Heavy off-road builds with soft suspension",
       "Excessive oversteer setups",
     ],
-    recommendedTags: ["asphalt", "grip", "long straights", "technical", "tuned"],
+    recommendedTags: ["asphalt", "grip", "long straights", "technical"],
     piSweetSpot: "700–900 (S1 / S2)",
     drivetrainNote:
       "RWD is rewarding when tuned well. AWD is more forgiving. FWD struggles on faster layouts.",
@@ -57,7 +57,7 @@ export const RACE_TYPES: RaceType[] = [
       "Cars that need long straights to build momentum",
       "Loose rear-end setups that punish tight exits",
     ],
-    recommendedTags: ["asphalt", "grip", "tight", "technical", "tuned"],
+    recommendedTags: ["asphalt", "grip", "tight", "technical"],
     piSweetSpot: "600–800 (A / S1)",
     drivetrainNote:
       "AWD dominates street racing for traction consistency. RWD can work with a very clean tune.",
@@ -80,7 +80,7 @@ export const RACE_TYPES: RaceType[] = [
       "Stiff suspension setups built for asphalt",
       "RWD cars without a rally-specific tune",
     ],
-    recommendedTags: ["dirt", "offroad", "tuned"],
+    recommendedTags: ["dirt", "offroad"],
     piSweetSpot: "500–700 (B / A / S1)",
     drivetrainNote:
       "AWD is strongly preferred. The classic rally picks (Impreza WRX STI, Lancer Evo) are AWD for a reason.",
@@ -103,7 +103,7 @@ export const RACE_TYPES: RaceType[] = [
       "Low-clearance sports cars",
       "Anything with stiff asphalt-focused suspension",
     ],
-    recommendedTags: ["mixed", "offroad", "dirt", "tuned"],
+    recommendedTags: ["mixed", "offroad", "dirt"],
     piSweetSpot: "500–700 (B / A)",
     drivetrainNote:
       "AWD is essential. Proper off-road vehicles (trucks, SUVs, buggies) have a genuine advantage over converted road cars.",
@@ -126,7 +126,7 @@ export const RACE_TYPES: RaceType[] = [
       "High-grip tire setups",
       "Cars with too little power to maintain angle",
     ],
-    recommendedTags: ["asphalt", "drift", "tuned"],
+    recommendedTags: ["asphalt", "drift"],
     piSweetSpot: "600–800 (A / S1)",
     drivetrainNote:
       "RWD only. AWD conversions work against you here. FWD is not viable for drift zones.",
@@ -153,7 +153,7 @@ export const RACE_TYPES: RaceType[] = [
       "Excessive aero — touge speeds don't generate enough for it to help",
       "Any car that feels nervous or unpredictable at the limit",
     ],
-    recommendedTags: ["asphalt", "tight", "technical", "grip", "tuned"],
+    recommendedTags: ["asphalt", "tight", "technical", "grip"],
     piSweetSpot: "B 600 to A 700 (route dependent — each route has its own class cap)",
     drivetrainNote:
       "RWD lightweight cars dominate touge. The AE86 and RX-7 are the community top picks for a reason — light weight and natural rotation win on mountain passes. AWD builds tend to understeer through the tightest sections. FWD is viable at lower classes.",
@@ -180,7 +180,7 @@ export const RACE_TYPES: RaceType[] = [
       "Handling upgrades that don't add acceleration — wasted PI budget",
       "Stiff suspension tuned for corners — irrelevant here",
     ],
-    recommendedTags: ["asphalt", "long straights", "drag", "tuned"],
+    recommendedTags: ["asphalt", "long straights", "drag"],
     piSweetSpot: "Any class — drag racing exists at every PI level. S2 and R class have the fastest times.",
     drivetrainNote:
       "AWD is dominant for drag racing. The launch traction advantage is decisive at most PI classes. RWD builds can be competitive with very precise tuning and driving but require more skill to execute. FWD rarely works for serious drag builds.",

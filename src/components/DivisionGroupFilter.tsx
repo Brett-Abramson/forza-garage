@@ -42,8 +42,8 @@ export default function DivisionGroupFilter({
             onClick={() => onGroupChange(selectedGroupId === group.id ? null : group.id)}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               selectedGroupId === group.id
-                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+                ? 'bg-[var(--fh-red-pale)] text-[var(--fh-red)] border-[var(--fh-red-border)]'
+                : 'bg-[var(--fh-panel)] text-[var(--fh-muted)] border-[var(--fh-border)] hover:text-[var(--fh-dark)]'
             }`}
           >
             <span>{group.icon}</span>
@@ -61,8 +61,8 @@ export default function DivisionGroupFilter({
               onClick={() => onDivisionChange(selectedDivision === division ? '' : division)}
               className={`px-2.5 py-0.5 rounded-full text-xs border transition-colors ${
                 selectedDivision === division
-                  ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
-                  : 'text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+                  ? 'bg-[var(--fh-red-pale)] text-[var(--fh-red)] border-[var(--fh-red-border)]'
+                  : 'text-[var(--fh-muted)] border-[var(--fh-border)] hover:text-[var(--fh-dark)]'
               }`}
             >
               {division}

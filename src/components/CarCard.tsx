@@ -54,13 +54,12 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
     <div
       onClick={() => onCardClick?.(car)}
       className={`
-        relative flex flex-col rounded-xl border overflow-hidden transition-all duration-200
+        relative flex flex-col rounded-xl border overflow-hidden transition-all duration-200 bg-[var(--fh-panel)]
         ${onCardClick ? 'cursor-pointer' : ''}
         ${car.owned
-          ? 'border-cyan-500/60 shadow-[0_0_12px_rgba(6,182,212,0.15)]'
-          : 'border-[#30363d] hover:border-[#484f58]'
+          ? 'border-[var(--fh-red-border)] shadow-[0_0_12px_rgba(204,0,0,0.1)]'
+          : 'border-[var(--fh-border)] hover:border-[var(--fh-red-border)]'
         }
-        bg-[#161b22]
       `}
     >
       {/* Visual header */}
@@ -69,11 +68,11 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
           <span className={`text-xs font-bold px-2 py-0.5 rounded ${classBadge}`}>
             {car.piClass}
           </span>
-          <span className="text-xs text-gray-400">{car.piRating}</span>
+          <span className="text-xs text-[var(--fh-dark2)]">{car.piRating}</span>
         </div>
         {car.owned && (
           <div className="ml-auto">
-            <span className="text-xs font-semibold text-cyan-400 bg-cyan-400/10 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-[var(--fh-red)] bg-[var(--fh-red-pale)] border border-[var(--fh-red-border)] px-2 py-0.5 rounded-full">
               Owned
             </span>
           </div>
@@ -82,23 +81,23 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
 
       {/* Info */}
       <div className="flex flex-col gap-1 px-3 pt-3 pb-2 flex-1">
-        <div className="text-xs text-gray-500">{car.year} · {car.make}</div>
+        <div className="text-xs text-[var(--fh-muted)]">{car.year} · {car.make}</div>
         <div className="text-sm font-semibold leading-tight">{car.model}</div>
-        <div className="text-xs text-gray-500 mt-0.5">{car.division}</div>
+        <div className="text-xs text-[var(--fh-muted)] mt-0.5">{car.division}</div>
 
-        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 text-xs text-gray-400">
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 text-xs text-[var(--fh-dark2)]">
           {car.drivetrain && <span>{car.drivetrain}</span>}
           <span>{car.country}</span>
           {car.bodyStyle && <span>{car.bodyStyle}</span>}
         </div>
 
         {car.engineType && (
-          <div className="text-xs mt-1 text-gray-500 truncate">{car.engineType}</div>
+          <div className="text-xs mt-1 text-[var(--fh-muted)] truncate">{car.engineType}</div>
         )}
 
         <div className={`text-xs mt-0.5 font-medium ${sourceColor}`}>{car.source}</div>
         {bestRace && (
-          <div className="text-xs mt-1.5 text-gray-600">
+          <div className="text-xs mt-1.5 text-[var(--fh-muted)]">
             {bestRace.icon} {bestRace.name}
           </div>
         )}
@@ -111,8 +110,8 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
           className={`
             w-full py-1.5 rounded-lg text-xs font-semibold transition-colors
             ${car.owned
-              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/40'
-              : 'bg-[#21262d] text-gray-400 border border-[#30363d] hover:bg-cyan-500/20 hover:text-cyan-400 hover:border-cyan-500/40'
+              ? 'bg-[var(--fh-red)] text-white border border-[var(--fh-red)] hover:opacity-80'
+              : 'bg-transparent border border-[var(--fh-border)] text-[var(--fh-muted)] hover:border-[var(--fh-red-border)] hover:text-[var(--fh-red)]'
             }
           `}
         >
