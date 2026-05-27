@@ -384,7 +384,7 @@ describe('GarageShowcase — expanded row tuning content', () => {
     const { container } = render(<GarageShowcase initialCars={mockCars} />)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByText(/Modern sports cars are the most varied division/i)).toBeInTheDocument()
+    expect(within(tbody).getByText(/most varied division for road racing/i)).toBeInTheDocument()
   })
 
   it('shows the spectrum note in the expanded row', async () => {
@@ -392,7 +392,7 @@ describe('GarageShowcase — expanded row tuning content', () => {
     const { container } = render(<GarageShowcase initialCars={mockCars} />)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByText(/lightweight naturally-aspirated coupes/i)).toBeInTheDocument()
+    expect(within(tbody).getByText(/lightweight naturally-aspirated RWD coupes/i)).toBeInTheDocument()
   })
 
   it('shows the Watch out callout in the expanded row', async () => {
@@ -400,7 +400,7 @@ describe('GarageShowcase — expanded row tuning content', () => {
     const { container } = render(<GarageShowcase initialCars={mockCars} />)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByText(/AWD conversion eats PI/i)).toBeInTheDocument()
+    expect(within(tbody).getByText(/AWD conversion without checking PI cost/i)).toBeInTheDocument()
   })
 
   it('shows "coming soon" for a car whose division has no guide for its best race type', async () => {

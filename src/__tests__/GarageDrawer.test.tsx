@@ -246,23 +246,23 @@ describe('GarageDrawer — tuning guide', () => {
 
   it('shows the philosophy paragraph for a matched guide', () => {
     renderDrawer()
-    expect(screen.getByText(/Modern sports cars are the most varied division/i)).toBeInTheDocument()
+    expect(screen.getByText(/most varied division for road racing/i)).toBeInTheDocument()
   })
 
   it('shows the spectrum note', () => {
     renderDrawer()
-    expect(screen.getByText(/lightweight naturally-aspirated coupes/i)).toBeInTheDocument()
+    expect(screen.getByText(/lightweight naturally-aspirated RWD coupes/i)).toBeInTheDocument()
   })
 
   it('shows numbered priorities', () => {
     renderDrawer()
-    expect(screen.getByText(/Identify your car's weak point first/i)).toBeInTheDocument()
+    expect(screen.getByText(/Diagnose first/i)).toBeInTheDocument()
   })
 
   it('shows the Watch out callout with its text', () => {
     renderDrawer()
     expect(screen.getByText(/Watch out/i)).toBeInTheDocument()
-    expect(screen.getByText(/AWD conversion eats PI/i)).toBeInTheDocument()
+    expect(screen.getByText(/AWD conversion without checking PI cost/i)).toBeInTheDocument()
   })
 
   it('shows "coming soon" when race matches but no guide exists for the division', () => {
