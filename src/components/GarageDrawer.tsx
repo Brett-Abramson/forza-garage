@@ -213,7 +213,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto">
               {/* Car stats */}
-              <div className="p-5 border-b border-fh-border grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+              <div className="p-5 border-b border-fh-border grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <Stat label="Class">
                   <span className={`text-xs font-bold px-2 py-0.5 rounded ${classBadge}`}>
                     {displayCar.piClass}

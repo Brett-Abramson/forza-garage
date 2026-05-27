@@ -57,7 +57,7 @@ const DEFAULT_FILTERS: FilterState = {
 
 type TagDetail = { tag: string; source: string }
 
-function ExpandedRow({
+function ExpandedContent({
   car,
   onTagDetailsChange,
   onNotesChange,
@@ -143,9 +143,7 @@ function ExpandedRow({
   )
 
   return (
-    <tr className="border-b border-fh-border bg-fh-panel">
-      <td colSpan={10} className="px-5 py-3">
-        <div className="flex flex-col gap-3 max-w-2xl">
+    <div className="flex flex-col gap-3">
           <div>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {autoTags.length === 0 && userTags.length === 0 && (
@@ -335,8 +333,76 @@ function ExpandedRow({
             </div>
           </div>
         </div>
+  )
+}
+
+// ─── Desktop: inline table row ────────────────────────────────────────────────
+
+function ExpandedRow(props: {
+  car: Car
+  onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
+  onNotesChange: (carId: number, notes: string) => void
+  onStatsChange: (carId: number, partial: Partial<Car>) => void
+}) {
+  return (
+    <tr className="hidden sm:table-row border-b border-fh-border bg-fh-panel">
+      <td colSpan={10} className="px-5 py-3">
+        <div className="max-w-2xl">
+          <ExpandedContent {...props} />
+        </div>
       </td>
     </tr>
+  )
+}
+
+// ─── Mobile: fixed bottom sheet ───────────────────────────────────────────────
+
+function MobileExpandedSheet({
+  car,
+  onClose,
+  onTagDetailsChange,
+  onNotesChange,
+  onStatsChange,
+}: {
+  car: Car
+  onClose: () => void
+  onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
+  onNotesChange: (carId: number, notes: string) => void
+  onStatsChange: (carId: number, partial: Partial<Car>) => void
+}) {
+  return (
+    <div className="sm:hidden fixed inset-0 z-50 flex flex-col justify-end">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      {/* Sheet */}
+      <div className="relative bg-fh-panel rounded-t-2xl max-h-[78vh] flex flex-col shadow-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-fh-border shrink-0">
+          <div>
+            <div className="text-sm font-semibold">{car.make} {car.model}</div>
+            <div className="text-xs text-fh-muted">{car.year}</div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="text-fh-muted hover:text-fh-dark transition-colors p-1 -mr-1"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
+            </svg>
+          </button>
+        </div>
+        {/* Scrollable content */}
+        <div className="overflow-y-auto flex-1 px-5 py-4">
+          <ExpandedContent
+            car={car}
+            onTagDetailsChange={onTagDetailsChange}
+            onNotesChange={onNotesChange}
+            onStatsChange={onStatsChange}
+          />
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -872,16 +938,10 @@ export default function GarageShowcase({ initialCars }: Props) {
         </div>
       ) : (
         <>
-          <p className="text-xs text-fh-muted -mb-3">
-            Showing {sortedCars.length} {sortedCars.length === 1 ? 'car' : 'cars'}
-            {sortedCars.length < cars.length && ` of ${cars.length}`}
-          </p>
           {view === 'grid' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {sortedCars.map((car) => (
-                <div key={car.id} className={pendingIds.has(car.id) ? 'opacity-60 pointer-events-none' : ''}>
-                  <CarCard car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} />
-                </div>
+                <CarCard key={car.id} car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} isPending={pendingIds.has(car.id)} />
               ))}
             </div>
           ) : (
@@ -928,6 +988,20 @@ export default function GarageShowcase({ initialCars }: Props) {
         </>
       )}
     </div>
+
+    {/* Mobile bottom sheet — shown when a list-view row is expanded on small screens */}
+    {expandedCarId !== null && (() => {
+      const expandedCar = sortedCars.find((c) => c.id === expandedCarId)
+      return expandedCar ? (
+        <MobileExpandedSheet
+          car={expandedCar}
+          onClose={() => setExpandedCarId(null)}
+          onTagDetailsChange={handleTagDetailsChange}
+          onNotesChange={handleNotesChange}
+          onStatsChange={handleStatsChange}
+        />
+      ) : null
+    })()}
 
     <GarageDrawer
       car={drawerCar}
