@@ -29,11 +29,11 @@ function Select({
 }) {
   return (
     <div className="flex flex-col gap-1 min-w-0">
-      <label className="text-xs text-[var(--fh-muted)] uppercase tracking-wide">{label}</label>
+      <label className="text-xs text-fh-muted uppercase tracking-wide">{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-[var(--fh-panel)] border border-[var(--fh-border)] rounded-lg px-2.5 py-1.5 text-sm text-[var(--fh-dark)] focus:outline-none focus:border-[var(--fh-red)] cursor-pointer"
+        className="bg-fh-panel border border-fh-border rounded-lg px-2.5 py-1.5 text-sm text-fh-dark focus:outline-none focus:border-fh-red cursor-pointer"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -128,16 +128,16 @@ export default function FilterBar({ filters, options, onChange, totalCount, filt
             onClick={() =>
               onChange({ search: filters.search, piClass: '', division: '', make: '', drivetrain: '', country: '', source: '', owned: 'all' })
             }
-            className="text-xs text-[var(--fh-muted)] hover:text-[var(--fh-dark)] underline pb-1.5 transition-colors"
+            className="text-xs text-fh-muted hover:text-fh-dark underline pb-1.5 transition-colors"
           >
             Clear filters
           </button>
         )}
       </div>
 
-      <div className="text-xs text-[var(--fh-muted)]">
+      <div className="text-xs text-fh-muted">
         Showing{' '}
-        <span className="text-[var(--fh-dark)] font-medium">{filteredCount}</span>
+        <span className="text-fh-dark font-medium">{filteredCount}</span>
         {filteredCount !== totalCount && (
           <> of {totalCount}</>
         )}{' '}

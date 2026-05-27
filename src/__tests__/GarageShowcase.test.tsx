@@ -83,7 +83,7 @@ describe('GarageShowcase — tag filter chips', () => {
     render(<GarageShowcase initialCars={mockCars} />)
     const chip = screen.getByRole('button', { name: 'grip' })
     await user.click(chip)
-    expect(chip.className).toContain('text-cyan-400')
+    expect(chip.className).toContain('text-fh-red')
   })
 
   it('clicking an active tag chip deselects it and restores cars', async () => {
@@ -398,7 +398,7 @@ describe('GarageShowcase — URL param tag init', () => {
     vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=grip') as ReturnType<typeof useSearchParams>)
     render(<GarageShowcase initialCars={mockCars} />)
     const gripChip = screen.getByRole('button', { name: 'grip' })
-    expect(gripChip.className).toContain('text-cyan-400')
+    expect(gripChip.className).toContain('text-fh-red')
   })
 
   it('pre-filters the car list from ?tags= URL param', () => {

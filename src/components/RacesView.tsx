@@ -21,26 +21,26 @@ function surfaceBadge(surface: string) {
 function TuningGuidePanel({ guide }: { guide: TuningGuide }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="border border-[#30363d] rounded-lg overflow-hidden">
+    <div className="border border-fh-border rounded-lg overflow-hidden">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[#161b22] transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-fh-panel transition-colors"
       >
-        <span className="text-xs font-medium text-gray-300">{guide.division}</span>
+        <span className="text-xs font-medium text-fh-dark-2">{guide.division}</span>
         <svg
           width="12" height="12" viewBox="0 0 16 16" fill="currentColor"
-          className={`shrink-0 text-gray-600 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+          className={`shrink-0 text-fh-muted transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
         >
           <path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z" />
         </svg>
       </button>
       {open && (
-        <div className="px-3 pb-3 flex flex-col gap-3 border-t border-[#21262d]">
-          <p className="text-xs text-gray-400 leading-relaxed pt-3">{guide.philosophy}</p>
+        <div className="px-3 pb-3 flex flex-col gap-3 border-t border-fh-border">
+          <p className="text-xs text-fh-dark-2 leading-relaxed pt-3">{guide.philosophy}</p>
           <ol className="space-y-1.5">
             {guide.priorities.map((p, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-gray-300">
-                <span className="text-cyan-500/60 font-mono shrink-0 w-4">{i + 1}.</span>
+              <li key={i} className="flex items-start gap-2 text-xs text-fh-dark-2">
+                <span className="text-fh-red/60 font-mono shrink-0 w-4">{i + 1}.</span>
                 {p}
               </li>
             ))}
@@ -86,13 +86,13 @@ export default function RacesView() {
           <button
             key={race.id}
             onClick={() => openRace(race)}
-            className="text-left bg-[#161b22] border border-[#30363d] rounded-xl p-5 hover:border-cyan-500/40 hover:bg-[#1c2330] transition-all duration-200 group"
+            className="text-left bg-fh-panel border border-fh-border rounded-xl p-5 hover:border-fh-red hover:bg-fh-panel-2 transition-all duration-200 group"
           >
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-3">
                 <span className="text-2xl leading-none">{race.icon}</span>
                 <div>
-                  <h2 className="text-sm font-semibold group-hover:text-cyan-400 transition-colors">
+                  <h2 className="text-sm font-semibold group-hover:text-fh-red transition-colors">
                     {race.name}
                   </h2>
                   <span className={`inline-block mt-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${surfaceBadge(race.surface)}`}>
@@ -102,13 +102,13 @@ export default function RacesView() {
               </div>
               <svg
                 width="14" height="14" viewBox="0 0 16 16" fill="currentColor"
-                className="shrink-0 text-gray-600 group-hover:text-cyan-500/60 transition-colors mt-0.5"
+                className="shrink-0 text-fh-muted group-hover:text-fh-red/60 transition-colors mt-0.5"
               >
                 <path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z" />
               </svg>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed line-clamp-3">{race.description}</p>
-            <div className="mt-4 flex items-center gap-4 text-[11px] text-gray-600">
+            <p className="text-xs text-fh-muted leading-relaxed line-clamp-3">{race.description}</p>
+            <div className="mt-4 flex items-center gap-4 text-[11px] text-fh-muted">
               <span>PI: {race.piSweetSpot}</span>
               <span>·</span>
               <span>{race.recommendedTags.length} tags</span>
@@ -129,7 +129,7 @@ export default function RacesView() {
       <div
         className={`
           fixed top-0 right-0 h-full w-full sm:w-[480px] z-50
-          bg-[#0d1117] border-l border-[#21262d]
+          bg-fh-panel border-l border-fh-border
           flex flex-col
           transition-transform duration-300 ease-in-out
           ${open ? 'translate-x-0' : 'translate-x-full'}
@@ -138,7 +138,7 @@ export default function RacesView() {
         {displayed && (
           <>
             {/* Header */}
-            <div className="flex items-start justify-between gap-3 p-5 border-b border-[#21262d]">
+            <div className="flex items-start justify-between gap-3 p-5 border-b border-fh-border">
               <div className="flex items-center gap-3">
                 <span className="text-3xl leading-none">{displayed.icon}</span>
                 <div>
@@ -151,7 +151,7 @@ export default function RacesView() {
               <button
                 onClick={close}
                 aria-label="Close"
-                className="shrink-0 mt-0.5 text-gray-500 hover:text-gray-200 transition-colors"
+                className="shrink-0 mt-0.5 text-fh-muted hover:text-fh-dark transition-colors"
               >
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
@@ -162,28 +162,28 @@ export default function RacesView() {
             {/* Body */}
             <div className="flex-1 overflow-y-auto">
               {/* Description */}
-              <div className="p-5 border-b border-[#21262d]">
-                <p className="text-sm text-gray-400 leading-relaxed">{displayed.description}</p>
+              <div className="p-5 border-b border-fh-border">
+                <p className="text-sm text-fh-dark-2 leading-relaxed">{displayed.description}</p>
               </div>
 
               {/* Demands + Avoid */}
-              <div className="p-5 border-b border-[#21262d] grid sm:grid-cols-2 gap-6">
+              <div className="p-5 border-b border-fh-border grid sm:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-xs text-gray-500 uppercase tracking-wide mb-3">This race demands</h3>
+                  <h3 className="text-xs text-fh-muted uppercase tracking-wide mb-3">This race demands</h3>
                   <ul className="space-y-1.5">
                     {displayed.demands.map((d) => (
-                      <li key={d} className="flex items-start gap-2 text-xs text-gray-300">
-                        <span className="text-cyan-500 mt-0.5 shrink-0">✓</span>
+                      <li key={d} className="flex items-start gap-2 text-xs text-fh-dark-2">
+                        <span className="text-fh-red mt-0.5 shrink-0">✓</span>
                         {d}
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-xs text-gray-500 uppercase tracking-wide mb-3">Works against you</h3>
+                  <h3 className="text-xs text-fh-muted uppercase tracking-wide mb-3">Works against you</h3>
                   <ul className="space-y-1.5">
                     {displayed.avoid.map((a) => (
-                      <li key={a} className="flex items-start gap-2 text-xs text-gray-300">
+                      <li key={a} className="flex items-start gap-2 text-xs text-fh-dark-2">
                         <span className="text-red-500 mt-0.5 shrink-0">✕</span>
                         {a}
                       </li>
@@ -193,25 +193,25 @@ export default function RacesView() {
               </div>
 
               {/* PI + Drivetrain */}
-              <div className="p-5 border-b border-[#21262d] grid sm:grid-cols-2 gap-6">
+              <div className="p-5 border-b border-fh-border grid sm:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-xs text-gray-500 uppercase tracking-wide mb-2">PI sweet spot</h3>
-                  <p className="text-sm font-semibold text-cyan-400">{displayed.piSweetSpot}</p>
+                  <h3 className="text-xs text-fh-muted uppercase tracking-wide mb-2">PI sweet spot</h3>
+                  <p className="text-sm font-semibold text-fh-red">{displayed.piSweetSpot}</p>
                 </div>
                 <div>
-                  <h3 className="text-xs text-gray-500 uppercase tracking-wide mb-2">Drivetrain</h3>
-                  <p className="text-xs text-gray-300 leading-relaxed">{displayed.drivetrainNote}</p>
+                  <h3 className="text-xs text-fh-muted uppercase tracking-wide mb-2">Drivetrain</h3>
+                  <p className="text-xs text-fh-dark-2 leading-relaxed">{displayed.drivetrainNote}</p>
                 </div>
               </div>
 
               {/* Recommended tags */}
-              <div className="p-5 border-b border-[#21262d]">
-                <h3 className="text-xs text-gray-500 uppercase tracking-wide mb-3">Garage tags it looks for</h3>
+              <div className="p-5 border-b border-fh-border">
+                <h3 className="text-xs text-fh-muted uppercase tracking-wide mb-3">Garage tags it looks for</h3>
                 <div className="flex flex-wrap gap-2">
                   {displayed.recommendedTags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-[#30363d] text-gray-400 bg-[#161b22]"
+                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-fh-border text-fh-dark-2 bg-fh-panel"
                     >
                       {tag}
                     </span>
@@ -224,10 +224,10 @@ export default function RacesView() {
                 const guides = getGuidesByRaceType(displayed.id)
                 if (guides.length === 0) return null
                 return (
-                  <div className="p-5 border-b border-[#21262d]">
-                    <h3 className="text-xs text-gray-500 uppercase tracking-wide mb-3">
+                  <div className="p-5 border-b border-fh-border">
+                    <h3 className="text-xs text-fh-muted uppercase tracking-wide mb-3">
                       Tuning guides
-                      <span className="ml-1.5 text-gray-700 normal-case">({guides.length} divisions)</span>
+                      <span className="ml-1.5 text-fh-dark-2 normal-case">({guides.length} divisions)</span>
                     </h3>
                     <div className="flex flex-col gap-2">
                       {guides.map((guide) => (
@@ -243,7 +243,7 @@ export default function RacesView() {
                 <Link
                   href={getRaceFilterUrl(displayed.id)}
                   onClick={close}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-semibold bg-fh-red-pale text-fh-red border border-fh-red hover:bg-fh-red-pale transition-colors"
                 >
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M1 6l7-4 7 4v8H1z" />

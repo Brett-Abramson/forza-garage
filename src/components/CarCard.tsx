@@ -5,34 +5,34 @@ import { getBestRaceType } from '@/lib/raceMatch'
 
 const DIVISION_ACCENT: Record<string, string> = {
   // Supercars / hypercars
-  'Hypercars':             'border-t-[var(--fh-red)]',
-  'Modern Supercars':      'border-t-[var(--fh-red)]',
-  'Retro Supercars':       'border-t-[var(--fh-red)]',
+  'Hypercars':             'border-t-fh-red',
+  'Modern Supercars':      'border-t-fh-red',
+  'Retro Supercars':       'border-t-fh-red',
 
   // GT / Saloons
-  'GT Cars':               'border-t-[var(--fh-purple)]',
-  'Super GT':              'border-t-[var(--fh-purple)]',
-  'Modern Super Saloons':  'border-t-[var(--fh-purple)]',
-  'Retro Super Saloons':   'border-t-[var(--fh-purple)]',
-  'Classic Racers':        'border-t-[var(--fh-purple)]',
-  'Retro Racers':          'border-t-[var(--fh-purple)]',
+  'GT Cars':               'border-t-fh-purple',
+  'Super GT':              'border-t-fh-purple',
+  'Modern Super Saloons':  'border-t-fh-purple',
+  'Retro Super Saloons':   'border-t-fh-purple',
+  'Classic Racers':        'border-t-fh-purple',
+  'Retro Racers':          'border-t-fh-purple',
 
   // Muscle
-  'Classic Muscle':        'border-t-[var(--fh-amber)]',
-  'Retro Muscle':          'border-t-[var(--fh-amber)]',
-  'Modern Muscle':         'border-t-[var(--fh-amber)]',
+  'Classic Muscle':        'border-t-fh-amber',
+  'Retro Muscle':          'border-t-fh-amber',
+  'Modern Muscle':         'border-t-fh-amber',
 
   // Hot Hatch / Sports
-  'Hot Hatch':             'border-t-[var(--fh-blue)]',
-  'Super Hot Hatch':       'border-t-[var(--fh-blue)]',
-  'Retro Hot Hatch':       'border-t-[var(--fh-blue)]',
-  'Classic Sports Cars':   'border-t-[var(--fh-blue)]',
-  'Retro Sports Cars':     'border-t-[var(--fh-blue)]',
-  'Modern Sports Cars':    'border-t-[var(--fh-blue)]',
+  'Hot Hatch':             'border-t-fh-blue',
+  'Super Hot Hatch':       'border-t-fh-blue',
+  'Retro Hot Hatch':       'border-t-fh-blue',
+  'Classic Sports Cars':   'border-t-fh-blue',
+  'Retro Sports Cars':     'border-t-fh-blue',
+  'Modern Sports Cars':    'border-t-fh-blue',
 
   // Track
-  'Track Toys':            'border-t-[var(--fh-pink)]',
-  'Extreme Track Toys':    'border-t-[var(--fh-pink)]',
+  'Track Toys':            'border-t-fh-pink',
+  'Extreme Track Toys':    'border-t-fh-pink',
 
   // Rally / Offroad
   'Classic Rally':         'border-t-green-600',
@@ -45,18 +45,18 @@ const DIVISION_ACCENT: Record<string, string> = {
   'Sports Utility Heroes': 'border-t-green-700',
 
   // Drift
-  'Drift Cars':            'border-t-[var(--fh-pink)]',
+  'Drift Cars':            'border-t-fh-pink',
 
   // Misc
-  'Rare Classics':         'border-t-[var(--fh-amber)]',
-  'Cult Cars':             'border-t-[var(--fh-muted2)]',
-  'Eclectic Domestics':    'border-t-[var(--fh-muted2)]',
-  'Rods and Customs':      'border-t-[var(--fh-muted2)]',
-  'Utility Heroes':        'border-t-[var(--fh-muted2)]',
+  'Rare Classics':         'border-t-fh-amber',
+  'Cult Cars':             'border-t-fh-muted-2',
+  'Eclectic Domestics':    'border-t-fh-muted-2',
+  'Rods and Customs':      'border-t-fh-muted-2',
+  'Utility Heroes':        'border-t-fh-muted-2',
 }
 
 function getDivisionAccent(division: string): string {
-  return DIVISION_ACCENT[division] ?? 'border-t-[var(--fh-border)]'
+  return DIVISION_ACCENT[division] ?? 'border-t-fh-border'
 }
 
 interface Props {
@@ -75,25 +75,25 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
     <div
       onClick={() => onCardClick?.(car)}
       className={`
-        relative flex flex-col rounded-xl border overflow-hidden transition-all duration-200 bg-[var(--fh-panel)]
+        relative flex flex-col rounded-xl border overflow-hidden transition-all duration-200 bg-fh-panel
         ${onCardClick ? 'cursor-pointer' : ''}
         ${car.owned
-          ? 'border-[var(--fh-red-border)] shadow-[0_0_12px_rgba(204,0,0,0.1)]'
-          : 'border-[var(--fh-border)] hover:border-[var(--fh-red-border)]'
+          ? 'border-fh-red shadow-[0_0_12px_rgba(204,0,0,0.1)]'
+          : 'border-fh-border hover:border-fh-red'
         }
       `}
     >
       {/* Division accent header */}
-      <div className={`border-t-2 ${accent} bg-[var(--fh-panel2)] flex items-end px-3 pb-2 pt-3`}>
+      <div className={`border-t-2 ${accent} bg-fh-panel-2 flex items-end px-3 pb-2 pt-3`}>
         <div className="flex items-center gap-2">
           <span className={`text-xs font-bold px-2 py-0.5 rounded ${classBadge}`}>
             {car.piClass}
           </span>
-          <span className="text-xs text-[var(--fh-dark2)]">{car.piRating}</span>
+          <span className="text-xs text-fh-dark-2">{car.piRating}</span>
         </div>
         {car.owned && (
           <div className="ml-auto">
-            <span className="text-xs font-semibold text-[var(--fh-red)] bg-[var(--fh-red-pale)] border border-[var(--fh-red-border)] px-2 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-fh-red bg-fh-red-pale border border-fh-red px-2 py-0.5 rounded-full">
               Owned
             </span>
           </div>
@@ -102,23 +102,23 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
 
       {/* Info */}
       <div className="flex flex-col gap-1 px-3 pt-3 pb-2 flex-1">
-        <div className="text-xs text-[var(--fh-muted)]">{car.year} · {car.make}</div>
+        <div className="text-xs text-fh-muted">{car.year} · {car.make}</div>
         <div className="text-sm font-semibold leading-tight">{car.model}</div>
-        <div className="text-xs text-[var(--fh-muted)] mt-0.5">{car.division}</div>
+        <div className="text-xs text-fh-muted mt-0.5">{car.division}</div>
 
-        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 text-xs text-[var(--fh-dark2)]">
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 text-xs text-fh-dark-2">
           {car.drivetrain && <span>{car.drivetrain}</span>}
           <span>{car.country}</span>
           {car.bodyStyle && <span>{car.bodyStyle}</span>}
         </div>
 
         {car.engineType && (
-          <div className="text-xs mt-1 text-[var(--fh-muted)] truncate">{car.engineType}</div>
+          <div className="text-xs mt-1 text-fh-muted truncate">{car.engineType}</div>
         )}
 
         <div className={`text-xs mt-0.5 font-medium ${sourceColor}`}>{car.source}</div>
         {bestRace && (
-          <div className="text-xs mt-1.5 text-[var(--fh-muted)]">
+          <div className="text-xs mt-1.5 text-fh-muted">
             {bestRace.icon} {bestRace.name}
           </div>
         )}
@@ -131,8 +131,8 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
           className={`
             w-full py-1.5 rounded-lg text-xs font-semibold transition-colors
             ${car.owned
-              ? 'bg-[var(--fh-red)] text-white border border-[var(--fh-red)] hover:opacity-80'
-              : 'bg-transparent border border-[var(--fh-border)] text-[var(--fh-muted)] hover:border-[var(--fh-red-border)] hover:text-[var(--fh-red)]'
+              ? 'bg-fh-red text-white border border-fh-red hover:opacity-80'
+              : 'bg-transparent border border-fh-border text-fh-muted hover:border-fh-red hover:text-fh-red'
             }
           `}
         >

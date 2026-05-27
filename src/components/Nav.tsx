@@ -33,13 +33,10 @@ export default function Nav() {
     : ''
 
   return (
-    <nav
-      className="border-b backdrop-blur-sm sticky top-0 z-10"
-      style={{ borderColor: 'var(--fh-border)', background: 'var(--fh-panel)' }}
-    >
+    <nav className="border-b border-fh-border bg-fh-panel backdrop-blur-sm sticky top-0 z-10">
       <div className="max-w-screen-2xl mx-auto px-4 flex items-center gap-1 h-12">
-        <Link href="/" className="text-sm font-bold tracking-tight mr-4" style={{ color: 'var(--fh-dark)' }}>
-          Forza<span style={{ color: 'var(--fh-red)' }}>Garage</span>
+        <Link href="/" className="text-sm font-bold tracking-tight mr-4 text-fh-dark">
+          Forza<span className="text-fh-red">Garage</span>
         </Link>
 
         {links.map(({ href, label, icon: Icon }) => {
@@ -67,27 +64,19 @@ export default function Nav() {
                 <button
                   aria-label="User menu"
                   onClick={() => setMenuOpen((v) => !v)}
-                  className="w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center transition-opacity hover:opacity-80"
-                  style={{ background: 'var(--fh-red)' }}
+                  className="w-7 h-7 rounded-full bg-fh-red text-white text-xs font-bold flex items-center justify-center transition-opacity hover:opacity-80"
                 >
                   {initials}
                 </button>
 
                 {menuOpen && (
                   <>
-                    {/* backdrop to close menu */}
                     <div
                       className="fixed inset-0 z-10"
                       onClick={() => setMenuOpen(false)}
                     />
-                    <div
-                      className="absolute right-0 top-full mt-1 w-44 rounded-lg border shadow-lg z-20 py-1"
-                      style={{ background: 'var(--fh-panel)', borderColor: 'var(--fh-border)' }}
-                    >
-                      <div
-                        className="px-3 py-2 text-xs truncate border-b"
-                        style={{ color: 'var(--fh-muted)', borderColor: 'var(--fh-border)' }}
-                      >
+                    <div className="absolute right-0 top-full mt-1 w-44 rounded-lg border border-fh-border bg-fh-panel shadow-lg z-20 py-1">
+                      <div className="px-3 py-2 text-xs text-fh-muted truncate border-b border-fh-border">
                         {user.emailAddresses[0]?.emailAddress}
                       </div>
                       <SignOutButton>
@@ -104,7 +93,7 @@ export default function Nav() {
               </div>
             ) : (
               <SignInButton mode="modal">
-                <button className="text-xs px-3 py-1.5 rounded-md border transition-colors fh-nav-link" style={{ borderColor: 'var(--fh-border)' }}>
+                <button className="text-xs px-3 py-1.5 rounded-md border border-fh-border transition-colors fh-nav-link">
                   Sign in
                 </button>
               </SignInButton>

@@ -143,20 +143,20 @@ function ExpandedRow({
   )
 
   return (
-    <tr className="border-b border-[#21262d] bg-[#0d1117]">
+    <tr className="border-b border-fh-border bg-fh-panel">
       <td colSpan={10} className="px-5 py-3">
         <div className="flex flex-col gap-3 max-w-2xl">
           <div>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {autoTags.length === 0 && userTags.length === 0 && (
-                <span className="text-xs text-gray-600">No tags — add one below</span>
+                <span className="text-xs text-fh-muted">No tags — add one below</span>
               )}
               {/* Auto tags — muted by default, removable */}
               {autoTags.map((tag) => (
                 <button
                   key={`auto-${tag}`}
                   onClick={() => patchTags(autoTags.filter((t) => t !== tag), userTags)}
-                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--fh-red-pale)] text-[var(--fh-red)] border border-[var(--fh-red-border)] opacity-60 hover:opacity-100 hover:bg-red-500/20 transition-opacity"
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red opacity-60 hover:opacity-100 hover:bg-red-500/20 transition-opacity"
                   title="Default tag from division — click to remove"
                 >
                   {tag} <span className="opacity-70">×</span>
@@ -167,7 +167,7 @@ function ExpandedRow({
                 <button
                   key={`user-${tag}`}
                   onClick={() => patchTags(autoTags, userTags.filter((t) => t !== tag))}
-                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30 transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30 transition-colors"
                 >
                   {tag} <span className="opacity-70">×</span>
                 </button>
@@ -179,7 +179,7 @@ function ExpandedRow({
                   <button
                     key={tag}
                     onClick={() => patchTags(autoTags, [...userTags, tag])}
-                    className="px-2.5 py-0.5 rounded-full text-xs border border-dashed border-[#30363d] text-gray-600 hover:text-gray-300 hover:border-[#484f58] transition-colors"
+                    className="px-2.5 py-0.5 rounded-full text-xs border border-dashed border-fh-border text-fh-muted hover:text-fh-dark-2 hover:border-fh-border transition-colors"
                   >
                     + {tag}
                   </button>
@@ -193,28 +193,28 @@ function ExpandedRow({
             onBlur={saveNotes}
             placeholder="Notes..."
             rows={2}
-            className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-xs text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/60 resize-none"
+            className="w-full bg-fh-panel border border-fh-border rounded-lg px-3 py-2 text-xs text-fh-dark-2 placeholder:text-fh-muted focus:outline-none focus:border-fh-red resize-none"
           />
           {/* Stat bars — compact version */}
-          <div className="border-t border-[#21262d] pt-3">
+          <div className="border-t border-fh-border pt-3">
             <StatBars car={car} />
           </div>
 
           {rankedRaces.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap text-xs text-gray-600 mt-1">
+            <div className="flex items-center gap-1.5 flex-wrap text-xs text-fh-muted mt-1">
               <span>Best for:</span>
               <a
                 href={`/races/${rankedRaces[0].race.id}`}
-                className="text-gray-400 hover:text-cyan-400 transition-colors"
+                className="text-fh-dark-2 hover:text-fh-red transition-colors"
               >
                 {rankedRaces[0].race.icon} {rankedRaces[0].race.name}
               </a>
               {rankedRaces.slice(1).map(({ race }) => (
                 <span key={race.id} className="flex items-center gap-1.5">
-                  <span className="text-gray-700">·</span>
+                  <span className="text-fh-dark-2">·</span>
                   <a
                     href={`/races/${race.id}`}
-                    className="text-gray-600 hover:text-gray-400 transition-colors"
+                    className="text-fh-muted hover:text-fh-dark-2 transition-colors"
                   >
                     {race.icon} {race.name}
                   </a>
@@ -225,10 +225,10 @@ function ExpandedRow({
 
           {/* Stat analysis callouts */}
           {statCallouts.length > 0 && (
-            <div className="border-t border-[#21262d] pt-3">
+            <div className="border-t border-fh-border pt-3">
               <div className="flex items-baseline gap-2 mb-2">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wide">Stat analysis</div>
-                <div className="text-[9px] text-gray-700 italic">based on available data</div>
+                <div className="text-[10px] text-fh-muted uppercase tracking-wide">Stat analysis</div>
+                <div className="text-[9px] text-fh-dark-2 italic">based on available data</div>
               </div>
               <div className="flex flex-col gap-2">
                 {statCallouts.map((c) => (
@@ -245,16 +245,16 @@ function ExpandedRow({
 
           {/* Tuning guide */}
           {rankedRaces.length > 0 && (
-            <div className="border-t border-[#21262d] pt-3 flex flex-col gap-3">
+            <div className="border-t border-fh-border pt-3 flex flex-col gap-3">
               {tuningGuide ? (
                 <>
-                  <p className="text-xs text-gray-500 leading-relaxed">{tuningGuide.philosophy}</p>
-                  <p className="text-xs text-gray-600 italic leading-relaxed">{tuningGuide.spectrum}</p>
+                  <p className="text-xs text-fh-muted leading-relaxed">{tuningGuide.philosophy}</p>
+                  <p className="text-xs text-fh-muted italic leading-relaxed">{tuningGuide.spectrum}</p>
                   <ol className="space-y-1">
                     {tuningGuide.priorities.map((p, i) => (
                       <li key={i} className="flex items-start gap-1.5 text-xs">
-                        <span className="text-cyan-500/50 font-mono shrink-0 w-4">{i + 1}.</span>
-                        <span className="text-gray-400">{p}</span>
+                        <span className="text-fh-red/50 font-mono shrink-0 w-4">{i + 1}.</span>
+                        <span className="text-fh-dark-2">{p}</span>
                       </li>
                     ))}
                   </ol>
@@ -264,16 +264,16 @@ function ExpandedRow({
                   </div>
                 </>
               ) : (
-                <p className="text-xs text-gray-600 italic">Tuning guide coming soon for this combination.</p>
+                <p className="text-xs text-fh-muted italic">Tuning guide coming soon for this combination.</p>
               )}
             </div>
           )}
 
           {/* Stat entry — collapsed by default */}
-          <div className="border-t border-[#21262d]">
+          <div className="border-t border-fh-border">
             <button
               onClick={() => setShowStatEntry((v) => !v)}
-              className="w-full flex items-center justify-between py-2 text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
+              className="w-full flex items-center justify-between py-2 text-[10px] text-fh-muted hover:text-fh-dark-2 transition-colors"
             >
               <span>
                 {showStatEntry
@@ -294,10 +294,10 @@ function ExpandedRow({
               <div className="overflow-hidden">
                 <div className="pt-1 pb-2">
                   <div className="flex items-center justify-between mb-1.5">
-                    <div className="text-[10px] text-gray-700">Performance · 0–10</div>
-                    {savingStats && <span className="text-[10px] text-gray-600">Saving…</span>}
+                    <div className="text-[10px] text-fh-dark-2">Performance · 0–10</div>
+                    {savingStats && <span className="text-[10px] text-fh-muted">Saving…</span>}
                     {!savingStats && !statsDirty && hasAnyStats && (
-                      <span className="text-[10px] text-gray-600">Saved</span>
+                      <span className="text-[10px] text-fh-muted">Saved</span>
                     )}
                   </div>
                   <div className="grid grid-cols-3 gap-x-3 gap-y-2 mb-3">
@@ -308,7 +308,7 @@ function ExpandedRow({
                       <RowStatInput key={key} label={label} value={stats[key]} step={0.1} min={0} max={10} onChange={(v) => updateStat(key, v)} onBlur={saveStats} />
                     ))}
                   </div>
-                  <div className="text-[10px] text-gray-700 mb-1.5">Specs</div>
+                  <div className="text-[10px] text-fh-dark-2 mb-1.5">Specs</div>
                   <div className="grid grid-cols-3 gap-x-3 gap-y-2">
                     <RowStatInput label="HP" value={stats.powerHp} onChange={(v) => updateStat('powerHp', v)} onBlur={saveStats} />
                     <RowStatInput label="Torque" value={stats.torqueFtLb} onChange={(v) => updateStat('torqueFtLb', v)} onBlur={saveStats} />
@@ -316,12 +316,12 @@ function ExpandedRow({
                     <RowStatInput label="F.Wt %" value={stats.frontWeight} min={0} max={100} onChange={(v) => updateStat('frontWeight', v)} onBlur={saveStats} />
                     <RowStatInput label="Disp (L)" value={stats.displacementL} step={0.1} onChange={(v) => updateStat('displacementL', v)} onBlur={saveStats} />
                     <div className="min-w-0">
-                      <div className="text-[10px] text-gray-600 mb-0.5">Rarity</div>
+                      <div className="text-[10px] text-fh-muted mb-0.5">Rarity</div>
                       <select
                         value={stats.rarity}
                         onChange={(e) => updateStat('rarity', e.target.value)}
                         onBlur={saveStats}
-                        className="w-full bg-[#161b22] border border-[#30363d] rounded px-1.5 py-0.5 text-[10px] text-gray-300 focus:outline-none focus:border-cyan-500/60"
+                        className="w-full bg-fh-panel border border-fh-border rounded px-1.5 py-0.5 text-[10px] text-fh-dark-2 focus:outline-none focus:border-fh-red"
                       >
                         <option value="">—</option>
                         {RARITY_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -363,7 +363,7 @@ function RowStatInput({
 
   return (
     <div className="min-w-0">
-      <div className="text-[10px] text-gray-600 mb-0.5">{label}</div>
+      <div className="text-[10px] text-fh-muted mb-0.5">{label}</div>
       <input
         type="number"
         aria-label={label}
@@ -374,7 +374,7 @@ function RowStatInput({
         onChange={(e) => onChange(e.target.value)}
         onBlur={handleBlur}
         placeholder="—"
-        className="w-full bg-[#161b22] border border-[#30363d] rounded px-1.5 py-0.5 text-[10px] text-gray-300 focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="w-full bg-fh-panel border border-fh-border rounded px-1.5 py-0.5 text-[10px] text-fh-dark-2 focus:outline-none focus:border-fh-red placeholder:text-fh-muted [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
     </div>
   )
@@ -618,12 +618,12 @@ export default function GarageShowcase({ initialCars }: Props) {
       <div className="flex flex-col items-center justify-center py-32 text-center">
         <div className="text-5xl mb-4">🏎️</div>
         <h2 className="text-xl font-semibold mb-2">Your garage is empty</h2>
-        <p className="text-gray-500 text-sm mb-6">
+        <p className="text-fh-muted text-sm mb-6">
           Head to the Car Database to find and add cars to your collection.
         </p>
         <Link
           href="/cars"
-          className="px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 rounded-lg text-sm font-medium hover:bg-cyan-500/30 transition-colors"
+          className="px-4 py-2 bg-fh-red-pale text-fh-red border border-fh-red rounded-lg text-sm font-medium hover:bg-fh-red-pale transition-colors"
         >
           Browse Car Database
         </Link>
@@ -642,28 +642,28 @@ export default function GarageShowcase({ initialCars }: Props) {
           placeholder="Search make, model, division... (press / to focus)"
           value={filters.search}
           onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-          className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/60 placeholder:text-gray-600"
+          className="flex-1 bg-fh-panel border border-fh-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fh-red placeholder:text-fh-muted"
         />
         {activeFilterCount > 0 && (
           <button
             onClick={clearAllFilters}
-            className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-colors whitespace-nowrap"
+            className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-colors whitespace-nowrap"
           >
             {activeFilterCount} active · clear
           </button>
         )}
-        <div className="flex bg-[#161b22] border border-[#30363d] rounded-lg overflow-hidden shrink-0">
+        <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0">
           <button
             onClick={() => setView('grid')}
             title="Grid view"
-            className={`px-3 py-2 transition-colors ${view === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`px-3 py-2 transition-colors ${view === 'grid' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
           >
             <GridIcon />
           </button>
           <button
             onClick={() => setView('table')}
             title="Table view"
-            className={`px-3 py-2 transition-colors ${view === 'table' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`px-3 py-2 transition-colors ${view === 'table' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
           >
             <TableIcon />
           </button>
@@ -680,15 +680,15 @@ export default function GarageShowcase({ initialCars }: Props) {
               onClick={() => setFilters((f) => ({ ...f, piClass: f.piClass === cls ? '' : cls }))}
               className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${
                 filters.piClass === cls
-                  ? 'bg-cyan-500/15 border-cyan-500/40'
-                  : 'bg-[#161b22] border-[#30363d] hover:border-[#484f58]'
+                  ? 'bg-fh-red-pale border-fh-red'
+                  : 'bg-fh-panel border-fh-border hover:border-fh-border'
               }`}
             >
               <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[cls]}`}>
                 {cls}
               </span>
               <span className="text-sm font-semibold">{classCounts[cls]}</span>
-              <span className="text-xs text-gray-500">{classCounts[cls] === 1 ? 'car' : 'cars'}</span>
+              <span className="text-xs text-fh-muted">{classCounts[cls] === 1 ? 'car' : 'cars'}</span>
             </button>
           ))}
       </div>
@@ -721,8 +721,8 @@ export default function GarageShowcase({ initialCars }: Props) {
             onClick={() => setFilters((f) => ({ ...f, source: f.source === match ? '' : match }))}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               filters.source === match
-                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+                ? 'bg-fh-red-pale text-fh-red border-fh-red'
+                : 'bg-fh-panel text-fh-muted border-fh-border hover:border-fh-border hover:text-fh-dark-2'
             }`}
           >
             {label}
@@ -733,13 +733,13 @@ export default function GarageShowcase({ initialCars }: Props) {
       {/* Filter mode toggle + chip row */}
       <div>
         <div className="flex items-center gap-1 mb-3">
-          <span className="text-xs text-gray-500 uppercase tracking-wide mr-2">Filter by</span>
+          <span className="text-xs text-fh-muted uppercase tracking-wide mr-2">Filter by</span>
           <button
             onClick={() => switchMode('tags')}
             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
               filterMode === 'tags'
-                ? 'bg-cyan-500/20 text-cyan-400'
-                : 'text-gray-500 hover:text-gray-300'
+                ? 'bg-fh-red-pale text-fh-red'
+                : 'text-fh-muted hover:text-fh-dark-2'
             }`}
           >
             Tags
@@ -749,7 +749,7 @@ export default function GarageShowcase({ initialCars }: Props) {
             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
               filterMode === 'race'
                 ? 'bg-amber-500/20 text-amber-400'
-                : 'text-gray-500 hover:text-gray-300'
+                : 'text-fh-muted hover:text-fh-dark-2'
             }`}
           >
             Race type
@@ -764,8 +764,8 @@ export default function GarageShowcase({ initialCars }: Props) {
                 onClick={() => toggleTag(tag)}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   selectedTags.has(tag)
-                    ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                    : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+                    ? 'bg-fh-red-pale text-fh-red border-fh-red'
+                    : 'bg-fh-panel text-fh-muted border-fh-border hover:border-fh-border hover:text-fh-dark-2'
                 }`}
               >
                 {tag}
@@ -774,7 +774,7 @@ export default function GarageShowcase({ initialCars }: Props) {
             {selectedTags.size > 0 && (
               <button
                 onClick={() => setSelectedTags(new Set())}
-                className="px-3 py-1 rounded-full text-xs font-medium border border-[#30363d] text-gray-500 hover:text-gray-300 hover:border-[#484f58] transition-colors"
+                className="px-3 py-1 rounded-full text-xs font-medium border border-fh-border text-fh-muted hover:text-fh-dark-2 hover:border-fh-border transition-colors"
               >
                 ✕ clear
               </button>
@@ -789,7 +789,7 @@ export default function GarageShowcase({ initialCars }: Props) {
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   selectedRace === race.id
                     ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                    : 'bg-[#161b22] text-gray-500 border-[#30363d] hover:border-[#484f58] hover:text-gray-300'
+                    : 'bg-fh-panel text-fh-muted border-fh-border hover:border-fh-border hover:text-fh-dark-2'
                 }`}
               >
                 <span>{race.icon}</span>
@@ -817,7 +817,7 @@ export default function GarageShowcase({ initialCars }: Props) {
                   <button
                     onClick={() => setSelectedRace(null)}
                     aria-label="Close race tray"
-                    className="shrink-0 text-gray-500 hover:text-gray-300 transition-colors"
+                    className="shrink-0 text-fh-muted hover:text-fh-dark-2 transition-colors"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                       <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
@@ -827,14 +827,14 @@ export default function GarageShowcase({ initialCars }: Props) {
                 <div className="grid sm:grid-cols-2 gap-3">
                   <ul className="space-y-1">
                     {displayedRace.demands.map((d) => (
-                      <li key={d} className="flex items-start gap-1.5 text-xs text-gray-300">
+                      <li key={d} className="flex items-start gap-1.5 text-xs text-fh-dark-2">
                         <span className="text-amber-500 mt-0.5 shrink-0">▸</span>
                         {d}
                       </li>
                     ))}
                   </ul>
                   <div>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Filtering by</p>
+                    <p className="text-[10px] text-fh-muted uppercase tracking-wide mb-1.5">Filtering by</p>
                     <div className="flex flex-wrap gap-1.5">
                       {displayedRace.recommendedTags.map((tag) => (
                         <span
@@ -855,14 +855,14 @@ export default function GarageShowcase({ initialCars }: Props) {
 
       {/* Results */}
       {sortedCars.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-gray-600">
+        <div className="flex flex-col items-center justify-center py-24 text-fh-muted">
           <div className="text-4xl mb-3">🔍</div>
           <div className="text-lg font-medium">No cars match</div>
           <div className="text-sm mt-1">Try adjusting your filters</div>
           {activeFilterCount > 0 && (
             <button
               onClick={clearAllFilters}
-              className="mt-4 px-4 py-2 rounded-lg text-sm border border-[#30363d] text-gray-500 hover:border-[#484f58] hover:text-gray-200 transition-colors"
+              className="mt-4 px-4 py-2 rounded-lg text-sm border border-fh-border text-fh-muted hover:border-fh-border hover:text-fh-dark transition-colors"
             >
               Clear all filters
             </button>
@@ -870,7 +870,7 @@ export default function GarageShowcase({ initialCars }: Props) {
         </div>
       ) : (
         <>
-          <p className="text-xs text-gray-500 -mb-3">
+          <p className="text-xs text-fh-muted -mb-3">
             Showing {sortedCars.length} {sortedCars.length === 1 ? 'car' : 'cars'}
             {sortedCars.length < cars.length && ` of ${cars.length}`}
           </p>
@@ -883,10 +883,10 @@ export default function GarageShowcase({ initialCars }: Props) {
               ))}
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-[#30363d]">
+            <div className="overflow-x-auto rounded-xl border border-fh-border">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-[#161b22] border-b border-[#30363d] text-xs uppercase tracking-wide select-none">
+                  <tr className="bg-fh-panel border-b border-fh-border text-xs uppercase tracking-wide select-none">
                     <SortTh label="Class" sortKey="piClass" sort={sort} onSort={handleSort} />
                     <SortTh label="PI" sortKey="piRating" sort={sort} onSort={handleSort} />
                     <SortTh label="Year" sortKey="year" sort={sort} onSort={handleSort} />
@@ -896,7 +896,7 @@ export default function GarageShowcase({ initialCars }: Props) {
                     <SortTh label="Drive" sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
                     <SortTh label="Country" sortKey="country" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
                     <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
-                    <th className="text-left py-2.5 px-3 text-gray-500">Garage</th>
+                    <th className="text-left py-2.5 px-3 text-fh-muted">Garage</th>
                   </tr>
                 </thead>
                 <tbody>

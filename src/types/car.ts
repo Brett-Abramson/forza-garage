@@ -77,9 +77,9 @@ export const PI_CLASS_COLORS: Record<string, string> = {
 
 // Color the source badge by how hard the car is to obtain
 export function getSourceColor(source: string): string {
-  if (source.includes('DLC')) return 'text-cyan-400'
+  if (source.includes('DLC')) return 'text-fh-red'
   if (source.includes('Loyalty')) return 'text-purple-400'
   if (source.includes('Seasonal')) return 'text-amber-400'
   if (source.includes('Collection Journal')) return 'text-blue-400'
-  return 'text-gray-500'
+  return 'text-fh-muted'
 }

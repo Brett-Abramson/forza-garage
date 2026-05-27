@@ -105,13 +105,13 @@ describe('CarRow — isExpanded', () => {
   it('applies expanded bg when isExpanded is true', () => {
     renderRow(baseCar, { isExpanded: true })
     const classes = screen.getByRole('row').className.split(/\s+/)
-    expect(classes).toContain('bg-[var(--fh-panel2)]')
+    expect(classes).toContain('bg-fh-panel-2')
   })
 
   it('does not apply the bare expanded bg class when isExpanded is false', () => {
     renderRow(baseCar, { isExpanded: false })
     const classes = screen.getByRole('row').className.split(/\s+/)
-    expect(classes).not.toContain('bg-[var(--fh-panel2)]')
+    expect(classes).not.toContain('bg-fh-panel-2')
   })
 })
 

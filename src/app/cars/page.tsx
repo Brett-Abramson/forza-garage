@@ -41,7 +41,7 @@ export default async function CarsPage() {
     <main className="max-w-screen-2xl mx-auto px-4 py-8">
       <header className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight">Car Database</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-fh-muted text-sm mt-1">
           Browse all {cars.length} cars — mark the ones you own to add them to your garage.
         </p>
       </header>

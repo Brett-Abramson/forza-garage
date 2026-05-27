@@ -90,7 +90,7 @@ export default async function LandingPage() {
         <div className="relative max-w-screen-2xl mx-auto px-4 py-20 sm:py-28">
           <p
             className="text-xs font-semibold tracking-[0.25em] uppercase mb-4"
-            style={{ color: 'var(--fh-red)' }}
+            className="text-fh-red"
           >
             Forza Horizon 6 · Japan
           </p>
@@ -99,7 +99,7 @@ export default async function LandingPage() {
             style={{ color: '#f0e8d8' }}
           >
             Your Garage.<br />
-            <span style={{ color: 'var(--fh-red)' }}>Tracked.</span>
+            <span className="text-fh-red">Tracked.</span>
           </h1>
           <p className="text-base mb-10 max-w-md" style={{ color: 'rgba(240,232,216,0.6)' }}>
             Browse 661 cars, build your collection, and find the right car for every race type.
@@ -109,7 +109,7 @@ export default async function LandingPage() {
             <Link
               href="/garage"
               className="btn-clip inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-80"
-              style={{ background: 'var(--fh-red)' }}
+              className="bg-fh-red"
             >
               My Garage
               {stats && (
@@ -139,39 +139,39 @@ export default async function LandingPage() {
         <section>
           <h2
             className="text-xs font-semibold uppercase tracking-widest mb-4"
-            style={{ color: 'var(--fh-muted)' }}
+            className="text-fh-muted"
           >
             Quick access
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
             <Link
               href="/garage"
-              className="group flex flex-col gap-2 p-5 rounded-xl border transition-colors"
-              style={{ background: 'var(--fh-panel)', borderColor: 'var(--fh-border)' }}
+              className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors"
+             
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold">My Garage</span>
-                <span className="text-xs" style={{ color: 'var(--fh-red)' }}>→</span>
+                <span className="text-xs" className="text-fh-red">→</span>
               </div>
-              <span className="text-3xl font-bold" style={{ color: 'var(--fh-red)' }}>
+              <span className="text-3xl font-bold" className="text-fh-red">
                 {stats ? stats.total : '—'}
               </span>
-              <span className="text-xs" style={{ color: 'var(--fh-muted)' }}>
+              <span className="text-xs" className="text-fh-muted">
                 {stats ? `${stats.total === 1 ? 'car' : 'cars'} owned` : 'Sign in to see your garage'}
               </span>
             </Link>
 
             <Link
               href="/cars"
-              className="group flex flex-col gap-2 p-5 rounded-xl border transition-colors"
-              style={{ background: 'var(--fh-panel)', borderColor: 'var(--fh-border)' }}
+              className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors"
+             
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold">Car Database</span>
-                <span className="text-xs" style={{ color: 'var(--fh-red)' }}>→</span>
+                <span className="text-xs" className="text-fh-red">→</span>
               </div>
-              <span className="text-3xl font-bold" style={{ color: 'var(--fh-red)' }}>661</span>
-              <span className="text-xs" style={{ color: 'var(--fh-muted)' }}>cars in database</span>
+              <span className="text-3xl font-bold" className="text-fh-red">661</span>
+              <span className="text-xs" className="text-fh-muted">cars in database</span>
             </Link>
           </div>
         </section>
@@ -181,7 +181,7 @@ export default async function LandingPage() {
           <section>
             <h2
               className="text-xs font-semibold uppercase tracking-widest mb-4"
-              style={{ color: 'var(--fh-muted)' }}
+              className="text-fh-muted"
             >
               Garage by class
             </h2>
@@ -190,13 +190,13 @@ export default async function LandingPage() {
                 <Link
                   key={cls}
                   href={`/garage?class=${cls}`}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm transition-opacity hover:opacity-75"
-                  style={{ background: 'var(--fh-panel)', borderColor: 'var(--fh-border)' }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-fh-border bg-fh-panel text-sm transition-opacity hover:opacity-75"
+                 
                 >
                   <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[cls] ?? 'bg-gray-600 text-white'}`}>
                     {cls}
                   </span>
-                  <span style={{ color: 'var(--fh-dark)' }}>{classMap[cls]}</span>
+                  <span className="text-fh-dark">{classMap[cls]}</span>
                 </Link>
               ))}
             </div>
@@ -208,7 +208,7 @@ export default async function LandingPage() {
           <section>
             <h2
               className="text-xs font-semibold uppercase tracking-widest mb-4"
-              style={{ color: 'var(--fh-muted)' }}
+              className="text-fh-muted"
             >
               Pinned
             </h2>
@@ -225,7 +225,7 @@ export default async function LandingPage() {
           <section>
             <h2
               className="text-xs font-semibold uppercase tracking-widest mb-4"
-              style={{ color: 'var(--fh-muted)' }}
+              className="text-fh-muted"
             >
               Recently added
             </h2>
@@ -240,17 +240,17 @@ export default async function LandingPage() {
         {/* ── Sign-in prompt (signed-out) ───────────────────────────────────── */}
         {!userId && (
           <section
-            className="rounded-xl border p-8 text-center max-w-md"
-            style={{ background: 'var(--fh-panel)', borderColor: 'var(--fh-border)' }}
+            className="rounded-xl border border-fh-border bg-fh-panel p-8 text-center max-w-md"
+           
           >
             <p className="text-sm mb-1 font-medium">Track your collection</p>
-            <p className="text-xs mb-5" style={{ color: 'var(--fh-muted)' }}>
+            <p className="text-xs mb-5" className="text-fh-muted">
               Sign in to track owned cars, add tags, and get race recommendations.
             </p>
             <Link
               href="/sign-in"
               className="btn-clip inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white"
-              style={{ background: 'var(--fh-red)' }}
+              className="bg-fh-red"
             >
               Sign in to get started
             </Link>
@@ -267,17 +267,17 @@ function CarListItem({ car }: { car: PinnedCar['car'] }) {
   return (
     <Link
       href={`/garage?q=${encodeURIComponent(car.model)}`}
-      className="flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors hover:opacity-80"
-      style={{ background: 'var(--fh-panel)', borderColor: 'var(--fh-border)' }}
+      className="flex items-center gap-3 px-4 py-3 rounded-lg border border-fh-border bg-fh-panel transition-colors hover:opacity-80"
+     
     >
       <span className={`text-xs font-bold px-1.5 py-0.5 rounded shrink-0 ${PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'}`}>
         {car.piClass}
       </span>
-      <span className="text-xs shrink-0 tabular-nums" style={{ color: 'var(--fh-muted)' }}>
+      <span className="text-xs shrink-0 tabular-nums" className="text-fh-muted">
         {car.piRating}
       </span>
       <span className="text-sm font-medium truncate">{car.make} {car.model}</span>
-      <span className="text-xs ml-auto shrink-0" style={{ color: 'var(--fh-muted)' }}>
+      <span className="text-xs ml-auto shrink-0" className="text-fh-muted">
         {car.year}
       </span>
     </Link>

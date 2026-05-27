@@ -29,7 +29,7 @@ export function SortTh({
     >
       <span
         className={`flex items-center gap-1 transition-colors ${
-          active ? 'text-[var(--fh-red)]' : 'text-[var(--fh-muted)] hover:text-[var(--fh-dark)]'
+          active ? 'text-fh-red' : 'text-fh-muted hover:text-fh-dark'
         }`}
       >
         {label}

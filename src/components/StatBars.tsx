@@ -6,7 +6,7 @@ interface Props {
 
 const BARS: { key: keyof Car; label: string; color: string }[] = [
   { key: 'statSpeed',        label: 'Speed',   color: 'bg-blue-500'   },
-  { key: 'statHandling',     label: 'Handling', color: 'bg-cyan-500'  },
+  { key: 'statHandling',     label: 'Handling', color: 'bg-fh-red'  },
   { key: 'statAcceleration', label: 'Accel',   color: 'bg-green-500'  },
   { key: 'statLaunch',       label: 'Launch',  color: 'bg-yellow-500' },
   { key: 'statBraking',      label: 'Braking', color: 'bg-orange-500' },
@@ -18,7 +18,7 @@ export default function StatBars({ car }: Props) {
 
   if (!hasAnyBarStat) {
     return (
-      <p className="text-[10px] text-gray-700 italic">
+      <p className="text-[10px] text-fh-dark-2 italic">
         No stats yet — enter them from the in-game stat screen below.
       </p>
     )
@@ -30,8 +30,8 @@ export default function StatBars({ car }: Props) {
         const value = car[key] as number | null
         return (
           <div key={key} className="flex items-center gap-2">
-            <div className="text-[10px] text-gray-600 w-14 shrink-0 text-right">{label}</div>
-            <div className="flex-1 h-1.5 bg-[#21262d] rounded-full overflow-hidden">
+            <div className="text-[10px] text-fh-muted w-14 shrink-0 text-right">{label}</div>
+            <div className="flex-1 h-1.5 bg-fh-panel-2 rounded-full overflow-hidden">
               {value != null && (
                 <div
                   className={`h-full rounded-full ${color} opacity-80 transition-all duration-300`}
@@ -39,7 +39,7 @@ export default function StatBars({ car }: Props) {
                 />
               )}
             </div>
-            <div className="text-[10px] text-gray-500 tabular-nums w-6 shrink-0">
+            <div className="text-[10px] text-fh-muted tabular-nums w-6 shrink-0">
               {value != null ? value.toFixed(1) : '—'}
             </div>
           </div>
@@ -65,11 +65,11 @@ function SpecsRow({ car }: { car: Car }) {
   if (specs.length === 0) return null
 
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 pt-2 border-t border-[#21262d]">
+    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 pt-2 border-t border-fh-border">
       {specs.map(({ label, value }) => (
         <div key={label} className="flex items-baseline gap-1">
-          <span className="text-[9px] text-gray-600 uppercase tracking-wide">{label}</span>
-          <span className="text-[10px] text-gray-400 tabular-nums">{value}</span>
+          <span className="text-[9px] text-fh-muted uppercase tracking-wide">{label}</span>
+          <span className="text-[10px] text-fh-dark-2 tabular-nums">{value}</span>
         </div>
       ))}
     </div>
