@@ -124,140 +124,156 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Main content ─────────────────────────────────────────────────────── */}
-      <div className="max-w-screen-2xl mx-auto px-4 py-10 flex flex-col gap-10">
+      <div className="max-w-screen-2xl mx-auto px-4 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start">
 
-        {/* ── Quick access cards ────────────────────────────────────────────── */}
-        <section>
-          <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
-            Quick access
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-            <Link
-              href="/garage"
-              className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">My Garage</span>
-                <span className="text-xs text-fh-red">→</span>
+          {/* ── LEFT — quick access + pinned + recently added ──────────────── */}
+          <div className="flex flex-col gap-8">
+
+            {/* Quick access cards */}
+            <section>
+              <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
+                Quick access
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Link
+                  href="/garage"
+                  className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold">My Garage</span>
+                    <span className="text-xs text-fh-red">→</span>
+                  </div>
+                  <span className="text-3xl font-bold text-fh-red">
+                    {stats ? stats.total : '—'}
+                  </span>
+                  <span className="text-xs text-fh-muted">
+                    {stats ? `${stats.total === 1 ? 'car' : 'cars'} owned` : 'Sign in to see your garage'}
+                  </span>
+                </Link>
+
+                <Link
+                  href="/cars"
+                  className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold">Car Database</span>
+                    <span className="text-xs text-fh-red">→</span>
+                  </div>
+                  <span className="text-3xl font-bold text-fh-red">661</span>
+                  <span className="text-xs text-fh-muted">cars in database</span>
+                </Link>
               </div>
-              <span className="text-3xl font-bold text-fh-red">
-                {stats ? stats.total : '—'}
-              </span>
-              <span className="text-xs text-fh-muted">
-                {stats ? `${stats.total === 1 ? 'car' : 'cars'} owned` : 'Sign in to see your garage'}
-              </span>
-            </Link>
+            </section>
 
-            <Link
-              href="/cars"
-              className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">Car Database</span>
-                <span className="text-xs text-fh-red">→</span>
-              </div>
-              <span className="text-3xl font-bold text-fh-red">661</span>
-              <span className="text-xs text-fh-muted">cars in database</span>
-            </Link>
-          </div>
-        </section>
-
-        {/* ── Featured car ──────────────────────────────────────────────────── */}
-        <section>
-          <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
-            Featured car
-          </h2>
-          <div className="max-w-lg rounded-xl border border-fh-border bg-fh-panel p-5 flex flex-col gap-3">
-            {/* Badge + title */}
-            <div className="flex items-start gap-3">
-              <span className="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-fh-red text-white">
-                {featured.badge}
-              </span>
-              <div>
-                <div className="text-base font-bold leading-tight">
-                  {featured.make} {featured.model}
+            {/* Pinned cars */}
+            {stats && stats.pinned.length > 0 && (
+              <section>
+                <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
+                  Pinned
+                </h2>
+                <div className="flex flex-col gap-2">
+                  {stats.pinned.map(({ car }) => (
+                    <CarListItem key={car.id} car={car} />
+                  ))}
                 </div>
-                <div className="text-xs text-fh-muted mt-0.5">{featured.year}</div>
-              </div>
-              {/* PI class + rating */}
-              <div className="ml-auto flex items-center gap-1.5 shrink-0">
-                <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[featured.piClass] ?? 'bg-gray-600 text-white'}`}>
-                  {featured.piClass}
-                </span>
-                <span className="text-xs tabular-nums text-fh-muted">{featured.piRating}</span>
-              </div>
-            </div>
-
-            {/* Reason */}
-            <p className="text-xs text-fh-dark-2 leading-relaxed">{featured.reason}</p>
-
-            {/* Race type link */}
-            {featuredRace && (
-              <Link
-                href="/races"
-                className="inline-flex items-center gap-1.5 text-xs text-fh-muted hover:text-fh-dark transition-colors"
-              >
-                <span>🏁</span>
-                <span>Best for: <span className="text-fh-dark">{featuredRace.name}</span></span>
-              </Link>
+              </section>
             )}
 
-            {/* Actions + footnote */}
-            <div className="flex items-center justify-between pt-1 border-t border-fh-border">
-              <Link
-                href={userId ? '/garage' : '/sign-in'}
-                className="btn-clip inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-fh-red transition-opacity hover:opacity-80"
-              >
-                {userId ? 'Open Garage' : 'Sign in to add'}
-              </Link>
-              <span className="text-[10px] text-fh-muted-2">meta as of May 2026</span>
-            </div>
+            {/* Recently added */}
+            {stats && stats.recent.length > 0 && (
+              <section>
+                <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
+                  Recently added
+                </h2>
+                <div className="flex flex-col gap-2">
+                  {stats.recent.map(({ car }) => (
+                    <CarListItem key={car.id} car={car} />
+                  ))}
+                </div>
+              </section>
+            )}
+
           </div>
-        </section>
 
-        {/* ── Pinned cars ───────────────────────────────────────────────────── */}
-        {stats && stats.pinned.length > 0 && (
-          <section>
-            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
-              Pinned
-            </h2>
-            <div className="flex flex-col gap-2 max-w-lg">
-              {stats.pinned.map(({ car }) => (
-                <CarListItem key={car.id} car={car} />
-              ))}
-            </div>
-          </section>
-        )}
+          {/* ── RIGHT — featured car + sign-in prompt ──────────────────────── */}
+          <div className="flex flex-col gap-6 order-first lg:order-last">
 
-        {/* ── Recently added ────────────────────────────────────────────────── */}
-        {stats && stats.recent.length > 0 && (
-          <section>
-            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
-              Recently added
-            </h2>
-            <div className="flex flex-col gap-2 max-w-lg">
-              {stats.recent.map(({ car }) => (
-                <CarListItem key={car.id} car={car} />
-              ))}
-            </div>
-          </section>
-        )}
+            {/* Featured car */}
+            <section>
+              <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
+                Featured car
+              </h2>
+              <div className="rounded-xl border border-fh-red-border bg-fh-panel p-5 flex flex-col gap-3 relative overflow-hidden">
+                {/* Red top bar */}
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-fh-red" />
 
-        {/* ── Sign-in prompt (signed-out) ───────────────────────────────────── */}
-        {!userId && (
-          <section className="rounded-xl border border-fh-border bg-fh-panel p-8 text-center max-w-md">
-            <p className="text-sm mb-1 font-medium">Track your collection</p>
-            <p className="text-xs mb-5 text-fh-muted">
-              Sign in to track owned cars, add tags, and get race recommendations.
-            </p>
-            <Link
-              href="/sign-in"
-              className="btn-clip inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-fh-red"
-            >
-              Sign in to get started
-            </Link>
-          </section>
-        )}
+                {/* Badge + title */}
+                <div className="flex items-start gap-3">
+                  <span className="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-fh-red text-white">
+                    {featured.badge}
+                  </span>
+                  <div>
+                    <div className="text-base font-bold leading-tight">
+                      {featured.make} {featured.model}
+                    </div>
+                    <div className="text-xs text-fh-muted mt-0.5">{featured.year}</div>
+                  </div>
+                  {/* PI class + rating */}
+                  <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[featured.piClass] ?? 'bg-gray-600 text-white'}`}>
+                      {featured.piClass}
+                    </span>
+                    <span className="text-xs tabular-nums text-fh-muted">{featured.piRating}</span>
+                  </div>
+                </div>
+
+                {/* Reason */}
+                <p className="text-xs text-fh-dark-2 leading-relaxed">{featured.reason}</p>
+
+                {/* Race type link */}
+                {featuredRace && (
+                  <Link
+                    href="/races"
+                    className="inline-flex items-center gap-1.5 text-xs text-fh-muted hover:text-fh-dark transition-colors"
+                  >
+                    <span>🏁</span>
+                    <span>Best for: <span className="text-fh-dark">{featuredRace.name}</span></span>
+                  </Link>
+                )}
+
+                {/* Actions + footnote */}
+                <div className="flex items-center justify-between pt-1 border-t border-fh-border">
+                  <Link
+                    href={userId ? '/garage' : '/sign-in'}
+                    className="btn-clip inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-fh-red transition-opacity hover:opacity-80"
+                  >
+                    {userId ? 'Open Garage' : 'Sign in to add'}
+                  </Link>
+                  <span className="text-[10px] text-fh-muted-2">meta as of May 2026</span>
+                </div>
+              </div>
+            </section>
+
+            {/* Sign-in prompt (signed-out only) */}
+            {!userId && (
+              <section className="rounded-xl border border-fh-border bg-fh-panel p-6 text-center">
+                <p className="text-sm mb-1 font-medium">Track your collection</p>
+                <p className="text-xs mb-5 text-fh-muted">
+                  Sign in to track owned cars, add tags, and get race recommendations.
+                </p>
+                <Link
+                  href="/sign-in"
+                  className="btn-clip inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-fh-red"
+                >
+                  Sign in to get started
+                </Link>
+              </section>
+            )}
+
+          </div>
+
+        </div>
       </div>
     </div>
   )
