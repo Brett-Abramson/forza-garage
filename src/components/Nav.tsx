@@ -2,16 +2,35 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useUser, SignInButton, SignOutButton } from '@clerk/nextjs'
+import { useState } from 'react'
 import ThemeToggle from '@/components/ThemeToggle'
 
 const links = [
-  { href: '/', label: 'My Garage', icon: GarageIcon },
+  { href: '/garage', label: 'My Garage', icon: GarageIcon },
   { href: '/races', label: 'Races', icon: RacesIcon },
   { href: '/cars', label: 'Car Database', icon: DatabaseIcon },
 ]
 
+function getInitials(firstName?: string | null, lastName?: string | null, email?: string | null): string {
+  const f = firstName?.[0] ?? ''
+  const l = lastName?.[0] ?? ''
+  if (f || l) return (f + l).toUpperCase()
+  return email?.[0]?.toUpperCase() ?? '?'
+}
+
 export default function Nav() {
   const pathname = usePathname()
+  const { isSignedIn, user, isLoaded } = useUser()
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  const initials = isSignedIn
+    ? getInitials(
+        user.firstName,
+        user.lastName,
+        user.emailAddresses[0]?.emailAddress,
+      )
+    : ''
 
   return (
     <nav
@@ -19,12 +38,12 @@ export default function Nav() {
       style={{ borderColor: 'var(--fh-border)', background: 'var(--fh-panel)' }}
     >
       <div className="max-w-screen-2xl mx-auto px-4 flex items-center gap-1 h-12">
-        <span className="text-sm font-bold tracking-tight mr-4" style={{ color: 'var(--fh-dark)' }}>
+        <Link href="/" className="text-sm font-bold tracking-tight mr-4" style={{ color: 'var(--fh-dark)' }}>
           Forza<span style={{ color: 'var(--fh-red)' }}>Garage</span>
-        </span>
+        </Link>
 
         {links.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href
+          const active = pathname === href || (href === '/garage' && pathname === '/')
           return (
             <Link
               key={href}
@@ -39,8 +58,58 @@ export default function Nav() {
           )
         })}
 
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
+
+          {isLoaded && (
+            isSignedIn ? (
+              <div className="relative">
+                <button
+                  aria-label="User menu"
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center transition-opacity hover:opacity-80"
+                  style={{ background: 'var(--fh-red)' }}
+                >
+                  {initials}
+                </button>
+
+                {menuOpen && (
+                  <>
+                    {/* backdrop to close menu */}
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setMenuOpen(false)}
+                    />
+                    <div
+                      className="absolute right-0 top-full mt-1 w-44 rounded-lg border shadow-lg z-20 py-1"
+                      style={{ background: 'var(--fh-panel)', borderColor: 'var(--fh-border)' }}
+                    >
+                      <div
+                        className="px-3 py-2 text-xs truncate border-b"
+                        style={{ color: 'var(--fh-muted)', borderColor: 'var(--fh-border)' }}
+                      >
+                        {user.emailAddresses[0]?.emailAddress}
+                      </div>
+                      <SignOutButton>
+                        <button
+                          className="w-full text-left px-3 py-2 text-sm transition-colors fh-nav-link"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          Sign out
+                        </button>
+                      </SignOutButton>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <SignInButton mode="modal">
+                <button className="text-xs px-3 py-1.5 rounded-md border transition-colors fh-nav-link" style={{ borderColor: 'var(--fh-border)' }}>
+                  Sign in
+                </button>
+              </SignInButton>
+            )
+          )}
         </div>
       </div>
     </nav>

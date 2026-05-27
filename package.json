@@ -17,6 +17,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.4.1",
     "@prisma/client": "^5.22.0",
     "next": "^15.3.0",
     "react": "^19.0.0",
