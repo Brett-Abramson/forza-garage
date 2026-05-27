@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import Nav from '@/components/Nav'
 import './globals.css'
 
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body className={`${inter.className} min-h-screen`}>
           <Nav />
           {children}
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>
