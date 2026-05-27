@@ -305,10 +305,9 @@ describe('GarageShowcase — list view expansion', () => {
     const user = userEvent.setup()
     render(<GarageShowcase initialCars={mockCars} />)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
-    // 911 GT3 has tags ['grip', 'asphalt'] — both should appear in the expansion
-    const buttons = screen.getAllByRole('button')
-    const gripPill = buttons.find((b) => b.textContent?.includes('grip') && b.className.includes('cyan'))
-    expect(gripPill).toBeTruthy()
+    // 911 GT3 has tags ['grip' (user), 'asphalt' (auto)] — both are removable
+    expect(screen.getByRole('button', { name: 'Remove grip' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove asphalt' })).toBeInTheDocument()
   })
 
   it('expanded row shows available tags as add buttons', async () => {

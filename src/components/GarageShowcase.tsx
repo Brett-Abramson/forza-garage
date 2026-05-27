@@ -158,8 +158,9 @@ function ExpandedRow({
                   onClick={() => patchTags(autoTags.filter((t) => t !== tag), userTags)}
                   className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red opacity-60 hover:opacity-100 hover:bg-red-500/20 transition-opacity"
                   title="Default tag from division — click to remove"
+                  aria-label={`Remove ${tag}`}
                 >
-                  {tag} <span className="opacity-70">×</span>
+                  {tag} <span aria-hidden="true" className="opacity-70">×</span>
                 </button>
               ))}
               {/* User tags — full color, removable */}
@@ -168,8 +169,9 @@ function ExpandedRow({
                   key={`user-${tag}`}
                   onClick={() => patchTags(autoTags, userTags.filter((t) => t !== tag))}
                   className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30 transition-colors"
+                  aria-label={`Remove ${tag}`}
                 >
-                  {tag} <span className="opacity-70">×</span>
+                  {tag} <span aria-hidden="true" className="opacity-70">×</span>
                 </button>
               ))}
             </div>

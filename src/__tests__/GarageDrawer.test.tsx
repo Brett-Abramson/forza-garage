@@ -128,10 +128,18 @@ describe('GarageDrawer — tag display', () => {
     expect(screen.getByText('grip')).toBeInTheDocument()    // user
   })
 
-  it('user tag has a remove button; auto tag does not', () => {
+  it('both user and auto tags have remove buttons', () => {
     renderDrawer()
     expect(screen.getByRole('button', { name: 'Remove grip' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Remove asphalt' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove asphalt' })).toBeInTheDocument()
+  })
+
+  it('auto tag remove button has a descriptive title', () => {
+    renderDrawer()
+    // auto-tag wrapper element carries a tooltip explaining it is removable
+    const autoTagBtn = screen.getByRole('button', { name: 'Remove asphalt' })
+    // the outer span/button group for auto tags has the title
+    expect(autoTagBtn.closest('[title]')).toBeTruthy()
   })
 
   it('shows "No tags yet" when tagDetails is empty', () => {
