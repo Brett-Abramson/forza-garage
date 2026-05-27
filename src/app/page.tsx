@@ -43,7 +43,7 @@ async function getGarageStats(userId: string) {
 
     prisma.userGarage.findMany({
       where: { userId },
-      take: 3,
+      take: 5,
       include: { car: { select: { id: true, make: true, model: true, year: true, piClass: true, piRating: true, division: true } } },
       orderBy: { addedAt: 'desc' },
     }) as Promise<RecentCar[]>,
@@ -88,36 +88,34 @@ export default async function LandingPage() {
         </div>
 
         <div className="relative max-w-screen-2xl mx-auto px-4 py-20 sm:py-28">
-          <p className="text-xs font-semibold tracking-[0.25em] uppercase mb-4 text-fh-red">
+          <p className="flex items-center gap-2 text-[10px] font-bold tracking-[0.25em] uppercase mb-5 text-fh-red">
+            <span className="w-4 h-px bg-fh-red inline-block" />
             Forza Horizon 6 · Japan
           </p>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4" style={{ color: '#f0e8d8' }}>
+          <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight uppercase mb-4 leading-none" style={{ color: '#f0e8d8' }}>
             Your Garage.<br />
             <span className="text-fh-red">Tracked.</span>
           </h1>
-          <p className="text-base mb-10 max-w-md" style={{ color: 'rgba(240,232,216,0.6)' }}>
+          <p className="text-sm mb-10 max-w-md" style={{ color: 'rgba(240,232,216,0.55)' }}>
             Browse 661 cars, build your collection, and find the right car for every race type.
           </p>
 
           <div className="flex flex-wrap gap-3">
             <Link
               href="/garage"
-              className="btn-clip inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-fh-red transition-opacity hover:opacity-80"
+              className="btn-clip inline-flex items-center gap-3 px-6 py-3 text-xs font-bold uppercase tracking-widest text-white bg-fh-red transition-opacity hover:opacity-80"
             >
+              <span>▶</span>
               My Garage
-              {stats && (
-                <span className="text-xs font-normal opacity-80 ml-1">
-                  {stats.total} cars
-                </span>
-              )}
+              {stats && <span className="opacity-70">{stats.total} cars</span>}
             </Link>
             <Link
               href="/cars"
-              className="btn-clip inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-80"
-              style={{ background: 'rgba(240,232,216,0.08)', color: 'rgba(240,232,216,0.9)', border: '1px solid rgba(240,232,216,0.15)' }}
+              className="btn-clip inline-flex items-center gap-3 px-6 py-3 text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-80"
+              style={{ background: 'rgba(240,232,216,0.08)', color: 'rgba(240,232,216,0.85)', border: '1px solid rgba(240,232,216,0.15)' }}
             >
               Car Database
-              <span className="text-xs font-normal opacity-60">661</span>
+              <span style={{ color: 'rgba(240,232,216,0.5)' }}>661</span>
             </Link>
           </div>
         </div>
@@ -132,16 +130,14 @@ export default async function LandingPage() {
 
             {/* Quick access cards */}
             <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
-                Quick access
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <SectionHeader label="Quick Access" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
                 <Link
                   href="/garage"
-                  className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors"
+                  className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors hover:bg-fh-panel-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold">My Garage</span>
+                    <span className="text-xs font-bold uppercase tracking-wide">My Garage</span>
                     <span className="text-xs text-fh-red">→</span>
                   </div>
                   <span className="text-3xl font-bold text-fh-red">
@@ -154,14 +150,14 @@ export default async function LandingPage() {
 
                 <Link
                   href="/cars"
-                  className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors"
+                  className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors hover:bg-fh-panel-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold">Car Database</span>
+                    <span className="text-xs font-bold uppercase tracking-wide">Car Database</span>
                     <span className="text-xs text-fh-red">→</span>
                   </div>
-                  <span className="text-3xl font-bold text-fh-red">661</span>
-                  <span className="text-xs text-fh-muted">cars in database</span>
+                  <span className="text-3xl font-bold text-fh-dark">661</span>
+                  <span className="text-xs text-fh-muted">cars total</span>
                 </Link>
               </div>
             </section>
@@ -169,9 +165,7 @@ export default async function LandingPage() {
             {/* Pinned cars */}
             {stats && stats.pinned.length > 0 && (
               <section>
-                <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
-                  Pinned
-                </h2>
+                <SectionHeader label="Pinned" />
                 <div className="flex flex-col gap-2">
                   {stats.pinned.map(({ car }) => (
                     <CarListItem key={car.id} car={car} />
@@ -183,9 +177,7 @@ export default async function LandingPage() {
             {/* Recently added */}
             {stats && stats.recent.length > 0 && (
               <section>
-                <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
-                  Recently added
-                </h2>
+                <SectionHeader label="Recently Added" />
                 <div className="flex flex-col gap-2">
                   {stats.recent.map(({ car }) => (
                     <CarListItem key={car.id} car={car} />
@@ -201,56 +193,60 @@ export default async function LandingPage() {
 
             {/* Featured car */}
             <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
-                Featured car
-              </h2>
-              <div className="rounded-xl border border-fh-red-border bg-fh-panel p-5 flex flex-col gap-3 relative overflow-hidden">
-                {/* Red top bar */}
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-fh-red" />
+              <SectionHeader label="Featured Car" />
+              <div className="rounded-xl border border-fh-red-border bg-fh-panel overflow-hidden [border-left-width:3px] [border-left-color:var(--fh-red)]">
 
-                {/* Badge + title */}
-                <div className="flex items-start gap-3">
-                  <span className="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-fh-red text-white">
+                {/* Full-width red badge */}
+                <div className="bg-fh-red px-4 py-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white">
                     {featured.badge}
                   </span>
+                </div>
+
+                <div className="p-5 flex flex-col gap-3">
+                  {/* Car name */}
                   <div>
-                    <div className="text-base font-bold leading-tight">
-                      {featured.make} {featured.model}
+                    <div className="text-xl font-extrabold leading-tight uppercase tracking-tight">
+                      {featured.model}
                     </div>
-                    <div className="text-xs text-fh-muted mt-0.5">{featured.year}</div>
+                    <div className="text-xs text-fh-muted mt-1">
+                      {featured.year} · {featured.make}
+                    </div>
                   </div>
+
                   {/* PI class + rating */}
-                  <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-2">
                     <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[featured.piClass] ?? 'bg-gray-600 text-white'}`}>
                       {featured.piClass}
                     </span>
-                    <span className="text-xs tabular-nums text-fh-muted">{featured.piRating}</span>
+                    <span className="text-lg font-bold tabular-nums text-fh-dark">{featured.piRating}</span>
                   </div>
-                </div>
 
-                {/* Reason */}
-                <p className="text-xs text-fh-dark-2 leading-relaxed">{featured.reason}</p>
+                  {/* Reason */}
+                  <p className="text-xs text-fh-dark-2 leading-relaxed">{featured.reason}</p>
 
-                {/* Race type link */}
-                {featuredRace && (
-                  <Link
-                    href="/races"
-                    className="inline-flex items-center gap-1.5 text-xs text-fh-muted hover:text-fh-dark transition-colors"
-                  >
-                    <span>🏁</span>
-                    <span>Best for: <span className="text-fh-dark">{featuredRace.name}</span></span>
-                  </Link>
-                )}
+                  <div className="border-t border-fh-border" />
 
-                {/* Actions + footnote */}
-                <div className="flex items-center justify-between pt-1 border-t border-fh-border">
+                  {/* Race type link */}
+                  {featuredRace && (
+                    <Link
+                      href="/races"
+                      className="inline-flex items-center gap-1.5 text-xs text-fh-muted hover:text-fh-dark transition-colors"
+                    >
+                      <span>🏁</span>
+                      <span>Best for: <span className="font-semibold text-fh-dark">{featuredRace.name}</span></span>
+                    </Link>
+                  )}
+
+                  {/* Full-width CTA */}
                   <Link
                     href={userId ? '/garage' : '/sign-in'}
-                    className="btn-clip inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-fh-red transition-opacity hover:opacity-80"
+                    className="btn-clip flex items-center justify-center py-2.5 text-xs font-bold uppercase tracking-widest text-white bg-fh-red transition-opacity hover:opacity-80"
                   >
-                    {userId ? 'Open Garage' : 'Sign in to add'}
+                    {userId ? 'Open Garage' : 'Sign In'}
                   </Link>
-                  <span className="text-[10px] text-fh-muted-2">meta as of May 2026</span>
+
+                  <span className="text-[10px] text-fh-muted-2 text-center">meta as of May 2026</span>
                 </div>
               </div>
             </section>
@@ -279,13 +275,25 @@ export default async function LandingPage() {
   )
 }
 
-// ── Sub-component ─────────────────────────────────────────────────────────────
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-5">
+      <div className="w-4 h-px bg-fh-red shrink-0" />
+      <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-fh-muted whitespace-nowrap">
+        {label}
+      </span>
+      <div className="flex-1 h-px bg-fh-border" />
+    </div>
+  )
+}
 
 function CarListItem({ car }: { car: PinnedCar['car'] }) {
   return (
     <Link
       href={`/garage?q=${encodeURIComponent(car.model)}`}
-      className="flex items-center gap-3 px-4 py-3 rounded-lg border border-fh-border bg-fh-panel transition-colors hover:opacity-80"
+      className="flex items-center gap-3 px-4 py-3 rounded-lg border border-fh-border bg-fh-panel transition-colors hover:bg-fh-panel-2 hover:border-fh-border"
     >
       <span className={`text-xs font-bold px-1.5 py-0.5 rounded shrink-0 ${PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'}`}>
         {car.piClass}
