@@ -384,7 +384,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                         <div className="text-[10px] text-fh-red font-medium uppercase tracking-wide mb-1">
                           {c.title}
                         </div>
-                        <p className="text-xs text-fh-muted leading-relaxed">{c.body}</p>
+                        <p className="text-xs text-fh-dark-2 leading-relaxed">{c.body}</p>
                       </div>
                     ))}
                   </div>
@@ -397,8 +397,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                   <div className="text-xs text-fh-muted uppercase tracking-wide mb-3">Tuning guide</div>
                   {tuningGuide ? (
                     <div className="flex flex-col gap-4">
-                      <p className="text-xs text-fh-dark-2 leading-relaxed">{tuningGuide.philosophy}</p>
-                      <p className="text-xs text-fh-muted italic leading-relaxed">{tuningGuide.spectrum}</p>
+                      <p className="text-xs text-fh-dark leading-relaxed">{tuningGuide.philosophy}</p>
+                      <p className="text-xs text-fh-dark-2 italic leading-relaxed">{tuningGuide.spectrum}</p>
                       <div>
                         <div className="text-[10px] text-fh-muted uppercase tracking-wide mb-2">Priorities</div>
                         <ol className="space-y-1.5">
@@ -410,9 +410,9 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                           ))}
                         </ol>
                       </div>
-                      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
-                        <div className="text-[10px] text-amber-500/70 uppercase tracking-wide mb-1">Watch out</div>
-                        <p className="text-xs text-amber-200/70 leading-relaxed">{tuningGuide.watchOut}</p>
+                      <div className="rounded-lg border border-fh-amber/30 bg-fh-amber/8 px-3 py-2.5">
+                        <div className="text-[10px] text-fh-amber uppercase tracking-wide mb-1">Watch out</div>
+                        <p className="text-xs text-fh-dark-2 leading-relaxed">{tuningGuide.watchOut}</p>
                       </div>
                     </div>
                   ) : (

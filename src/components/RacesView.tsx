@@ -36,18 +36,18 @@ function TuningGuidePanel({ guide }: { guide: TuningGuide }) {
       </button>
       {open && (
         <div className="px-3 pb-3 flex flex-col gap-3 border-t border-fh-border">
-          <p className="text-xs text-fh-dark-2 leading-relaxed pt-3">{guide.philosophy}</p>
+          <p className="text-xs text-fh-dark leading-relaxed pt-3">{guide.philosophy}</p>
           <ol className="space-y-1.5">
             {guide.priorities.map((p, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-fh-dark-2">
+              <li key={i} className="flex items-start gap-2 text-xs text-fh-dark">
                 <span className="text-fh-red/60 font-mono shrink-0 w-4">{i + 1}.</span>
                 {p}
               </li>
             ))}
           </ol>
-          <div className="rounded border border-amber-500/20 bg-amber-500/5 px-2.5 py-2">
-            <span className="text-[10px] text-amber-500/70 uppercase tracking-wide mr-1.5">Watch out:</span>
-            <span className="text-xs text-amber-200/60 leading-relaxed">{guide.watchOut}</span>
+          <div className="rounded border border-fh-amber/30 bg-fh-amber/8 px-2.5 py-2">
+            <span className="text-[10px] text-fh-amber uppercase tracking-wide mr-1.5">Watch out:</span>
+            <span className="text-xs text-fh-dark-2 leading-relaxed">{guide.watchOut}</span>
           </div>
         </div>
       )}
