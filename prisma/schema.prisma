@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Car {
@@ -53,18 +54,23 @@ model Car {
 }
 
 model UserGarage {
-  id      Int       @id @default(autoincrement())
-  carId   Int
-  car     Car       @relation(fields: [carId], references: [id])
-  addedAt DateTime  @default(now())
-  notes   String?
-  tags    CarTag[]
+  id        Int      @id @default(autoincrement())
+  userId    String
+  carId     Int
+  car       Car      @relation(fields: [carId], references: [id])
+  addedAt   DateTime @default(now())
+  notes     String?
+  pinned    Boolean  @default(false)
+  tags      CarTag[]
+
+  @@index([userId])
+  @@unique([userId, carId])
 }
 
 model CarTag {
   id            Int        @id @default(autoincrement())
   userGarageId  Int
-  userGarage    UserGarage @relation(fields: [userGarageId], references: [id])
+  userGarage    UserGarage @relation(fields: [userGarageId], references: [id], onDelete: Cascade)
   tag           String
   source        String     @default("user") // "auto" | "user"
 }

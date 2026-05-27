@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ carId: string }> }
 ) {
+  const { userId } = await auth()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { carId: carIdStr } = await params
   const carId = parseInt(carIdStr)
   if (isNaN(carId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
 
-  const entry = await prisma.userGarage.findFirst({ where: { carId } })
+  const entry = await prisma.userGarage.findFirst({ where: { carId, userId } })
   if (!entry) return NextResponse.json({ error: 'Not in garage' }, { status: 404 })
 
   const body = await request.json()
@@ -30,6 +34,13 @@ export async function PATCH(
         data: tags.map((tag) => ({ userGarageId: entry.id, tag, source: 'user' })),
       })
     }
+  }
+
+  if ('pinned' in body) {
+    await prisma.userGarage.update({
+      where: { id: entry.id },
+      data: { pinned: Boolean(body.pinned) },
+    })
   }
 
   return NextResponse.json({ ok: true })

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getAutoTags } from '@/lib/autotags'
 
@@ -20,15 +21,18 @@ export async function PATCH(
 
   // ── Owned toggle ──────────────────────────────────────────────────────────
   if ('owned' in body) {
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const car = await prisma.car.findUnique({
       where: { id: carId },
-      include: { garage: { select: { id: true } } },
+      include: { garage: { where: { userId }, select: { id: true } } },
     })
     if (!car) return NextResponse.json({ error: 'Car not found' }, { status: 404 })
 
     if (body.owned) {
       if (car.garage.length === 0) {
-        const entry = await prisma.userGarage.create({ data: { carId } })
+        const entry = await prisma.userGarage.create({ data: { carId, userId } })
         const autoTags = getAutoTags(car.division, car.drivetrain ?? undefined)
         if (autoTags.length > 0) {
           await prisma.carTag.createMany({
@@ -37,7 +41,7 @@ export async function PATCH(
         }
       }
     } else {
-      await prisma.userGarage.deleteMany({ where: { carId } })
+      await prisma.userGarage.deleteMany({ where: { carId, userId } })
     }
 
     const { garage, ...carData } = car
@@ -45,6 +49,7 @@ export async function PATCH(
   }
 
   // ── Stat / spec updates ───────────────────────────────────────────────────
+  // Stats are shared (not per-user), so no auth required here.
   const statUpdates: Record<string, unknown> = {}
   for (const field of CAR_STAT_FIELDS) {
     if (field in body) {

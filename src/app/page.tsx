@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import GarageShowcase from '@/components/GarageShowcase'
 import type { Car } from '@/types/car'
@@ -6,10 +7,16 @@ import type { Car } from '@/types/car'
 export const dynamic = 'force-dynamic'
 
 export default async function GaragePage() {
-  const entries = await prisma.userGarage.findMany({
-    include: { car: true, tags: true },
-    orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
-  })
+  const { userId } = await auth()
+
+  const entries = userId
+    ? await prisma.userGarage.findMany({
+        where: { userId },
+        include: { car: true, tags: true },
+        orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
+      })
+    : []
+
   const cars: Car[] = entries.map(({ car, tags, notes }) => ({
     ...car,
     owned: true,
@@ -23,11 +30,11 @@ export default async function GaragePage() {
       <header className="mb-8">
         <div className="flex items-baseline gap-3">
           <h1 className="text-2xl font-bold tracking-tight">My Garage</h1>
-          <span className="text-gray-500 text-sm">
+          <span className="text-sm" style={{ color: 'var(--fh-muted)' }}>
             {cars.length} {cars.length === 1 ? 'car' : 'cars'}
           </span>
         </div>
-        <p className="text-gray-500 text-sm mt-1">Your personal collection.</p>
+        <p className="text-sm mt-1" style={{ color: 'var(--fh-muted)' }}>Your personal collection.</p>
       </header>
 
       <Suspense fallback={null}>
