@@ -7,9 +7,9 @@ import { useState } from 'react'
 import ThemeToggle from '@/components/ThemeToggle'
 
 const links = [
-  { href: '/garage', label: 'My Garage', icon: GarageIcon },
-  { href: '/races', label: 'Races', icon: RacesIcon },
-  { href: '/cars', label: 'Car Database', icon: DatabaseIcon },
+  { href: '/garage', label: 'My Garage', icon: GarageIcon, shortcut: 'g' },
+  { href: '/races', label: 'Races', icon: RacesIcon, shortcut: 'r' },
+  { href: '/cars', label: 'Car Database', icon: DatabaseIcon, shortcut: 'c' },
 ]
 
 function getInitials(firstName?: string | null, lastName?: string | null, email?: string | null): string {
@@ -39,7 +39,7 @@ export default function Nav() {
           Forza<span className="text-fh-red">Garage</span>
         </Link>
 
-        {links.map(({ href, label, icon: Icon }) => {
+        {links.map(({ href, label, icon: Icon, shortcut }) => {
           const active = pathname === href || (href === '/garage' && pathname === '/')
           return (
             <Link
@@ -51,6 +51,9 @@ export default function Nav() {
             >
               <Icon />
               {label}
+              <kbd className="hidden lg:inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono border border-fh-border text-fh-muted-2 bg-fh-panel-2 leading-none ml-0.5">
+                {shortcut}
+              </kbd>
             </Link>
           )
         })}

@@ -63,9 +63,10 @@ interface Props {
   car: Car
   onToggleOwned: (id: number, owned: boolean) => void
   onCardClick?: (car: Car) => void
+  isPending?: boolean
 }
 
-export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
+export default function CarCard({ car, onToggleOwned, onCardClick, isPending }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const accent = getDivisionAccent(car.division)
@@ -127,16 +128,25 @@ export default function CarCard({ car, onToggleOwned, onCardClick }: Props) {
       {/* Owned toggle */}
       <div className="px-3 pb-3">
         <button
-          onClick={(e) => { e.stopPropagation(); onToggleOwned(car.id, !car.owned) }}
+          onClick={(e) => { e.stopPropagation(); if (!isPending) onToggleOwned(car.id, !car.owned) }}
+          disabled={isPending}
           className={`
-            w-full py-1.5 rounded-lg text-xs font-semibold transition-colors
+            w-full py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5
             ${car.owned
               ? 'bg-fh-red text-white border border-fh-red hover:opacity-80'
               : 'bg-transparent border border-fh-border text-fh-muted hover:border-fh-red hover:text-fh-red'
             }
+            ${isPending ? 'opacity-60 cursor-not-allowed' : ''}
           `}
         >
-          {car.owned ? 'Remove from garage' : 'Add to garage'}
+          {isPending ? (
+            <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : (
+            car.owned ? 'Remove from garage' : 'Add to garage'
+          )}
         </button>
       </div>
     </div>

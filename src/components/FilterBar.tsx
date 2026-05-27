@@ -60,7 +60,7 @@ export default function FilterBar({ filters, options, onChange, totalCount, filt
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-end gap-3">
         <Select
           label="PI Class"
           value={filters.piClass}

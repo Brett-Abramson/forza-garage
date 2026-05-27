@@ -97,6 +97,27 @@ describe('CarRow', () => {
     const row = screen.getByRole('row')
     expect(row.className).not.toContain('opacity-60')
   })
+
+  it('shows a spinner SVG in the button when isPending', () => {
+    renderRow(baseCar, { isPending: true })
+    const btn = screen.getByRole('button')
+    expect(btn.querySelector('svg')).toBeTruthy()
+    expect(btn).not.toHaveTextContent('+ Add')
+    expect(btn).not.toHaveTextContent('Owned')
+  })
+
+  it('button is disabled when isPending', () => {
+    renderRow(baseCar, { isPending: true })
+    expect(screen.getByRole('button')).toBeDisabled()
+  })
+
+  it('does not call onToggleOwned when the button is clicked while isPending', async () => {
+    const onToggleOwned = vi.fn()
+    renderRow(baseCar, { isPending: true, onToggleOwned })
+    // Disabled buttons don't fire click events in userEvent
+    await userEvent.click(screen.getByRole('button'))
+    expect(onToggleOwned).not.toHaveBeenCalled()
+  })
 })
 
 // ─── isExpanded ──────────────────────────────────────────────────────────────
