@@ -17,6 +17,7 @@ vi.mock('@clerk/nextjs', () => ({
   SignInButton: ({ children }: { children: unknown }) => children,
   SignOutButton: ({ children }: { children: unknown }) => children,
   ClerkProvider: ({ children }: { children: unknown }) => children,
+  SignIn: () => null,
 }))
 
 vi.mock('@clerk/nextjs/server', () => ({
