@@ -63,11 +63,11 @@ export default async function GaragePage() {
       <header className="mb-8">
         <div className="flex items-baseline gap-3">
           <h1 className="text-2xl font-bold tracking-tight">My Garage</h1>
-          <span className="text-sm" className="text-fh-muted">
+          <span className="text-sm text-fh-muted">
             {cars.length} {cars.length === 1 ? 'car' : 'cars'}
           </span>
         </div>
-        <p className="text-sm mt-1" className="text-fh-muted">Your personal collection.</p>
+        <p className="text-sm mt-1 text-fh-muted">Your personal collection.</p>
       </header>
 
       <Suspense fallback={null}>

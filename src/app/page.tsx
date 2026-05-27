@@ -78,7 +78,6 @@ export default async function LandingPage() {
         className="relative overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #0e0408 0%, #1a0808 50%, #0a0a14 100%)' }}
       >
-        {/* Decorative SVGs */}
         <div className="absolute inset-0 pointer-events-none select-none">
           <FujiSvg className="absolute bottom-0 right-0 w-80 opacity-20" />
           <ToriiSvg className="absolute bottom-0 right-64 w-24 opacity-15" />
@@ -88,16 +87,10 @@ export default async function LandingPage() {
         </div>
 
         <div className="relative max-w-screen-2xl mx-auto px-4 py-20 sm:py-28">
-          <p
-            className="text-xs font-semibold tracking-[0.25em] uppercase mb-4"
-            className="text-fh-red"
-          >
+          <p className="text-xs font-semibold tracking-[0.25em] uppercase mb-4 text-fh-red">
             Forza Horizon 6 · Japan
           </p>
-          <h1
-            className="text-4xl sm:text-5xl font-bold tracking-tight mb-4"
-            style={{ color: '#f0e8d8' }}
-          >
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4" style={{ color: '#f0e8d8' }}>
             Your Garage.<br />
             <span className="text-fh-red">Tracked.</span>
           </h1>
@@ -108,14 +101,11 @@ export default async function LandingPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/garage"
-              className="btn-clip inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-80"
-              className="bg-fh-red"
+              className="btn-clip inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-fh-red transition-opacity hover:opacity-80"
             >
               My Garage
               {stats && (
-                <span
-                  className="text-xs font-normal opacity-80 ml-1"
-                >
+                <span className="text-xs font-normal opacity-80 ml-1">
                   {stats.total} cars
                 </span>
               )}
@@ -137,26 +127,22 @@ export default async function LandingPage() {
 
         {/* ── Quick access cards ────────────────────────────────────────────── */}
         <section>
-          <h2
-            className="text-xs font-semibold uppercase tracking-widest mb-4"
-            className="text-fh-muted"
-          >
+          <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
             Quick access
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
             <Link
               href="/garage"
               className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors"
-             
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold">My Garage</span>
-                <span className="text-xs" className="text-fh-red">→</span>
+                <span className="text-xs text-fh-red">→</span>
               </div>
-              <span className="text-3xl font-bold" className="text-fh-red">
+              <span className="text-3xl font-bold text-fh-red">
                 {stats ? stats.total : '—'}
               </span>
-              <span className="text-xs" className="text-fh-muted">
+              <span className="text-xs text-fh-muted">
                 {stats ? `${stats.total === 1 ? 'car' : 'cars'} owned` : 'Sign in to see your garage'}
               </span>
             </Link>
@@ -164,14 +150,13 @@ export default async function LandingPage() {
             <Link
               href="/cars"
               className="group flex flex-col gap-2 p-5 rounded-xl border border-fh-border bg-fh-panel transition-colors"
-             
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold">Car Database</span>
-                <span className="text-xs" className="text-fh-red">→</span>
+                <span className="text-xs text-fh-red">→</span>
               </div>
-              <span className="text-3xl font-bold" className="text-fh-red">661</span>
-              <span className="text-xs" className="text-fh-muted">cars in database</span>
+              <span className="text-3xl font-bold text-fh-red">661</span>
+              <span className="text-xs text-fh-muted">cars in database</span>
             </Link>
           </div>
         </section>
@@ -179,10 +164,7 @@ export default async function LandingPage() {
         {/* ── Garage by class ───────────────────────────────────────────────── */}
         {stats && stats.total > 0 && (
           <section>
-            <h2
-              className="text-xs font-semibold uppercase tracking-widest mb-4"
-              className="text-fh-muted"
-            >
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
               Garage by class
             </h2>
             <div className="flex flex-wrap gap-2">
@@ -191,7 +173,6 @@ export default async function LandingPage() {
                   key={cls}
                   href={`/garage?class=${cls}`}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-fh-border bg-fh-panel text-sm transition-opacity hover:opacity-75"
-                 
                 >
                   <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[cls] ?? 'bg-gray-600 text-white'}`}>
                     {cls}
@@ -206,10 +187,7 @@ export default async function LandingPage() {
         {/* ── Pinned cars ───────────────────────────────────────────────────── */}
         {stats && stats.pinned.length > 0 && (
           <section>
-            <h2
-              className="text-xs font-semibold uppercase tracking-widest mb-4"
-              className="text-fh-muted"
-            >
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
               Pinned
             </h2>
             <div className="flex flex-col gap-2 max-w-lg">
@@ -223,10 +201,7 @@ export default async function LandingPage() {
         {/* ── Recently added ────────────────────────────────────────────────── */}
         {stats && stats.recent.length > 0 && (
           <section>
-            <h2
-              className="text-xs font-semibold uppercase tracking-widest mb-4"
-              className="text-fh-muted"
-            >
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-fh-muted">
               Recently added
             </h2>
             <div className="flex flex-col gap-2 max-w-lg">
@@ -239,18 +214,14 @@ export default async function LandingPage() {
 
         {/* ── Sign-in prompt (signed-out) ───────────────────────────────────── */}
         {!userId && (
-          <section
-            className="rounded-xl border border-fh-border bg-fh-panel p-8 text-center max-w-md"
-           
-          >
+          <section className="rounded-xl border border-fh-border bg-fh-panel p-8 text-center max-w-md">
             <p className="text-sm mb-1 font-medium">Track your collection</p>
-            <p className="text-xs mb-5" className="text-fh-muted">
+            <p className="text-xs mb-5 text-fh-muted">
               Sign in to track owned cars, add tags, and get race recommendations.
             </p>
             <Link
               href="/sign-in"
-              className="btn-clip inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white"
-              className="bg-fh-red"
+              className="btn-clip inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-fh-red"
             >
               Sign in to get started
             </Link>
@@ -268,16 +239,15 @@ function CarListItem({ car }: { car: PinnedCar['car'] }) {
     <Link
       href={`/garage?q=${encodeURIComponent(car.model)}`}
       className="flex items-center gap-3 px-4 py-3 rounded-lg border border-fh-border bg-fh-panel transition-colors hover:opacity-80"
-     
     >
       <span className={`text-xs font-bold px-1.5 py-0.5 rounded shrink-0 ${PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'}`}>
         {car.piClass}
       </span>
-      <span className="text-xs shrink-0 tabular-nums" className="text-fh-muted">
+      <span className="text-xs shrink-0 tabular-nums text-fh-muted">
         {car.piRating}
       </span>
       <span className="text-sm font-medium truncate">{car.make} {car.model}</span>
-      <span className="text-xs ml-auto shrink-0" className="text-fh-muted">
+      <span className="text-xs ml-auto shrink-0 text-fh-muted">
         {car.year}
       </span>
     </Link>
