@@ -58,41 +58,8 @@ export default async function GaragePage() {
     notes,
   }))
 
-  const carsWithValue = cars.filter((c) => c.value != null)
-  const totalValue = carsWithValue.reduce((sum, c) => sum + c.value!, 0)
-  const unknownCount = cars.length - carsWithValue.length
-
   return (
     <main className="max-w-screen-2xl mx-auto px-4 py-8">
-      <header className="mb-8">
-        <div className="flex items-center gap-6">
-          <h1 className="text-2xl font-bold tracking-tight">My Garage</h1>
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-fh-muted uppercase tracking-wide leading-none mb-0.5">Cars</span>
-              <span className="text-sm font-medium tabular-nums">{cars.length}</span>
-            </div>
-            {carsWithValue.length > 0 && (
-              <>
-                <span className="text-fh-border select-none">|</span>
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-fh-muted uppercase tracking-wide leading-none mb-0.5">Total value</span>
-                  <span className="text-sm font-medium tabular-nums">
-                    {totalValue.toLocaleString()} Cr
-                    {unknownCount > 0 && (
-                      <span
-                        className="text-[10px] text-fh-muted align-super ml-0.5 cursor-help"
-                        title={`Excludes ${unknownCount} ${unknownCount === 1 ? 'car' : 'cars'} with unknown value`}
-                      >†</span>
-                    )}
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
       <Suspense fallback={null}>
         <GarageShowcase initialCars={cars} />
       </Suspense>

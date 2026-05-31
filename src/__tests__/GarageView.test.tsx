@@ -2,7 +2,30 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GarageView from '@/components/GarageView'
+import { NavControlsProvider, useNavControls } from '@/context/NavControls'
+import { GridIcon, TableIcon } from '@/components/table-ui'
 import type { Car } from '@/types/car'
+
+// Renders the view toggle by consuming NavControlsProvider — mirrors what Nav does
+function NavToggle() {
+  const { controls } = useNavControls()
+  if (!controls) return null
+  return (
+    <div>
+      <button title="Grid view" onClick={() => controls.setView('grid')}><GridIcon /></button>
+      <button title="Table view" onClick={() => controls.setView('table')}><TableIcon /></button>
+    </div>
+  )
+}
+
+function renderView(cars: Car[]) {
+  return render(
+    <NavControlsProvider>
+      <NavToggle />
+      <GarageView initialCars={cars} />
+    </NavControlsProvider>
+  )
+}
 
 // Three cars with distinct make/PI rating/class for sort verification
 const mockCars: Car[] = [
@@ -58,20 +81,20 @@ beforeEach(() => {
 
 describe('GarageView — view toggle', () => {
   it('starts in grid view (no table rendered)', () => {
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
   it('shows table after clicking the table-view button', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     expect(screen.getByRole('table')).toBeInTheDocument()
   })
 
   it('shows all cars in the table', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     const rows = screen.getAllByRole('row').slice(1)
     expect(rows).toHaveLength(mockCars.length)
@@ -81,7 +104,7 @@ describe('GarageView — view toggle', () => {
 describe('GarageView — default sort', () => {
   it('sorts by highest PI class then rating when no column is selected', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     // default: R (999) → S1 (826) → A (800)
     expect(getColumnValues(COL.make)).toEqual(['Bugatti', 'Porsche', 'Ford'])
@@ -89,7 +112,7 @@ describe('GarageView — default sort', () => {
 
   it('no column header has aria-sort set initially', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     const headers = screen.getAllByRole('columnheader')
     const sorted = headers.filter((th) => th.hasAttribute('aria-sort'))
@@ -100,7 +123,7 @@ describe('GarageView — default sort', () => {
 describe('GarageView — column sort', () => {
   it('clicking Make sorts alphabetically ascending', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     await user.click(getHeader(/^make/i))
     expect(getColumnValues(COL.make)).toEqual(['Bugatti', 'Ford', 'Porsche'])
@@ -108,7 +131,7 @@ describe('GarageView — column sort', () => {
 
   it('clicking Make twice reverses to descending', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     await user.click(getHeader(/^make/i))
     await user.click(getHeader(/^make/i))
@@ -117,7 +140,7 @@ describe('GarageView — column sort', () => {
 
   it('clicking PI sorts by rating ascending', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     await user.click(getHeader(/^pi/i))
     expect(getColumnValues(COL.piRating)).toEqual(['800', '826', '999'])
@@ -125,7 +148,7 @@ describe('GarageView — column sort', () => {
 
   it('clicking PI twice sorts by rating descending', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     await user.click(getHeader(/^pi/i))
     await user.click(getHeader(/^pi/i))
@@ -134,7 +157,7 @@ describe('GarageView — column sort', () => {
 
   it('clicking Class sorts by game order ascending (D→X)', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     await user.click(getHeader(/^class/i))
     // A < S1 < R
@@ -143,7 +166,7 @@ describe('GarageView — column sort', () => {
 
   it('clicking Year sorts chronologically ascending', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     await user.click(getHeader(/^year/i))
     expect(getColumnValues(COL.year)).toEqual(['2018', '2019', '2020'])
@@ -151,7 +174,7 @@ describe('GarageView — column sort', () => {
 
   it('switching from one column to another resets to ascending', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     // click Make twice → descending
     await user.click(getHeader(/^make/i))
@@ -165,7 +188,7 @@ describe('GarageView — column sort', () => {
 describe('GarageView — aria-sort', () => {
   it('sets aria-sort="ascending" on the active column after first click', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     await user.click(getHeader(/^make/i))
     expect(getHeader(/^make/i)).toHaveAttribute('aria-sort', 'ascending')
@@ -173,7 +196,7 @@ describe('GarageView — aria-sort', () => {
 
   it('sets aria-sort="descending" after second click on same column', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     await user.click(getHeader(/^make/i))
     await user.click(getHeader(/^make/i))
@@ -182,7 +205,7 @@ describe('GarageView — aria-sort', () => {
 
   it('removes aria-sort from previous column when switching', async () => {
     const user = userEvent.setup()
-    render(<GarageView initialCars={mockCars} />)
+    renderView(mockCars)
     await switchToTable(user)
     await user.click(getHeader(/^make/i))
     await user.click(getHeader(/^pi/i))

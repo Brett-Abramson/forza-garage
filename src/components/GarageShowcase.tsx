@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect, useRef, Fragment } from 'react'
+import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef, Fragment } from 'react'
+import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
 import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS, SOURCE_CHIPS } from '@/types/car'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
@@ -532,6 +533,19 @@ export default function GarageShowcase({ initialCars }: Props) {
   ])
 
   const options = useMemo(() => buildOptions(cars), [cars])
+
+  // Register search + view controls with the navbar
+  const { register, unregister } = useNavControls()
+  useLayoutEffect(() => {
+    register({
+      search: filters.search,
+      setSearch: (v) => setFilters((f) => ({ ...f, search: v })),
+      view,
+      setView,
+    })
+  }, [filters.search, view, register])
+  useEffect(() => () => unregister(), [unregister])
+
   const activeRace = useMemo(() => RACE_TYPES.find((r) => r.id === selectedRace) ?? null, [selectedRace])
   const displayedRace = useMemo(() => RACE_TYPES.find((r) => r.id === displayedRaceId) ?? null, [displayedRaceId])
 
@@ -699,44 +713,54 @@ export default function GarageShowcase({ initialCars }: Props) {
     )
   }
 
+  const carsWithValue = cars.filter((c) => c.value != null)
+  const totalValue = carsWithValue.reduce((sum, c) => sum + c.value!, 0)
+  const unknownCount = cars.length - carsWithValue.length
+
   return (
     <>
     <div className="flex flex-col gap-6">
-      {/* Search + active filter badge + view toggle */}
-      <div className="flex gap-3 items-center">
-        <input
-          ref={searchRef}
-          type="text"
-          placeholder="Search make, model, division... (press / to focus)"
-          value={filters.search}
-          onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-          className="flex-1 bg-fh-panel border border-fh-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fh-red placeholder:text-fh-muted"
-        />
-        {activeFilterCount > 0 && (
+      {/* Page header */}
+      <header className="flex items-center gap-6">
+        <div className="flex items-center gap-6">
+          <h1 className="text-2xl font-bold tracking-tight">My Garage</h1>
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-fh-muted uppercase tracking-wide leading-none mb-0.5">Cars</span>
+              <span className="text-sm font-medium tabular-nums">{cars.length}</span>
+            </div>
+            {carsWithValue.length > 0 && (
+              <>
+                <span className="text-fh-border select-none">|</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-fh-muted uppercase tracking-wide leading-none mb-0.5">Total value</span>
+                  <span className="text-sm font-medium tabular-nums">
+                    {totalValue.toLocaleString()} Cr
+                    {unknownCount > 0 && (
+                      <span
+                        className="text-[10px] text-fh-muted align-super ml-0.5 cursor-help"
+                        title={`Excludes ${unknownCount} ${unknownCount === 1 ? 'car' : 'cars'} with unknown value`}
+                      >†</span>
+                    )}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Active filter badge */}
+      {activeFilterCount > 0 && (
+        <div className="flex">
           <button
             onClick={clearAllFilters}
             className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-colors whitespace-nowrap"
           >
             {activeFilterCount} active · clear
           </button>
-        )}
-        <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0">
-          <button
-            onClick={() => setView('grid')}
-            title="Grid view"
-            className={`px-3 py-2 transition-colors ${view === 'grid' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
-          >
-            <GridIcon />
-          </button>
-          <button
-            onClick={() => setView('table')}
-            title="Table view"
-            className={`px-3 py-2 transition-colors ${view === 'table' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
-          >
-            <TableIcon />
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Class stat chips */}
       <div className="flex flex-wrap gap-2">
@@ -1015,5 +1039,26 @@ export default function GarageShowcase({ initialCars }: Props) {
       }}
     />
     </>
+  )
+}
+
+function ViewToggle({ view, setView }: { view: string; setView: (v: "grid" | "table") => void }) {
+  return (
+    <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0">
+      <button
+        onClick={() => setView("grid")}
+        title="Grid view"
+        className={`px-3 py-2 transition-colors ${view === "grid" ? "bg-fh-red-pale text-fh-red" : "text-fh-muted hover:text-fh-dark-2"}`}
+      >
+        <GridIcon />
+      </button>
+      <button
+        onClick={() => setView("table")}
+        title="Table view"
+        className={`px-3 py-2 transition-colors ${view === "table" ? "bg-fh-red-pale text-fh-red" : "text-fh-muted hover:text-fh-dark-2"}`}
+      >
+        <TableIcon />
+      </button>
+    </div>
   )
 }

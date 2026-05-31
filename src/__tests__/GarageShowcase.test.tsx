@@ -2,9 +2,31 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GarageShowcase from '@/components/GarageShowcase'
+import { NavControlsProvider, useNavControls } from '@/context/NavControls'
+import { GridIcon, TableIcon } from '@/components/table-ui'
 import { RACE_TYPES } from '@/lib/races'
 import type { Car } from '@/types/car'
 import { useSearchParams } from 'next/navigation'
+
+function NavToggle() {
+  const { controls } = useNavControls()
+  if (!controls) return null
+  return (
+    <div>
+      <button title="Grid view" onClick={() => controls.setView('grid')}><GridIcon /></button>
+      <button title="Table view" onClick={() => controls.setView('table')}><TableIcon /></button>
+    </div>
+  )
+}
+
+function renderShowcase(cars: Car[]) {
+  return render(
+    <NavControlsProvider>
+      <NavToggle />
+      <GarageShowcase initialCars={cars} />
+    </NavControlsProvider>
+  )
+}
 
 const mockCars: Car[] = [
   {
@@ -53,7 +75,7 @@ beforeEach(() => {
 
 describe('GarageShowcase — tag filter chips', () => {
   it('renders all CAR_TAGS as filter chips', () => {
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     expect(screen.getByRole('button', { name: 'grip' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'drift' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'offroad' })).toBeInTheDocument()
@@ -61,7 +83,7 @@ describe('GarageShowcase — tag filter chips', () => {
 
   it('selecting a tag hides cars that do not have it', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'grip' }))
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.queryByText('Silvia')).not.toBeInTheDocument()
@@ -70,7 +92,7 @@ describe('GarageShowcase — tag filter chips', () => {
 
   it('selecting multiple tags applies AND logic', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'asphalt' }))
     await user.click(screen.getByRole('button', { name: 'grip' }))
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
@@ -80,7 +102,7 @@ describe('GarageShowcase — tag filter chips', () => {
 
   it('active tag chip gets highlighted styles', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     const chip = screen.getByRole('button', { name: 'grip' })
     await user.click(chip)
     expect(chip.className).toContain('text-fh-red')
@@ -88,7 +110,7 @@ describe('GarageShowcase — tag filter chips', () => {
 
   it('clicking an active tag chip deselects it and restores cars', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     const chip = screen.getByRole('button', { name: 'grip' })
     await user.click(chip)
     await user.click(chip)
@@ -99,7 +121,7 @@ describe('GarageShowcase — tag filter chips', () => {
 
   it('clear pill appears when a tag is selected', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     expect(screen.queryByRole('button', { name: /clear/i })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'grip' }))
     // Both the tag-chip "✕ clear" and the active filter badge should appear
@@ -109,7 +131,7 @@ describe('GarageShowcase — tag filter chips', () => {
 
   it('clear pill removes all tag filters and shows all cars', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'grip' }))
     await user.click(screen.getByRole('button', { name: /✕ clear/i }))
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
@@ -122,7 +144,7 @@ describe('GarageShowcase — tag filter chips', () => {
 
 describe('GarageShowcase — PI class chips', () => {
   it('shows a chip for each class present in the garage', () => {
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     expect(screen.getAllByText('S1').length).toBeGreaterThan(0)
     expect(screen.getAllByText('B').length).toBeGreaterThan(0)
     expect(screen.getAllByText('D').length).toBeGreaterThan(0)
@@ -130,7 +152,7 @@ describe('GarageShowcase — PI class chips', () => {
 
   it('clicking a PI class chip filters to that class', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     const s1Buttons = screen.getAllByRole('button').filter((b) =>
       b.textContent?.includes('S1') && b.textContent?.includes('car')
     )
@@ -145,13 +167,13 @@ describe('GarageShowcase — PI class chips', () => {
 
 describe('GarageShowcase — filter mode toggle', () => {
   it('defaults to tags mode — tag chips are visible', () => {
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     expect(screen.getByRole('button', { name: 'grip' })).toBeInTheDocument()
   })
 
   it('switching to Race type mode shows race pills', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'Race type' }))
     for (const race of RACE_TYPES) {
       expect(screen.getByRole('button', { name: new RegExp(race.name, 'i') })).toBeInTheDocument()
@@ -160,14 +182,14 @@ describe('GarageShowcase — filter mode toggle', () => {
 
   it('switching to Race type mode hides tag chips', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'Race type' }))
     expect(screen.queryByRole('button', { name: 'grip' })).not.toBeInTheDocument()
   })
 
   it('switching back to Tags mode shows tag chips again', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'Race type' }))
     await user.click(screen.getByRole('button', { name: 'Tags' }))
     expect(screen.getByRole('button', { name: 'grip' })).toBeInTheDocument()
@@ -175,7 +197,7 @@ describe('GarageShowcase — filter mode toggle', () => {
 
   it('switching to Tags mode clears the active race', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'Race type' }))
     await user.click(screen.getByRole('button', { name: /Road Racing/i }))
     await user.click(screen.getByRole('button', { name: 'Tags' }))
@@ -189,7 +211,7 @@ describe('GarageShowcase — filter mode toggle', () => {
 describe('GarageShowcase — race filter', () => {
   it('selecting a race pill activates it with amber styles', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'Race type' }))
     const roadBtn = screen.getByRole('button', { name: /Road Racing/i })
     await user.click(roadBtn)
@@ -198,7 +220,7 @@ describe('GarageShowcase — race filter', () => {
 
   it('race filter uses OR logic — shows cars matching any recommended tag', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'Race type' }))
     // Road Racing recommendedTags include 'asphalt' and 'grip'
     // 911 GT3 has ['grip', 'asphalt'] — matches
@@ -212,7 +234,7 @@ describe('GarageShowcase — race filter', () => {
 
   it('deselecting a race pill restores all cars', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'Race type' }))
     const roadBtn = screen.getByRole('button', { name: /Road Racing/i })
     await user.click(roadBtn)
@@ -222,7 +244,7 @@ describe('GarageShowcase — race filter', () => {
 
   it('race tray slides in when a race pill is selected', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'Race type' }))
     await user.click(screen.getByRole('button', { name: /Road Racing/i }))
     expect(container.querySelector('.grid-rows-\\[1fr\\]')).toBeTruthy()
@@ -239,20 +261,20 @@ const byCount = (pattern: RegExp) =>
 
 describe('GarageShowcase — car count', () => {
   it('shows total count when no filters are active', () => {
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     expect(screen.getAllByText(byCount(/showing 3 cars/i))[0]).toBeInTheDocument()
   })
 
   it('count updates when a tag filter is applied', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'grip' }))
     expect(screen.getAllByText(byCount(/showing 1/i))[0]).toBeInTheDocument()
   })
 
   it('shows singular "car" when exactly one result', async () => {
     const user = userEvent.setup()
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'grip' }))
     // "Showing 1 of 3 cars" — check the count is 1 and "cars" (plural) is not shown alone
     const countEl = screen.getAllByText(byCount(/showing 1/i))[0]
@@ -264,13 +286,13 @@ describe('GarageShowcase — car count', () => {
 
 describe('GarageShowcase — drawer', () => {
   it('drawer is closed initially', () => {
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     expect(container.querySelector('.translate-x-full')).toBeTruthy()
   })
 
   it('clicking a car card opens the drawer in grid view', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByTitle('Grid view'))
     const card = Array.from(container.querySelectorAll('.cursor-pointer')).find((el) =>
       el.textContent?.includes('911 GT3')
@@ -282,7 +304,7 @@ describe('GarageShowcase — drawer', () => {
 
   it('clicking a row in table view does not open the drawer', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     const row = screen.getByText('911 GT3').closest('tr')!
     await user.click(row)
     expect(container.querySelector('.translate-x-0')).toBeFalsy()
@@ -302,13 +324,13 @@ describe('GarageShowcase — drawer', () => {
 
 describe('GarageShowcase — list view expansion', () => {
   it('default view is table', () => {
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     expect(container.querySelector('table')).toBeInTheDocument()
   })
 
   it('clicking a row expands it to show tags and notes', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     const tbody = container.querySelector('tbody')!
     expect(within(tbody).getByPlaceholderText('Notes...')).toBeInTheDocument()
@@ -316,7 +338,7 @@ describe('GarageShowcase — list view expansion', () => {
 
   it('expanded row shows the car\'s current tags as removable pills', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     // 911 GT3 has tags ['grip' (user), 'asphalt' (auto)] — both are removable
     const tbody = container.querySelector('tbody')!
@@ -326,7 +348,7 @@ describe('GarageShowcase — list view expansion', () => {
 
   it('expanded row shows available tags as add buttons', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     // 'drift' is not on the 911 GT3, so it should appear as an add button
     const tbody = container.querySelector('tbody')!
@@ -335,7 +357,7 @@ describe('GarageShowcase — list view expansion', () => {
 
   it('clicking the same row again collapses it', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     const row = screen.getByText('911 GT3').closest('tr')!
     await user.click(row)
     await user.click(row)
@@ -345,7 +367,7 @@ describe('GarageShowcase — list view expansion', () => {
 
   it('only one row is expanded at a time', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     await user.click(screen.getByText('Silvia').closest('tr')!)
     // One ExpandedRow <tr> in the tbody (desktop); Silvia's, not 911 GT3's
@@ -355,7 +377,7 @@ describe('GarageShowcase — list view expansion', () => {
 
   it('adding a tag calls the garage API', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     const tbody = container.querySelector('tbody')!
     await user.click(within(tbody).getByRole('button', { name: '+ drift' }))
@@ -371,7 +393,7 @@ describe('GarageShowcase — list view expansion', () => {
 describe('GarageShowcase — expanded row tuning content', () => {
   it('shows a "Best for" race type line when the car has matching tags', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     // Modern Sports Cars + asphalt + grip → Road Racing
     const tbody = container.querySelector('tbody')!
@@ -381,7 +403,7 @@ describe('GarageShowcase — expanded row tuning content', () => {
 
   it('shows the tuning guide philosophy in the expanded row', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     const tbody = container.querySelector('tbody')!
     expect(within(tbody).getByText(/most varied division for road racing/i)).toBeInTheDocument()
@@ -389,7 +411,7 @@ describe('GarageShowcase — expanded row tuning content', () => {
 
   it('shows the spectrum note in the expanded row', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     const tbody = container.querySelector('tbody')!
     expect(within(tbody).getByText(/lightweight naturally-aspirated RWD coupes/i)).toBeInTheDocument()
@@ -397,7 +419,7 @@ describe('GarageShowcase — expanded row tuning content', () => {
 
   it('shows the Watch out callout in the expanded row', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     const tbody = container.querySelector('tbody')!
     expect(within(tbody).getByText(/AWD conversion without checking PI cost/i)).toBeInTheDocument()
@@ -405,7 +427,7 @@ describe('GarageShowcase — expanded row tuning content', () => {
 
   it('shows "coming soon" for a car whose division has no guide for its best race type', async () => {
     const user = userEvent.setup()
-    const { container } = render(<GarageShowcase initialCars={mockCars} />)
+    const { container } = renderShowcase(mockCars)
     // Silvia: Retro Sports Cars + drift/asphalt → best match is Drift Zones
     // No tuning guide exists for Drift Zones + Retro Sports Cars
     await user.click(screen.getByText('Silvia').closest('tr')!)
@@ -419,14 +441,14 @@ describe('GarageShowcase — expanded row tuning content', () => {
 describe('GarageShowcase — URL param tag init', () => {
   it('pre-activates tag chips from ?tags= URL param', () => {
     vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=grip') as ReturnType<typeof useSearchParams>)
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     const gripChip = screen.getByRole('button', { name: 'grip' })
     expect(gripChip.className).toContain('text-fh-red')
   })
 
   it('pre-filters the car list from ?tags= URL param', () => {
     vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=grip') as ReturnType<typeof useSearchParams>)
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.queryByText('Silvia')).not.toBeInTheDocument()
     expect(screen.queryByText('Jimmy')).not.toBeInTheDocument()
@@ -434,13 +456,13 @@ describe('GarageShowcase — URL param tag init', () => {
 
   it('applies AND logic for comma-separated URL param tags', () => {
     vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=asphalt%2Cgrip') as ReturnType<typeof useSearchParams>)
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.queryByText('Silvia')).not.toBeInTheDocument()
   })
 
   it('shows all cars when no tag URL params', () => {
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.getByText('Silvia')).toBeInTheDocument()
     expect(screen.getByText('Jimmy')).toBeInTheDocument()
@@ -448,7 +470,7 @@ describe('GarageShowcase — URL param tag init', () => {
 
   it('ignores unknown tags in URL params', () => {
     vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=notarealtag') as ReturnType<typeof useSearchParams>)
-    render(<GarageShowcase initialCars={mockCars} />)
+    renderShowcase(mockCars)
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.getByText('Silvia')).toBeInTheDocument()
     expect(screen.getByText('Jimmy')).toBeInTheDocument()

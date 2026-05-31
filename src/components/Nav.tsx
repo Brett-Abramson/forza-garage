@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation'
 import { useUser, SignInButton, SignOutButton } from '@clerk/nextjs'
 import { useState } from 'react'
 import ThemeToggle from '@/components/ThemeToggle'
+import { useNavControls } from '@/context/NavControls'
+import { GridIcon, TableIcon } from '@/components/table-ui'
 
 const links = [
   { href: '/garage', label: 'My Garage', icon: GarageIcon, shortcut: 'g' },
@@ -23,6 +25,8 @@ export default function Nav() {
   const pathname = usePathname()
   const { isSignedIn, user, isLoaded } = useUser()
   const [menuOpen, setMenuOpen] = useState(false)
+  const { controls } = useNavControls()
+  const showControls = (pathname === '/cars' || pathname === '/garage') && controls !== null
 
   const initials = isSignedIn
     ? getInitials(
@@ -58,7 +62,35 @@ export default function Nav() {
           )
         })}
 
-        <div className="ml-auto flex items-center gap-2">
+        {showControls && (
+          <div className="ml-auto flex items-center gap-2 flex-1 max-w-sm">
+            <input
+              type="text"
+              placeholder="Search make, model, division…"
+              value={controls!.search}
+              onChange={(e) => controls!.setSearch(e.target.value)}
+              className="flex-1 min-w-0 bg-fh-panel-2 border border-fh-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-fh-red placeholder:text-fh-muted"
+            />
+            <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0">
+              <button
+                onClick={() => controls!.setView('grid')}
+                title="Grid view"
+                className={`px-2.5 py-1.5 transition-colors ${controls!.view === 'grid' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
+              >
+                <GridIcon />
+              </button>
+              <button
+                onClick={() => controls!.setView('table')}
+                title="Table view"
+                className={`px-2.5 py-1.5 transition-colors ${controls!.view === 'table' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
+              >
+                <TableIcon />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className={`flex items-center gap-2 ${showControls ? '' : 'ml-auto'}`}>
           <ThemeToggle />
 
           {isLoaded && (

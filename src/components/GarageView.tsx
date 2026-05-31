@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef, useLayoutEffect } from 'react'
+import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
 import { Car, FilterState, SOURCE_CHIPS } from '@/types/car'
 import { CAR_TAGS } from '@/lib/tags'
@@ -74,6 +75,18 @@ export default function GarageView({ initialCars }: Props) {
   )
 
   const options = useMemo(() => buildOptions(cars), [cars])
+
+  // Register search + view controls with the navbar
+  const { register, unregister } = useNavControls()
+  useLayoutEffect(() => {
+    register({
+      search: filters.search,
+      setSearch: (v) => setFilters((f) => ({ ...f, search: v })),
+      view,
+      setView,
+    })
+  }, [filters.search, view, register])
+  useEffect(() => () => unregister(), [unregister])
 
   // Press / to focus search (skips when cursor is already in a form field)
   useEffect(() => {
@@ -235,6 +248,14 @@ export default function GarageView({ initialCars }: Props) {
   return (
     <>
     <div className="flex flex-col gap-6">
+      {/* Page header */}
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight">Car Database</h1>
+        <p className="text-fh-muted text-sm mt-1">
+          Browse all {initialCars.length} cars — mark the ones you own to add them to your garage.
+        </p>
+      </header>
+
       {/* Stats bar */}
       <div className="flex items-center gap-6 text-sm">
         <div>
@@ -249,41 +270,17 @@ export default function GarageView({ initialCars }: Props) {
         </div>
       </div>
 
-      {/* Search + active filter badge + view toggle */}
-      <div className="flex gap-3 items-center">
-        <input
-          ref={searchRef}
-          type="text"
-          placeholder="Search make, model, division... (press / to focus)"
-          value={filters.search}
-          onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-          className="flex-1 bg-fh-panel border border-fh-border rounded-lg px-3 py-2 text-sm text-fh-dark focus:outline-none focus:border-fh-red placeholder:text-fh-muted-2"
-        />
-        {activeFilterCount > 0 && (
+      {/* Active filter badge */}
+      {activeFilterCount > 0 && (
+        <div className="flex">
           <button
             onClick={clearAllFilters}
             className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red hover:opacity-80 transition-opacity whitespace-nowrap"
           >
             {activeFilterCount} active · clear
           </button>
-        )}
-        <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0">
-          <button
-            onClick={() => setView('grid')}
-            title="Grid view"
-            className={`px-3 py-2 transition-colors ${view === 'grid' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark'}`}
-          >
-            <GridIcon />
-          </button>
-          <button
-            onClick={() => setView('table')}
-            title="Table view"
-            className={`px-3 py-2 transition-colors ${view === 'table' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark'}`}
-          >
-            <TableIcon />
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Division group filter */}
       <DivisionGroupFilter
@@ -410,5 +407,26 @@ export default function GarageView({ initialCars }: Props) {
       onToggleOwned={toggleOwned}
     />
     </>
+  )
+}
+
+function ViewToggle({ view, setView }: { view: string; setView: (v: "grid" | "table") => void }) {
+  return (
+    <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0">
+      <button
+        onClick={() => setView("grid")}
+        title="Grid view"
+        className={`px-3 py-2 transition-colors ${view === "grid" ? "bg-fh-red-pale text-fh-red" : "text-fh-muted hover:text-fh-dark-2"}`}
+      >
+        <GridIcon />
+      </button>
+      <button
+        onClick={() => setView("table")}
+        title="Table view"
+        className={`px-3 py-2 transition-colors ${view === "table" ? "bg-fh-red-pale text-fh-red" : "text-fh-muted hover:text-fh-dark-2"}`}
+      >
+        <TableIcon />
+      </button>
+    </div>
   )
 }

@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import Nav from '@/components/Nav'
 import KeyboardNav from '@/components/KeyboardNav'
+import { NavControlsProvider } from '@/context/NavControls'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -27,9 +28,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </head>
         <body className={`${inter.className} min-h-screen`}>
-          <Nav />
-          <KeyboardNav />
-          {children}
+          <NavControlsProvider>
+            <Nav />
+            <KeyboardNav />
+            {children}
+          </NavControlsProvider>
           <SpeedInsights />
           <Analytics />
         </body>
