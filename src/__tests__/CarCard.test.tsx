@@ -71,9 +71,9 @@ describe('CarCard — owned state', () => {
     expect(screen.getByRole('button', { name: 'Add to garage' })).toBeInTheDocument()
   })
 
-  it('shows "Remove from garage" button when owned', () => {
+  it('does not show a remove button when owned (removal is in the drawer)', () => {
     render(<CarCard car={{ ...baseCar, owned: true }} onToggleOwned={vi.fn()} />)
-    expect(screen.getByRole('button', { name: 'Remove from garage' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Remove from garage' })).not.toBeInTheDocument()
   })
 
   it('shows "Owned" badge in the header when owned', () => {
@@ -97,11 +97,11 @@ describe('CarCard — onToggleOwned', () => {
     expect(onToggleOwned).toHaveBeenCalledWith(baseCar.id, true)
   })
 
-  it('calls onToggleOwned with (id, false) when removing from garage', async () => {
+  it('does not call onToggleOwned from the card when owned (removal is in the drawer)', () => {
     const onToggleOwned = vi.fn()
     render(<CarCard car={{ ...baseCar, owned: true }} onToggleOwned={onToggleOwned} />)
-    await userEvent.click(screen.getByRole('button', { name: 'Remove from garage' }))
-    expect(onToggleOwned).toHaveBeenCalledWith(baseCar.id, false)
+    expect(screen.queryByRole('button', { name: 'Remove from garage' })).not.toBeInTheDocument()
+    expect(onToggleOwned).not.toHaveBeenCalled()
   })
 })
 

@@ -64,6 +64,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
       setNotesDirty(false)
       setStats(carToStats(displayCar))
       setStatsDirty(false)
+      setConfirmRemove(false)
       prevId.current = displayCar.id
     }
   }, [displayCar])
@@ -166,6 +167,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
   const hasAnyStats = Object.values(stats).some((v) => v !== '')
   const [toggling, setToggling] = useState(false)
   const [showStatEntry, setShowStatEntry] = useState(false)
+  const [confirmRemove, setConfirmRemove] = useState(false)
 
   const statCallouts = displayCar ? getStatCallouts(displayCar, [...autoTags, ...userTags]) : []
 
@@ -249,23 +251,19 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                 )}
               </div>
 
-              {/* Owned toggle — shown when parent can handle it */}
-              {onToggleOwned && (
+              {/* Add to garage — only for non-owned cars */}
+              {onToggleOwned && !displayCar.owned && (
                 <div className="px-5 py-3 border-b border-fh-border">
                   <button
                     disabled={toggling}
                     onClick={async () => {
                       setToggling(true)
-                      await onToggleOwned(displayCar.id, !displayCar.owned)
+                      await onToggleOwned(displayCar.id, true)
                       setToggling(false)
                     }}
-                    className={`w-full py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                      displayCar.owned
-                        ? 'bg-fh-red-pale text-fh-red border border-fh-red hover:opacity-80'
-                        : 'bg-fh-red text-white border border-fh-red hover:opacity-90'
-                    }`}
+                    className="w-full py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-fh-red text-white border border-fh-red hover:opacity-90"
                   >
-                    {toggling ? '…' : displayCar.owned ? 'Remove from garage' : 'Add to garage'}
+                    {toggling ? '…' : 'Add to garage'}
                   </button>
                 </div>
               )}
@@ -515,6 +513,45 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                 </div>
               </div>
             </div>
+
+            {/* Remove from garage — destructive, secondary, two-step confirm */}
+            {onToggleOwned && displayCar.owned && (
+              <div className="px-5 py-4 border-t border-fh-border flex justify-end">
+                {!confirmRemove ? (
+                  <button
+                    onClick={() => setConfirmRemove(true)}
+                    className="flex items-center gap-1.5 text-xs text-fh-red bg-fh-red-pale border border-fh-red/30 hover:border-fh-red px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M6.5 1.75a.25.25 0 0 1 .25-.25h2.5a.25.25 0 0 1 .25.25V3h-3V1.75Zm4.5 0V3h2.25a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1 0-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75ZM4.496 6.675l.66 6.6a.25.25 0 0 0 .249.225h5.19a.25.25 0 0 0 .249-.225l.66-6.6a.75.75 0 0 1 1.492.149l-.66 6.6A1.748 1.748 0 0 1 10.595 15h-5.19a1.748 1.748 0 0 1-1.741-1.576l-.66-6.6a.75.75 0 1 1 1.492-.149Z" />
+                    </svg>
+                    Remove from garage
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-3 bg-fh-red-pale border border-fh-red/30 px-3 py-1.5 rounded-lg">
+                    <span className="text-xs text-fh-red">Remove this car?</span>
+                    <button
+                      onClick={() => setConfirmRemove(false)}
+                      className="text-xs text-fh-muted hover:text-fh-dark transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      disabled={toggling}
+                      onClick={async () => {
+                        setToggling(true)
+                        await onToggleOwned(displayCar.id, false)
+                        setToggling(false)
+                        setConfirmRemove(false)
+                      }}
+                      className="text-xs text-fh-red hover:opacity-70 font-semibold transition-colors disabled:opacity-50"
+                    >
+                      {toggling ? '…' : 'Confirm'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

@@ -117,10 +117,13 @@ export default function CarCard({ car, onToggleOwned, onCardClick, isPending }: 
           <div className="text-xs mt-1 text-fh-muted truncate">{car.engineType}</div>
         )}
 
-        <div className="flex items-baseline justify-between gap-2">
-          <div className={`text-xs mt-0.5 font-medium ${sourceColor}`}>{car.source}</div>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <span className={`text-xs font-medium ${sourceColor}`}>{car.source}</span>
           {car.value != null && (
-            <div className="text-xs text-fh-muted tabular-nums shrink-0">{car.value.toLocaleString()} Cr</div>
+            <>
+              <span className="text-fh-muted-2 text-xs select-none">·</span>
+              <span className="text-xs text-fh-muted tabular-nums">{car.value.toLocaleString()} Cr</span>
+            </>
           )}
         </div>
         {bestRace && (
@@ -130,30 +133,27 @@ export default function CarCard({ car, onToggleOwned, onCardClick, isPending }: 
         )}
       </div>
 
-      {/* Owned toggle */}
-      <div className="px-3 pb-3">
-        <button
-          onClick={(e) => { e.stopPropagation(); if (!isPending) onToggleOwned(car.id, !car.owned) }}
-          disabled={isPending}
-          className={`
-            w-full py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5
-            ${car.owned
-              ? 'bg-fh-red text-white border border-fh-red hover:opacity-80'
-              : 'bg-transparent border border-fh-border text-fh-muted hover:border-fh-red hover:text-fh-red'
-            }
-            ${isPending ? 'opacity-60 cursor-not-allowed' : ''}
-          `}
-        >
-          {isPending ? (
-            <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          ) : (
-            car.owned ? 'Remove from garage' : 'Add to garage'
-          )}
-        </button>
-      </div>
+      {/* Add to garage — only shown for non-owned cars */}
+      {!car.owned && (
+        <div className="px-3 pb-3">
+          <button
+            onClick={(e) => { e.stopPropagation(); if (!isPending) onToggleOwned(car.id, true) }}
+            disabled={isPending}
+            className={`
+              w-full py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5
+              bg-transparent border border-fh-border text-fh-muted hover:border-fh-red hover:text-fh-red
+              ${isPending ? 'opacity-60 cursor-not-allowed' : ''}
+            `}
+          >
+            {isPending ? (
+              <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : 'Add to garage'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

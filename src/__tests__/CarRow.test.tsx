@@ -78,10 +78,13 @@ describe('CarRow', () => {
     expect(onToggleOwned).toHaveBeenCalledWith(baseCar.id, true)
   })
 
-  it('calls onToggleOwned with (id, false) when clicking Owned', async () => {
+  it('requires confirmation before calling onToggleOwned with (id, false)', async () => {
     const onToggleOwned = vi.fn()
     renderRow({ ...baseCar, owned: true }, { onToggleOwned })
     await userEvent.click(screen.getByRole('button', { name: 'Owned' }))
+    expect(onToggleOwned).not.toHaveBeenCalled()
+    expect(screen.getByText('Remove?')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm' }))
     expect(onToggleOwned).toHaveBeenCalledWith(baseCar.id, false)
   })
 
