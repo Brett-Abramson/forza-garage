@@ -22,6 +22,7 @@ import StatBars from './StatBars'
 import { getStatCallouts } from '@/lib/statCallouts'
 import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS } from '@/lib/statUtils'
 import Link from 'next/link'
+import BackToTop from './BackToTop'
 
 type ViewMode = 'grid' | 'table'
 type FilterMode = 'tags' | 'race'
@@ -1034,6 +1035,7 @@ export default function GarageShowcase({ initialCars }: Props) {
         if (!owned) setDrawerCar(null)
       }}
     />
+    <BackToTop minItems={20} itemCount={cars.length} />
     </>
   )
 }

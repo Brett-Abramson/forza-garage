@@ -13,6 +13,7 @@ import DivisionGroupFilter from './DivisionGroupFilter'
 import GarageDrawer from './GarageDrawer'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
 import { getDivisionsForGroup } from '@/lib/divisionGroups'
+import BackToTop from './BackToTop'
 
 type ViewMode = 'grid' | 'table'
 
@@ -402,6 +403,7 @@ export default function GarageView({ initialCars }: Props) {
       onStatsChange={handleStatsChange}
       onToggleOwned={toggleOwned}
     />
+    <BackToTop />
     </>
   )
 }
