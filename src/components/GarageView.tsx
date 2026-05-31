@@ -133,13 +133,9 @@ export default function GarageView({ initialCars }: Props) {
   const filteredCars = useMemo(() => {
     return cars.filter((car) => {
       if (filters.search) {
-        const q = filters.search.toLowerCase()
-        if (
-          !car.make.toLowerCase().includes(q) &&
-          !car.model.toLowerCase().includes(q) &&
-          !car.division.toLowerCase().includes(q)
-        )
-          return false
+        const haystack = `${car.year} ${car.make} ${car.model} ${car.division}`.toLowerCase()
+        const tokens = filters.search.toLowerCase().trim().split(/\s+/)
+        if (!tokens.every((t) => haystack.includes(t))) return false
       }
       if (filters.piClass && car.piClass !== filters.piClass) return false
       // Group + division filter
