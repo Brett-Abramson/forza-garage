@@ -29,6 +29,7 @@ const nullStatCar: Car = {
   weightLb: null,
   frontWeight: null,
   displacementL: null,
+  value: null,
   rarity: null,
   source: 'Autoshow',
   sourceInfo: null,

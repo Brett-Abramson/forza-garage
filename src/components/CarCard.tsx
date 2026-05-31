@@ -117,7 +117,12 @@ export default function CarCard({ car, onToggleOwned, onCardClick, isPending }: 
           <div className="text-xs mt-1 text-fh-muted truncate">{car.engineType}</div>
         )}
 
-        <div className={`text-xs mt-0.5 font-medium ${sourceColor}`}>{car.source}</div>
+        <div className="flex items-baseline justify-between gap-2">
+          <div className={`text-xs mt-0.5 font-medium ${sourceColor}`}>{car.source}</div>
+          {car.value != null && (
+            <div className="text-xs text-fh-muted tabular-nums shrink-0">{car.value.toLocaleString()} Cr</div>
+          )}
+        </div>
         {bestRace && (
           <div className="text-xs mt-1.5 text-fh-muted">
             {bestRace.icon} {bestRace.name}

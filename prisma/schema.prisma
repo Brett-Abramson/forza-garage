@@ -42,12 +42,14 @@ model Car {
   displacementL Float?
 
   // Identity
+  value   Int?     // purchase price in credits
   rarity  String?  // Common | Rare | Legendary | Forza Edition
 
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   garage      UserGarage[]
 
+  @@unique([year, make, model])
   @@index([make])
   @@index([division])
   @@index([piClass])

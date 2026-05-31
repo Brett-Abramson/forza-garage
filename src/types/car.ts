@@ -35,6 +35,7 @@ export interface Car {
   displacementL: number | null
 
   // Identity
+  value: number | null   // purchase price in credits
   rarity: string | null  // Common | Rare | Legendary | Forza Edition
 
   owned: boolean

@@ -34,8 +34,9 @@ async function main() {
   const [_header, ...rows] = parseCSV(csv)
 
   const carData = rows.map((cols) => {
-    const [year, make, model, classField, division, country, source, sourceInfo] = cols
+    const [year, make, model, classField, division, country, valueStr, rarity, source, sourceInfo] = cols
     const [piClass, piRatingStr] = classField.split(' ')
+    const valueRaw = valueStr ? parseInt(valueStr.replace(/,/g, '')) : null
     return {
       year: parseInt(year),
       make,
@@ -44,6 +45,8 @@ async function main() {
       piRating: parseInt(piRatingStr),
       division,
       country,
+      value: isNaN(valueRaw!) ? null : valueRaw,
+      rarity: rarity || null,
       source,
       sourceInfo: sourceInfo || null,
       // Not in CSV yet
@@ -56,10 +59,22 @@ async function main() {
   })
 
   console.log(`Seeding ${carData.length} FH6 cars...`)
-  await prisma.carTag.deleteMany()
-  await prisma.userGarage.deleteMany()
-  await prisma.car.deleteMany()
-  await prisma.car.createMany({ data: carData })
+  for (const car of carData) {
+    await prisma.car.upsert({
+      where: { year_make_model: { year: car.year, make: car.make, model: car.model } },
+      update: {
+        piClass: car.piClass,
+        piRating: car.piRating,
+        division: car.division,
+        country: car.country,
+        value: car.value,
+        rarity: car.rarity,
+        source: car.source,
+        sourceInfo: car.sourceInfo,
+      },
+      create: car,
+    })
+  }
 
   console.log('Done.')
 }

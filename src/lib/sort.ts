@@ -1,6 +1,6 @@
 import { Car, PI_CLASS_ORDER } from '@/types/car'
 
-export type SortKey = 'piClass' | 'piRating' | 'year' | 'make' | 'model' | 'division' | 'drivetrain' | 'country' | 'source'
+export type SortKey = 'piClass' | 'piRating' | 'year' | 'make' | 'model' | 'division' | 'drivetrain' | 'country' | 'source' | 'value'
 export type SortDir = 'asc' | 'desc'
 
 export const PI_CLASS_INDEX: Record<string, number> = Object.fromEntries(
@@ -13,6 +13,8 @@ export function compareRows(a: Car, b: Car, key: SortKey, dir: SortDir): number 
     result = (PI_CLASS_INDEX[a.piClass] ?? -1) - (PI_CLASS_INDEX[b.piClass] ?? -1)
   } else if (key === 'piRating' || key === 'year') {
     result = a[key] - b[key]
+  } else if (key === 'value') {
+    result = (a.value ?? -1) - (b.value ?? -1)
   } else {
     result = String(a[key]).localeCompare(String(b[key]))
   }

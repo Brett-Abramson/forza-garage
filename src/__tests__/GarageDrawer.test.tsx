@@ -22,7 +22,7 @@ const baseCar: Car = {
   bodyStyle: null,
   statSpeed: null, statHandling: null, statAcceleration: null, statLaunch: null,
   statBraking: null, statOffroad: null, powerHp: null, torqueFtLb: null,
-  weightLb: null, frontWeight: null, displacementL: null, rarity: null,
+  weightLb: null, frontWeight: null, displacementL: null, value: null, rarity: null,
   source: 'Autoshow',
   sourceInfo: null,
   owned: true,

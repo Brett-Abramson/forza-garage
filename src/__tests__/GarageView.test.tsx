@@ -12,7 +12,7 @@ const mockCars: Car[] = [
     engineCC: null, cylinders: null, country: 'Germany', bodyStyle: null,
     statSpeed: null, statHandling: null, statAcceleration: null, statLaunch: null,
     statBraking: null, statOffroad: null, powerHp: null, torqueFtLb: null,
-    weightLb: null, frontWeight: null, displacementL: null, rarity: null,
+    weightLb: null, frontWeight: null, displacementL: null, value: null, rarity: null,
     source: 'Autoshow', sourceInfo: null, owned: false,
   },
   {
@@ -21,7 +21,7 @@ const mockCars: Car[] = [
     engineCC: null, cylinders: null, country: 'USA', bodyStyle: null,
     statSpeed: null, statHandling: null, statAcceleration: null, statLaunch: null,
     statBraking: null, statOffroad: null, powerHp: null, torqueFtLb: null,
-    weightLb: null, frontWeight: null, displacementL: null, rarity: null,
+    weightLb: null, frontWeight: null, displacementL: null, value: null, rarity: null,
     source: 'Autoshow', sourceInfo: null, owned: false,
   },
   {
@@ -30,7 +30,7 @@ const mockCars: Car[] = [
     engineCC: null, cylinders: null, country: 'France', bodyStyle: null,
     statSpeed: null, statHandling: null, statAcceleration: null, statLaunch: null,
     statBraking: null, statOffroad: null, powerHp: null, torqueFtLb: null,
-    weightLb: null, frontWeight: null, displacementL: null, rarity: null,
+    weightLb: null, frontWeight: null, displacementL: null, value: null, rarity: null,
     source: 'Autoshow', sourceInfo: null, owned: false,
   },
 ]

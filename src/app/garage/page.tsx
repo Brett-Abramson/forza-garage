@@ -58,6 +58,10 @@ export default async function GaragePage() {
     notes,
   }))
 
+  const carsWithValue = cars.filter((c) => c.value != null)
+  const totalValue = carsWithValue.reduce((sum, c) => sum + c.value!, 0)
+  const unknownCount = cars.length - carsWithValue.length
+
   return (
     <main className="max-w-screen-2xl mx-auto px-4 py-8">
       <header className="mb-8">
@@ -66,8 +70,23 @@ export default async function GaragePage() {
           <span className="text-sm text-fh-muted">
             {cars.length} {cars.length === 1 ? 'car' : 'cars'}
           </span>
+          {carsWithValue.length > 0 && (
+            <span className="text-sm text-fh-muted tabular-nums">
+              {totalValue.toLocaleString()} Cr
+              {unknownCount > 0 && (
+                <span className="text-xs text-fh-muted ml-1" title={`${unknownCount} car${unknownCount === 1 ? '' : 's'} with unknown value excluded`}>
+                  †
+                </span>
+              )}
+            </span>
+          )}
         </div>
-        <p className="text-sm mt-1 text-fh-muted">Your personal collection.</p>
+        <p className="text-sm mt-1 text-fh-muted">
+          Your personal collection.
+          {unknownCount > 0 && (
+            <span className="ml-1">† excludes {unknownCount} {unknownCount === 1 ? 'car' : 'cars'} with unknown value.</span>
+          )}
+        </p>
       </header>
 
       <Suspense fallback={null}>

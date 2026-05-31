@@ -383,6 +383,7 @@ export default function GarageView({ initialCars }: Props) {
                 <SortTh label="Drive" sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
                 <SortTh label="Country" sortKey="country" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
                 <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
+                <SortTh label="Value" sortKey="value" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
                 <th className="text-left py-2.5 px-3 text-fh-muted">Garage</th>
               </tr>
             </thead>

@@ -50,6 +50,17 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
       <td className={`py-2.5 px-3 hidden xl:table-cell text-xs font-medium ${sourceColor}`}>
         {car.source}
       </td>
+      <td className="py-2.5 px-3 text-fh-dark-2 tabular-nums hidden xl:table-cell text-xs">
+        {car.value != null
+          ? `${car.value.toLocaleString()} Cr`
+          : (
+            <span
+              className="cursor-default"
+              title={car.sourceInfo ?? undefined}
+            >—</span>
+          )
+        }
+      </td>
       <td className="py-2.5 px-3">
         <button
           onClick={(e) => { e.stopPropagation(); if (!isPending) onToggleOwned(car.id, !car.owned) }}
