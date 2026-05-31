@@ -543,8 +543,8 @@ export default function GarageShowcase({ initialCars }: Props) {
       view,
       setView,
     })
-  }, [filters.search, view, register])
-  useEffect(() => () => unregister(), [unregister])
+    return () => unregister()
+  }, [filters.search, view, register, unregister])
 
   const activeRace = useMemo(() => RACE_TYPES.find((r) => r.id === selectedRace) ?? null, [selectedRace])
   const displayedRace = useMemo(() => RACE_TYPES.find((r) => r.id === displayedRaceId) ?? null, [displayedRaceId])

@@ -85,8 +85,8 @@ export default function GarageView({ initialCars }: Props) {
       view,
       setView,
     })
-  }, [filters.search, view, register])
-  useEffect(() => () => unregister(), [unregister])
+    return () => unregister()
+  }, [filters.search, view, register, unregister])
 
   // Press / to focus search (skips when cursor is already in a form field)
   useEffect(() => {
