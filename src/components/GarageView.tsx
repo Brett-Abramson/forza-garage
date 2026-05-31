@@ -70,7 +70,11 @@ export default function GarageView({ initialCars }: Props) {
     searchParams.get('group') ?? null
   )
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
-  const [drawerCar, setDrawerCar] = useState<Car | null>(null)
+  const [drawerCar, setDrawerCar] = useState<Car | null>(() => {
+    const openId = searchParams.get('open')
+    if (!openId) return null
+    return initialCars.find((c) => c.id === Number(openId)) ?? null
+  })
   const [selectedTags, setSelectedTags] = useState<Set<string>>(
     () => new Set((searchParams.get('tags')?.split(',') ?? []).filter((t) => ALL_TAGS.has(t)))
   )

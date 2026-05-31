@@ -56,11 +56,15 @@ async function getGarageStats(userId: string) {
 
 export default async function LandingPage() {
   const { userId } = await auth()
-  const [stats, carCount] = await Promise.all([
+  const featured = getRandomFeaturedCar()
+  const [stats, carCount, featuredCar] = await Promise.all([
     userId ? getGarageStats(userId) : Promise.resolve(null),
     prisma.car.count(),
+    prisma.car.findFirst({
+      where: { make: featured.make, model: featured.model, year: featured.year },
+      select: { id: true },
+    }),
   ])
-  const featured = getRandomFeaturedCar()
 
   // Map piClass → count for quick lookup
   const classMap: Record<string, number> = {}
@@ -69,6 +73,11 @@ export default async function LandingPage() {
       classMap[row.piClass] = Number(row._count_id)
     }
   }
+
+  // Build deep-link to /cars with the featured car pre-filtered and drawer open
+  const featuredCarUrl = featuredCar
+    ? `/cars?q=${encodeURIComponent(`${featured.year} ${featured.make} ${featured.model}`)}&open=${featuredCar.id}`
+    : '/cars'
 
   // Resolve race type name for the featured car link
   const featuredRace = featured.raceType
@@ -243,10 +252,10 @@ export default async function LandingPage() {
 
                   {/* Full-width CTA */}
                   <Link
-                    href={userId ? '/garage' : '/sign-in'}
+                    href={featuredCarUrl}
                     className="btn-clip flex items-center justify-center py-2.5 text-xs font-bold uppercase tracking-widest text-white bg-fh-red transition-opacity hover:opacity-80"
                   >
-                    {userId ? 'Open Garage' : 'Sign In'}
+                    View in Database
                   </Link>
 
                   <span className="text-[10px] text-fh-muted-2 text-center">meta as of May 2026</span>
