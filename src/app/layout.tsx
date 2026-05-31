@@ -4,6 +4,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import Nav from '@/components/Nav'
+import Footer from '@/components/Footer'
 import KeyboardNav from '@/components/KeyboardNav'
 import { NavControlsProvider } from '@/context/NavControls'
 import './globals.css'
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Nav />
             <KeyboardNav />
             {children}
+            <Footer />
           </NavControlsProvider>
           <SpeedInsights />
           <Analytics />
