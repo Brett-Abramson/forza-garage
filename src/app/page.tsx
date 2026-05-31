@@ -56,7 +56,10 @@ async function getGarageStats(userId: string) {
 
 export default async function LandingPage() {
   const { userId } = await auth()
-  const stats = userId ? await getGarageStats(userId) : null
+  const [stats, carCount] = await Promise.all([
+    userId ? getGarageStats(userId) : Promise.resolve(null),
+    prisma.car.count(),
+  ])
   const featured = getRandomFeaturedCar()
 
   // Map piClass → count for quick lookup
@@ -97,7 +100,7 @@ export default async function LandingPage() {
             <span className="text-fh-red">Tracked.</span>
           </h1>
           <p className="text-sm mb-10 max-w-md" style={{ color: 'rgba(240,232,216,0.55)' }}>
-            Browse 661 cars, build your collection, and find the right car for every race type.
+            Browse {carCount} cars, build your collection, and find the right car for every race type.
           </p>
 
           <div className="flex flex-wrap gap-3">
@@ -115,7 +118,7 @@ export default async function LandingPage() {
               style={{ background: 'rgba(240,232,216,0.08)', color: 'rgba(240,232,216,0.85)', border: '1px solid rgba(240,232,216,0.15)' }}
             >
               Car Database
-              <span style={{ color: 'rgba(240,232,216,0.5)' }}>661</span>
+              <span style={{ color: 'rgba(240,232,216,0.5)' }}>{carCount}</span>
             </Link>
           </div>
         </div>
@@ -156,7 +159,7 @@ export default async function LandingPage() {
                     <span className="text-xs font-bold uppercase tracking-wide">Car Database</span>
                     <span className="text-xs text-fh-red">→</span>
                   </div>
-                  <span className="text-3xl font-bold text-fh-dark">661</span>
+                  <span className="text-3xl font-bold text-fh-dark">{carCount}</span>
                   <span className="text-xs text-fh-muted">cars total</span>
                 </Link>
               </div>
