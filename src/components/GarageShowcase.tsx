@@ -234,11 +234,11 @@ function ExpandedContent({
               </div>
               <div className="flex flex-col gap-2">
                 {statCallouts.map((c) => (
-                  <div key={c.id} className="rounded border border-blue-500/20 bg-blue-500/5 px-2.5 py-2">
-                    <div className="text-[10px] text-blue-400/80 font-medium uppercase tracking-wide mb-0.5">
+                  <div key={c.id} className="rounded border border-fh-blue/20 bg-fh-blue-pale px-2.5 py-2">
+                    <div className="text-[10px] text-fh-blue font-medium uppercase tracking-wide mb-0.5">
                       {c.title}
                     </div>
-                    <p className="text-xs text-blue-200/60 leading-relaxed">{c.body}</p>
+                    <p className="text-xs text-fh-dark-2 leading-relaxed">{c.body}</p>
                   </div>
                 ))}
               </div>
@@ -260,9 +260,9 @@ function ExpandedContent({
                       </li>
                     ))}
                   </ol>
-                  <div className="rounded border border-amber-500/20 bg-amber-500/5 px-2.5 py-2">
-                    <span className="text-[10px] text-amber-500/70 uppercase tracking-wide mr-1.5">Watch out:</span>
-                    <span className="text-xs text-amber-200/60 leading-relaxed">{tuningGuide.watchOut}</span>
+                  <div className="rounded border border-fh-amber/20 bg-fh-amber-pale px-2.5 py-2">
+                    <span className="text-[10px] text-fh-amber uppercase tracking-wide mr-1.5">Watch out:</span>
+                    <span className="text-xs text-fh-dark-2 leading-relaxed">{tuningGuide.watchOut}</span>
                   </div>
                 </>
               ) : (

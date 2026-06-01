@@ -408,7 +408,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                           ))}
                         </ol>
                       </div>
-                      <div className="rounded-lg border border-fh-amber/30 bg-fh-amber/8 px-3 py-2.5">
+                      <div className="rounded-lg border border-fh-amber/20 bg-fh-amber-pale px-3 py-2.5">
                         <div className="text-[10px] text-fh-amber uppercase tracking-wide mb-1">Watch out</div>
                         <p className="text-xs text-fh-dark-2 leading-relaxed">{tuningGuide.watchOut}</p>
                       </div>
