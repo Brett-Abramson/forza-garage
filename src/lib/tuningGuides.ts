@@ -8,8 +8,8 @@
 //   mechanical balance. Previous guides incorrectly said "stiffen front ARB".
 // - RWD diff accel corrected: 55% start (50–70% range), not 85%.
 // - AWD diff values added: front 85%/0%, rear 55%/15%, center 70–80% rear bias.
-// - Tire pressures corrected per compound: slick 28–32.5, semi-slick 27–29.5,
-//   street/stock 24–26.5, off-road 15.5–21 PSI.
+// - Tire pressures (v2 corrected, cold): slick/semi-slick 30–33, stock/sport/rally
+//   26–28, off-road/XC 24–26 PSI cold. Previous warm values removed.
 // - Caster added: 6.5–7.0°, most cars happiest near max (7°).
 // - Mechanical Balance target added: 0.55–0.65, sweet spot 0.60.
 // - Drag damping pattern documented: inverted from grip (stiff front bump +
@@ -63,9 +63,9 @@ export interface TuningGuide {
 //   AWD rear:  55% accel / 15% decel
 //   AWD center: 70–80% rear bias
 //
-// Tire pressure by compound:
-//   Slick: 28–32.5 PSI  |  Semi-slick: 27–29.5  |  Street/Stock: 24–26.5
-//   Rally: 24–26.5  |  Off-road: 15.5–21
+// Tire pressure by compound (cold):
+//   Slick/semi-slick/drift: 30–33 PSI  |  Stock/sport/rally: 26–28 PSI
+//   Cross country/off-road: 24–26 PSI  |  Drag rear: 26–28 PSI
 //
 // Caster: 6.5–7.0° for most road cars, near max (7°). Off-road: ~2.0°.
 //
@@ -107,7 +107,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Adding power before grip. A hot hatch with 50 extra horsepower and stock tires is slower than one with race tires and stock power. Chassis upgrades always first.",
     parameters: {
-      tirePressurePSI:   "Semi-slick: 27–29.5 PSI warm. Street tires: 24–26.5 PSI",
+      tirePressurePSI:   "Semi-slick: 30–33 PSI cold. Street/stock: 26–28 PSI cold",
       camberFront:       "−0.5° to −1.5° — add negative if turn-in is lazy",
       camberRear:        "0° to −1.0°",
       caster:            "6.5–7.0° (near max for most cars)",
@@ -139,7 +139,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Over-tuning aero for tight sections. Max downforce hurts straight-line speed and isn't needed unless the layout has sustained high-speed corners. Set aero balance to 0.40–0.45 first, then judge overall level by feel.",
     parameters: {
-      tirePressurePSI:   "Semi-slick: 27–29.5 PSI warm",
+      tirePressurePSI:   "Semi-slick: 30–33 PSI cold",
       camberFront:       "−0.5° to −1.5°",
       camberRear:        "0° to −1.0°",
       caster:            "6.5–7.0°",
@@ -170,7 +170,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "AWD conversion without checking PI cost. On many cars the AWD swap eats PI better spent on tires and brakes. RWD is faster on dry tarmac in skilled hands — lighter weight and better rotation equals better lap times at equal PI.",
     parameters: {
-      tirePressurePSI:   "Semi-slick: 27–29.5 PSI. Race slick: 28–32.5 PSI",
+      tirePressurePSI:   "Semi-slick: 30–33 PSI cold. Race slick: 30–33 PSI cold",
       camberFront:       "−0.5° to −1.5° (more for RWD). Over −2.0° → raise caster instead",
       camberRear:        "0° to −1.0°",
       caster:            "6.5–7.0° — near max for most cars",
@@ -201,7 +201,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Ignoring brake balance. GT cars that lock up under heavy braking lose more time than almost any other tuning mistake. Start at 52–54% forward and adjust from there.",
     parameters: {
-      tirePressurePSI:   "Semi-slick: 27–29.5 PSI. Heavier GTs toward upper end",
+      tirePressurePSI:   "Semi-slick: 30–33 PSI cold",
       camberFront:       "−0.5° to −1.5°",
       camberRear:        "0° to −1.0°",
       caster:            "6.5–7.0°",
@@ -231,7 +231,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Setting rear aero to max without adjusting front. An aero imbalance creates unpredictable handling at speed. Target the 0.40–0.45 aero balance stat first, then raise overall level by feel.",
     parameters: {
-      tirePressurePSI:   "Race slick or semi-slick: 27–32.5 PSI depending on compound",
+      tirePressurePSI:   "Slick/semi-slick: 30–33 PSI cold",
       caster:            "6.5–7.0°",
       arbNote:           "Max both. Soften toward 0.55–0.65 mechanical balance",
       mechBalanceTarget: "0.55–0.65",
@@ -259,7 +259,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Adding more power at S1/S2. You almost certainly have enough. Adding power without grip upgrades makes the car harder to drive and slower in corners. Weight reduction gains more lap time than engine work at this level.",
     parameters: {
-      tirePressurePSI:   "Race slick: 28–32.5 PSI. Semi-slick: 27–29.5 PSI",
+      tirePressurePSI:   "Slick/semi-slick: 30–33 PSI cold",
       camberFront:       "−0.5° to −1.5°. Add in 0.3° steps; over −2.0° raise caster instead",
       camberRear:        "0° to −1.0°",
       caster:            "6.5–7.0°",
@@ -290,7 +290,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Treating a hypercar like a sports car. They need more precise ARB, aero, and diff tuning than anything below them. A hypercar with wrong diff values is not just slow — it's dangerous.",
     parameters: {
-      tirePressurePSI:   "Race slick: 28–32.5 PSI",
+      tirePressurePSI:   "Slick: 30–33 PSI cold",
       camberFront:       "−0.5° to −1.5°",
       caster:            "6.5–7.0°",
       arbNote:           "Max both. Soften toward 0.55–0.65 mechanical balance. High-power RWD hypercars often need significantly softer rear ARB",
@@ -319,7 +319,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "High-power engine swaps on narrow old chassis. Fun but rarely fast. The chassis limit is the chassis limit regardless of what's under the hood.",
     parameters: {
-      tirePressurePSI:   "Street/stock: 24–26.5 PSI. Semi-slick: 27–29.5 PSI",
+      tirePressurePSI:   "Stock/street: 26–28 PSI cold. Semi-slick: 30–33 PSI cold",
       camberFront:       "−0.5° to −1.0° — conservative; these cars don't like aggressive alignment",
       caster:            "6.0–7.0°",
       arbNote:           "Max both. Soften more than a modern car — older chassis needs compliance",
@@ -364,7 +364,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Over-tuning a car that's already optimized. These cars often feel best close to their default tune. Test on the actual race route before touching anything.",
     parameters: {
-      tirePressurePSI:   "Race slick: 28–32.5 PSI. Semi-slick: 27–29.5 PSI",
+      tirePressurePSI:   "Slick/semi-slick: 30–33 PSI cold",
       caster:            "6.5–7.0°",
       arbNote:           "Max both. Soften carefully — track toys are sensitive to ARB changes",
       mechBalanceTarget: "0.55–0.65",
@@ -410,7 +410,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Expecting sports car behavior. A tuned super saloon is fast but it's not a GR86. Tune it for what it is — stable, powerful, heavy — rather than trying to make it feel lighter.",
     parameters: {
-      tirePressurePSI:   "Semi-slick: 27–29.5 PSI. Heavier cars toward upper end",
+      tirePressurePSI:   "Semi-slick: 30–33 PSI cold",
       caster:            "6.5–7.0°",
       arbNote:           "Max both. Soften front for AWD understeer; soften rear for RWD exit snap",
       mechBalanceTarget: "0.55–0.65",
@@ -441,7 +441,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Tuning for top speed. Street racing rarely has sections long enough to need it. Short gearing and grip beats high top speed every time.",
     parameters: {
-      tirePressurePSI:   "Semi-slick: 27–29.5 PSI. Street tires: 24–26.5 PSI",
+      tirePressurePSI:   "Semi-slick: 30–33 PSI cold. Street: 26–28 PSI cold",
       arbNote:           "Max both. FWD: soften front for rotation. AWD: soften rear for rotation without push",
       mechBalanceTarget: "0.55–0.65",
       diffFWD:           "85% accel / 0% decel",
@@ -468,7 +468,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Wheelspin out of slow corners. On street racing it compounds across an entire lap. If you're spinning on exit, reduce diff accel first (try 45–50%) before touching anything else.",
     parameters: {
-      tirePressurePSI:   "Semi-slick: 27–29.5 PSI",
+      tirePressurePSI:   "Semi-slick: 30–33 PSI cold",
       arbNote:           "Max both. Soften rear if oversteering on exit; soften front if understeering on entry",
       mechBalanceTarget: "0.55–0.65",
       diffRWD:           "50–55% accel / 15% decel — lower accel than road racing for cleaner exit",
@@ -494,7 +494,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Adding more power. Modern muscle almost always has too much power for street racing already. Weight reduction and chassis work gains more time than any engine upgrade.",
     parameters: {
-      tirePressurePSI:   "Semi-slick: 27–29.5 PSI",
+      tirePressurePSI:   "Semi-slick: 30–33 PSI cold",
       arbNote:           "Max both. Soften rear significantly — muscle cars need compliance in tight sections",
       mechBalanceTarget: "0.55–0.60 — lean slightly toward front grip to manage the power",
       diffRWD:           "45–55% accel / 15–20% decel — lower accel than normal to manage torque",
@@ -541,7 +541,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Tuning for grip like it's a tarmac car. Dirt rewards controlled slides. A car that fights the slide is slower than one that works with it. Stiff ARBs tie the wheels together and make the car skip across bumps.",
     parameters: {
-      tirePressurePSI:   "Rally tires: 24–26.5 PSI",
+      tirePressurePSI:   "Rally: 26–28 PSI cold",
       camberFront:       "−0.5° to −1.0° — less aggressive than tarmac",
       camberRear:        "0° to −0.5°",
       caster:            "6.5–7.0°",
@@ -571,7 +571,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Engine swaps that push power far beyond the original spec. A 600hp engine in a Lancia Stratos chassis is a spinning nightmare on dirt.",
     parameters: {
-      tirePressurePSI:   "Rally: 24–26.5 PSI",
+      tirePressurePSI:   "Rally: 26–28 PSI cold",
       arbNote:           "Near minimum both ends",
       diffAWD:           "Front: 80–90%/0–5% · Rear: 80–90%/10% · Center: 50–65% rear bias",
       brakeBalance:      "48% forward",
@@ -595,7 +595,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Road tires on dirt. Even sport compound tires are significantly worse than rally tires on loose surfaces. Always swap compound first.",
     parameters: {
-      tirePressurePSI:   "Rally: 24–26.5 PSI",
+      tirePressurePSI:   "Rally: 26–28 PSI cold",
       arbNote:           "Near minimum both ends",
       diffAWD:           "Front: 80–90%/0–5% · Rear: ~90%/10–15% · Center: 50–65% rear bias",
       brakeBalance:      "48% forward",
@@ -619,7 +619,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Expecting rally car performance. Pickups on dirt circuits are slower through corners than rally cars. Find time in traction zones, not cornering speed.",
     parameters: {
-      tirePressurePSI:   "Off-road: 15.5–21 PSI",
+      tirePressurePSI:   "Off-road: 24–26 PSI cold",
       arbNote:           "Near minimum both ends",
       rideHeight:        "Near maximum",
       diffAWD:           "Front: 80–90%/0–5% · Rear: 80–90%/10% · Center: 50–65% rear bias",
@@ -648,7 +648,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Lowering ride height for any reason. Cross country terrain will beach a car with insufficient clearance. Prioritize clearance over everything including lap time.",
     parameters: {
-      tirePressurePSI:   "Off-road: 15.5–21 PSI",
+      tirePressurePSI:   "Off-road: 24–26 PSI cold",
       arbNote:           "Near minimum both ends — do NOT use the max-then-soften approach here",
       springs:           "Near the soft end. Off-road rule: start high, lower only if clearly not bottoming out",
       rideHeight:        "Near maximum. Off-road inverts the normal rule — start high",
@@ -675,7 +675,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Treating an SUV like a road car. Even on cross country sections that look like roads, the terrain is rough enough that road-spec suspension bottoms out and loses traction.",
     parameters: {
-      tirePressurePSI:   "Off-road: 15.5–21 PSI",
+      tirePressurePSI:   "Off-road: 24–26 PSI cold",
       arbNote:           "Near minimum both ends",
       rideHeight:        "Raised — near maximum",
       diffAWD:           "Front: 80–90%/0–5% · Rear: 80–90%/10% · Center: 50–65% rear bias",
@@ -700,7 +700,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Insufficient ground clearance over crests. Cross country can beach a vehicle. If in doubt, go higher.",
     parameters: {
-      tirePressurePSI:   "Off-road: 15.5–21 PSI",
+      tirePressurePSI:   "Off-road: 24–26 PSI cold",
       arbNote:           "Near minimum both ends",
       rideHeight:        "Near maximum",
       diffAWD:           "Front: 80–90%/0–5% · Rear: 80–90%/10% · Center: 50–65% rear bias",
@@ -820,7 +820,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Using your road racing tune without changes. A stiff circuit setup bounces off-line on mountain drainage dips and cracked surfaces — the Bump < Rebound rule matters here.",
     parameters: {
-      tirePressurePSI:   "30–32 PSI warm (cooler than road racing for cold mountain surfaces)",
+      tirePressurePSI:   "30–33 PSI cold",
       camberFront:       "−1.5° to −2.0° (more aggressive than road for hairpin turn-in)",
       camberRear:        "−1.0° to −1.5°",
       caster:            "6.5–7.0° (strong self-centering helps on downhill)",
@@ -851,7 +851,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Using a road racing tune without softening the springs. A stiff circuit setup packs down progressively through consecutive mountain corners, losing steering response by the time you reach the worst hairpins.",
     parameters: {
-      tirePressurePSI:   "30–32 PSI warm",
+      tirePressurePSI:   "30–33 PSI cold",
       camberFront:       "−1.5° to −2.0°",
       camberRear:        "−1.0° to −1.5°",
       caster:            "6.5–7.0°",
@@ -881,7 +881,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Big engine swaps on mid-engine cars. The MR2 is balanced around its stock power range. A 500hp swap makes it difficult to control at the hairpin limits.",
     parameters: {
-      tirePressurePSI:   "30–32 PSI warm",
+      tirePressurePSI:   "30–33 PSI cold",
       camberFront:       "−1.5° to −2.0°",
       caster:            "6.5–7.0°",
       arbNote:           "Max both. Softer than road setup",
@@ -909,7 +909,7 @@ export const TUNING_GUIDES: TuningGuide[] = [
     watchOut:
       "Expecting grip-car behavior on downhill FWD hairpins without trail braking. Trail braking is mandatory technique for FWD touge — if you're not using it, the car will understeer every time regardless of tune.",
     parameters: {
-      tirePressurePSI:   "30–32 PSI warm",
+      tirePressurePSI:   "30–33 PSI cold",
       camberFront:       "−1.5° to −2.0°",
       arbNote:           "Max both. Soften front more than rear — helps FWD rotation",
       springs:           "20–25% softer than road baseline",
@@ -1134,10 +1134,11 @@ export const DIVISION_GUIDES: DivisionGuide[] = [
     divisions: ['Modern Supercars', 'Hypercars', 'Retro Supercars'],
     philosophy: 'Supercars are already engineered near the edge of what\'s possible. Your job is refinement, not transformation. The stock chassis is already stiff — start close to stock and adjust by feel.',
     priorities: [
-      'Race suspension to unlock full tuning — don\'t change spring rates drastically from stock',
+      'Race suspension to unlock full tuning — don\'t change spring rates drastically from stock; balanced front/rear rates suit most supercars',
       'Slick or semi-slick tires — at S1 and S2, full slick is standard',
       'Always fit aero — these cars are fast enough that downforce makes a measurable difference',
-      'Race diff — these cars produce enormous power and the diff manages where it goes',
+      'Race diff — RWD: 40–55% acceleration / 20–35% deceleration. AWD: 70–80% rear centre bias. These cars produce enormous power and the diff manages where it goes',
+      'Damping: rebound 9–11, bump 5–7 as a starting point — stiffer than sports cars to control the extra mass at speed',
       'Weight reduction before engine upgrades — chassis work first',
     ],
     watchOut: 'Many supercars are naturally tail-happy. A slightly stiffer rear ARB helps stability, but test the car first — some of that oversteer character is intentional.',
@@ -1146,7 +1147,8 @@ export const DIVISION_GUIDES: DivisionGuide[] = [
     divisions: ['Modern Sports Cars', 'Classic Sports Cars', 'Retro Sports Cars'],
     philosophy: 'Sports cars are the most versatile cars in the game. They can compete across multiple disciplines if built correctly for each one. Road racing is balanced around them.',
     priorities: [
-      'Race suspension, semi-slick tires, light weight reduction, sport diff for road and street',
+      'Race suspension, semi-slick tires, light weight reduction, race diff for road and street — Race diff over Sport diff at A class and above',
+      'Race diff tuning: RWD 40–55% acceleration / 20–35% deceleration — lower end for technical circuits, higher for flowing layouts',
       'Rally suspension, rally tires, AWD (if convertible) for dirt — competitive at B and A class',
       'Most sports cars sit naturally at A class — don\'t push to S1 without tuning the chassis to match',
       'Prioritise chassis upgrades over engine power when PI is tight',
@@ -1157,10 +1159,10 @@ export const DIVISION_GUIDES: DivisionGuide[] = [
     divisions: ['Hot Hatch', 'Super Hot Hatch', 'Retro Hot Hatch'],
     philosophy: 'Hot hatches are deceptively competitive at B and A class. They\'re light, nimble, and often have strong stock handling. Don\'t ruin that by over-upgrading.',
     priorities: [
-      'Sport suspension at B class; race suspension at A class and above',
+      'Race suspension at A class and above for full tuning access. At B class, Sport suspension is acceptable if Race costs too much PI — but it limits tuning sliders',
       'Semi-slick at A class — sport tires at B class are often more PI-efficient',
-      'FWD hot hatches can be very competitive — lean into understeer mitigation rather than converting to AWD',
-      'Stiff rear ARB and brake bias slightly forward compensates well for FWD understeer',
+      'FWD hot hatches: fit a race diff and tune to 20–30% acceleration lock — this directly reduces understeer on exit without the PI cost of AWD conversion',
+      'Stiff rear ARB and brake bias slightly forward (55–60%) compensates well for remaining FWD understeer',
       'Prioritise chassis upgrades over power — these cars win on handling and braking',
     ],
     watchOut: 'Most hot hatches peak naturally at A class. Pushing to S1 usually requires power upgrades that change the car\'s character significantly.',
@@ -1171,7 +1173,8 @@ export const DIVISION_GUIDES: DivisionGuide[] = [
     priorities: [
       'Race suspension — manages weight and torque under hard acceleration',
       'Wide rear tires, slick or semi-slick at A class and above — traction is always the limit',
-      'Lock the rear diff higher than you would on a sports car — high acceleration lock puts torque to the ground',
+      'Race diff: RWD 55–70% acceleration / 20–35% deceleration — higher acceleration lock than sports cars puts the torque to the ground',
+      'Damping: rebound 10–12, bump 6–8 — muscle cars carry more weight and need firmer control over body movement',
       'RWD is the natural state — manage it with diff tuning and throttle discipline rather than converting to AWD',
       'Use their straight-line speed advantage in road racing — don\'t ask them to corner like a sports car',
     ],
@@ -1181,10 +1184,11 @@ export const DIVISION_GUIDES: DivisionGuide[] = [
     divisions: ['GT Cars', 'Super GT', 'Modern Super Saloons', 'Retro Super Saloons'],
     philosophy: 'GT cars and saloons are about stability and consistency. They\'re heavier than sports cars but carry speed through corners better than you\'d expect. Build for their strengths.',
     priorities: [
-      'Race suspension for full tuning access — sport suspension is PI-efficient at lower classes',
+      'Race suspension for full tuning access — required for camber, spring rates, and damping sliders',
+      'Balanced spring rates front and rear — GT cars don\'t need front-soft/rear-stiff; balanced rates suit their weight distribution better',
       'Slick tires at S1 and above; semi-slick at A — GT cars put high loads through tires',
       'Fit aero early — it\'s one of the most PI-efficient upgrades for this division',
-      'Sport or race diff — consistent corner exits matter more than peak power with a heavy car',
+      'Race diff: RWD 40–55% acceleration / 20–35% deceleration — consistent corner exits matter more than peak power with a heavy car',
       'Weight reduction and chassis work are usually more PI-efficient than further engine upgrades',
     ],
     watchOut: 'GT cars are competitive at S1 and R class road racing. At lower PI classes they often can\'t match the lap times of purpose-built sports cars of the same rating.',
@@ -1194,11 +1198,12 @@ export const DIVISION_GUIDES: DivisionGuide[] = [
     philosophy: 'Track cars are purpose-built and require minimal upgrade philosophy — they\'re already configured for one discipline. Tune them, don\'t upgrade them.',
     priorities: [
       'Forza Edition and purpose-built track cars are often near-maxed — adjust settings, not parts',
-      'Aero balance first — these cars generate significant downforce and the balance is critical',
+      'Aero balance first — target 40–45% front. These cars generate significant downforce and the balance is critical',
+      'Race diff: 40–55% acceleration / 20–35% deceleration — track cars need precise diff tuning to match their extreme grip levels',
       'Extreme Track Toys are road race spec — don\'t use them off-tarmac',
       'Tire pressure and aero balance will give you more lap time than any part upgrade',
     ],
-    watchOut: 'Formula Drift cars are built exclusively for drift zones. Don\'t try to road race them — the setup is wrong for grip driving.',
+    watchOut: 'Formula Drift cars in Track Toys are built exclusively for drift zones. Don\'t try to road race them — the setup is completely wrong for grip driving.',
   },
   {
     divisions: ['Rally Monsters', 'Classic Rally', 'Retro Rally', 'Modern Rally'],
@@ -1206,7 +1211,8 @@ export const DIVISION_GUIDES: DivisionGuide[] = [
     priorities: [
       'Rally or off-road suspension — if not already fitted, that\'s the first upgrade',
       'Rally tires for dirt; off-road for cross country — never slick or semi-slick',
-      'AWD is the strongest choice — FWD can be competitive at lower classes',
+      'AWD is the strongest choice — centre diff bias 70–80% rear for loose surfaces. FWD can be competitive at lower classes',
+      'Loose surface diff: 30–50% acceleration / 20–30% deceleration — softer than road racing to prevent wheelspin on dirt',
       'Moderate engine upgrades — traction limits output on loose surfaces before power does',
       'A well-built rally car can compete in both dirt racing and cross country — best budget off-road option',
     ],
@@ -1217,10 +1223,11 @@ export const DIVISION_GUIDES: DivisionGuide[] = [
     philosophy: 'Off-road cars are built for cross country dominance. They have the suspension travel and durability that other categories don\'t — build around that strength.',
     priorities: [
       'Off-road suspension already standard — tune for maximum travel and compliance',
+      'ARBs near minimum (front and rear 1–3) — the car needs to articulate freely over uneven ground; stiff ARBs cause wheel lift and unpredictable handling',
       'Off-road compound tires only',
-      'AWD is standard — these cars are designed around it',
+      'AWD is standard — centre diff bias 70–80% rear. These cars are designed around it',
+      'Diff: 50–70% acceleration / 20–35% deceleration — more aggressive than road racing to drive through loose terrain',
       'More engine PI is justified here — cross country routes have long fast sections where power matters',
-      'Soft ARBs — the car needs to articulate over uneven ground; stiff ARBs cause wheel lift',
     ],
     watchOut: 'Off-road cars can compete in dirt racing but Rally cars are often faster — Rally suspension is better optimised for racing on loose roads than pure off-road suspension.',
   },
@@ -1230,7 +1237,9 @@ export const DIVISION_GUIDES: DivisionGuide[] = [
     priorities: [
       'RWD — non-negotiable for a proper drift build',
       'Drift compound rear, semi-slick or slick front — the mismatch is intentional',
-      'Locked rear diff (high acceleration and deceleration %) — consistent, predictable oversteer',
+      'Locked rear diff — near 100% both acceleration and deceleration. Consistent, predictable oversteer requires a fully locked rear',
+      'Alignment: front camber –4° to –5°, rear camber –0.5° to –1°, toe 0.1–0.2° out front for turn-in, caster at or near maximum',
+      'Brake bias 55–58% rear — helps initiate slides on entry without destabilising the front',
       'High torque sustains slide angle — don\'t under-power a drift build',
       'Front aero for steering grip; rear wing for stability at high drift speeds',
     ],
