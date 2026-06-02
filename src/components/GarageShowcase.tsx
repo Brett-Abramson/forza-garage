@@ -11,7 +11,7 @@ import FilterBar from './FilterBar'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
 import { CAR_TAGS } from '@/lib/tags'
 const ALL_TAGS = new Set<string>(CAR_TAGS)
-import { splitTagsBySource } from '@/lib/autotags'
+import { splitTagsBySource, getAutoTags } from '@/lib/autotags'
 import { RACE_TYPES } from '@/lib/races'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
 import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
@@ -469,7 +469,16 @@ export default function GarageShowcase({ initialCars }: Props) {
   const searchParams = useSearchParams()
   const searchRef = useRef<HTMLInputElement>(null)
 
-  const [cars, setCars] = useState<Car[]>(initialCars)
+  const [cars, setCars] = useState<Car[]>(() =>
+    initialCars.map((car) => {
+      // Only apply auto-tags to cars with no stored tags (unowned cars).
+      // Owned cars already have tags materialised from CarTag records in the DB.
+      const existing = car.tags ?? []
+      if (existing.length > 0) return car
+      const auto = getAutoTags(car.division, car.drivetrain ?? undefined)
+      return auto.length > 0 ? { ...car, tags: auto } : car
+    })
+  )
   const [filters, setFilters] = useState<FilterState>({
     search: searchParams.get('q') ?? '',
     piClass: searchParams.get('class') ?? '',

@@ -11,14 +11,17 @@ const DIVISION_TAGS: Record<string, CarTag[]> = {
   // Off-road
   "Unlimited Offroad":      ["offroad", "mixed", "dirt"],
   "Unlimited Buggies":      ["offroad", "mixed", "dirt"],
-  "Pickups & 4x4's":        ["offroad", "mixed"],
-  "UTV's":                  ["offroad", "dirt"],
+  "Buggies":                ["offroad", "dirt"],
+  "Offroad":                ["offroad", "mixed", "dirt"],
+  "Pickups & 4x4s":         ["offroad", "mixed"],
+  "UTVs":                   ["offroad", "dirt"],
   "Sports Utility Heroes":  ["offroad", "mixed"],
 
   // Rally
   "Rally Monsters":         ["dirt", "offroad", "mixed"],
   "Classic Rally":          ["dirt", "mixed"],
   "Retro Rally":            ["dirt", "mixed"],
+  "Modern Rally":           ["dirt", "mixed"],
 
   // Drift
   "Drift Cars":             ["drift", "asphalt", "tight"],
@@ -62,6 +65,10 @@ const DIVISION_TAGS: Record<string, CarTag[]> = {
   "Rare Classics":          ["asphalt"],
   "Classic Street Cars":    ["asphalt", "tight"],
   "Utility Heroes":         ["mixed"],
+
+  // Legacy key aliases — kept for any existing CarTag data that may reference old names
+  "Pickups & 4x4's":        ["offroad", "mixed"],
+  "UTV's":                  ["offroad", "dirt"],
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
