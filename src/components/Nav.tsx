@@ -11,6 +11,7 @@ import { GridIcon, TableIcon } from '@/components/table-ui'
 const links = [
   { href: '/garage', label: 'My Garage', icon: GarageIcon, shortcut: 'g' },
   { href: '/races', label: 'Races', icon: RacesIcon, shortcut: 'r' },
+  { href: '/builds', label: 'Builds', icon: BuildsIcon, shortcut: 'b' },
   { href: '/cars', label: 'Car Database', icon: DatabaseIcon, shortcut: 'c' },
 ]
 
@@ -165,6 +166,15 @@ function GarageIcon() {
       <path d="M1 6l7-4 7 4v8H1z" />
       <rect x="5" y="9" width="6" height="5" rx="0.5" />
       <rect x="6.5" y="9" width="1" height="5" />
+    </svg>
+  )
+}
+
+function BuildsIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M2 3h5v2H2zM2 7h9v2H2zM2 11h7v2H2z" />
+      <circle cx="13" cy="4" r="2" />
     </svg>
   )
 }

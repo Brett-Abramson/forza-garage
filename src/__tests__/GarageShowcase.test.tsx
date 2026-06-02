@@ -425,14 +425,16 @@ describe('GarageShowcase — expanded row tuning content', () => {
     expect(within(tbody).getByText(/AWD conversion without checking PI cost/i)).toBeInTheDocument()
   })
 
-  it('shows "coming soon" for a car whose division has no guide for its best race type', async () => {
+  it('shows division fallback guide when no race-type-specific guide exists', async () => {
     const user = userEvent.setup()
     const { container } = renderShowcase(mockCars)
     // Silvia: Retro Sports Cars + drift/asphalt → best match is Drift Zones
-    // No tuning guide exists for Drift Zones + Retro Sports Cars
+    // No tuning guide exists for Drift Zones + Retro Sports Cars,
+    // but the division fallback (Sports Cars) should appear instead
     await user.click(screen.getByText('Silvia').closest('tr')!)
     const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByText(/coming soon/i)).toBeInTheDocument()
+    expect(within(tbody).queryByText(/coming soon/i)).not.toBeInTheDocument()
+    expect(within(tbody).getByText(/sports cars are the most versatile/i)).toBeInTheDocument()
   })
 })
 

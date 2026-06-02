@@ -1114,3 +1114,134 @@ export function getGuidesByRaceType(raceTypeId: string): TuningGuide[] {
 export function getGuidesByDivision(division: string): TuningGuide[] {
   return TUNING_GUIDES.filter((g) => g.division === division)
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Division fallback guides
+// Shown when no race-type-specific guide exists for a car's division.
+// Content source: Forza Garage Build & Upgrade Guide (Jun 2026).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface DivisionGuide {
+  /** One or more division strings this guide applies to */
+  divisions: string[]
+  philosophy: string
+  priorities: string[]
+  watchOut: string
+}
+
+export const DIVISION_GUIDES: DivisionGuide[] = [
+  {
+    divisions: ['Modern Supercars', 'Hypercars', 'Retro Supercars'],
+    philosophy: 'Supercars are already engineered near the edge of what\'s possible. Your job is refinement, not transformation. The stock chassis is already stiff — start close to stock and adjust by feel.',
+    priorities: [
+      'Race suspension to unlock full tuning — don\'t change spring rates drastically from stock',
+      'Slick or semi-slick tires — at S1 and S2, full slick is standard',
+      'Always fit aero — these cars are fast enough that downforce makes a measurable difference',
+      'Race diff — these cars produce enormous power and the diff manages where it goes',
+      'Weight reduction before engine upgrades — chassis work first',
+    ],
+    watchOut: 'Many supercars are naturally tail-happy. A slightly stiffer rear ARB helps stability, but test the car first — some of that oversteer character is intentional.',
+  },
+  {
+    divisions: ['Modern Sports Cars', 'Classic Sports Cars', 'Retro Sports Cars'],
+    philosophy: 'Sports cars are the most versatile cars in the game. They can compete across multiple disciplines if built correctly for each one. Road racing is balanced around them.',
+    priorities: [
+      'Race suspension, semi-slick tires, light weight reduction, sport diff for road and street',
+      'Rally suspension, rally tires, AWD (if convertible) for dirt — competitive at B and A class',
+      'Most sports cars sit naturally at A class — don\'t push to S1 without tuning the chassis to match',
+      'Prioritise chassis upgrades over engine power when PI is tight',
+    ],
+    watchOut: 'A well-tuned A class sports car is often faster than a poorly tuned S1 version of the same car. Build within the class before pushing up.',
+  },
+  {
+    divisions: ['Hot Hatch', 'Super Hot Hatch', 'Retro Hot Hatch'],
+    philosophy: 'Hot hatches are deceptively competitive at B and A class. They\'re light, nimble, and often have strong stock handling. Don\'t ruin that by over-upgrading.',
+    priorities: [
+      'Sport suspension at B class; race suspension at A class and above',
+      'Semi-slick at A class — sport tires at B class are often more PI-efficient',
+      'FWD hot hatches can be very competitive — lean into understeer mitigation rather than converting to AWD',
+      'Stiff rear ARB and brake bias slightly forward compensates well for FWD understeer',
+      'Prioritise chassis upgrades over power — these cars win on handling and braking',
+    ],
+    watchOut: 'Most hot hatches peak naturally at A class. Pushing to S1 usually requires power upgrades that change the car\'s character significantly.',
+  },
+  {
+    divisions: ['Modern Muscle', 'Classic Muscle', 'Retro Muscle'],
+    philosophy: 'Muscle cars are built around torque and straight-line power. They\'re heavier and less nimble than sports cars — tuning should compensate for their weaknesses, not amplify them.',
+    priorities: [
+      'Race suspension — manages weight and torque under hard acceleration',
+      'Wide rear tires, slick or semi-slick at A class and above — traction is always the limit',
+      'Lock the rear diff higher than you would on a sports car — high acceleration lock puts torque to the ground',
+      'RWD is the natural state — manage it with diff tuning and throttle discipline rather than converting to AWD',
+      'Use their straight-line speed advantage in road racing — don\'t ask them to corner like a sports car',
+    ],
+    watchOut: 'Soft springs let the rear squat on launch and waste power. Stiffer rear springs than you\'d expect are often the right call.',
+  },
+  {
+    divisions: ['GT Cars', 'Super GT', 'Modern Super Saloons', 'Retro Super Saloons'],
+    philosophy: 'GT cars and saloons are about stability and consistency. They\'re heavier than sports cars but carry speed through corners better than you\'d expect. Build for their strengths.',
+    priorities: [
+      'Race suspension for full tuning access — sport suspension is PI-efficient at lower classes',
+      'Slick tires at S1 and above; semi-slick at A — GT cars put high loads through tires',
+      'Fit aero early — it\'s one of the most PI-efficient upgrades for this division',
+      'Sport or race diff — consistent corner exits matter more than peak power with a heavy car',
+      'Weight reduction and chassis work are usually more PI-efficient than further engine upgrades',
+    ],
+    watchOut: 'GT cars are competitive at S1 and R class road racing. At lower PI classes they often can\'t match the lap times of purpose-built sports cars of the same rating.',
+  },
+  {
+    divisions: ['Track Toys', 'Extreme Track Toys'],
+    philosophy: 'Track cars are purpose-built and require minimal upgrade philosophy — they\'re already configured for one discipline. Tune them, don\'t upgrade them.',
+    priorities: [
+      'Forza Edition and purpose-built track cars are often near-maxed — adjust settings, not parts',
+      'Aero balance first — these cars generate significant downforce and the balance is critical',
+      'Extreme Track Toys are road race spec — don\'t use them off-tarmac',
+      'Tire pressure and aero balance will give you more lap time than any part upgrade',
+    ],
+    watchOut: 'Formula Drift cars are built exclusively for drift zones. Don\'t try to road race them — the setup is wrong for grip driving.',
+  },
+  {
+    divisions: ['Rally Monsters', 'Classic Rally', 'Retro Rally', 'Modern Rally'],
+    philosophy: 'Rally cars are bred for loose surfaces. Their value is in off-tarmac disciplines. Don\'t waste PI trying to make them road race competitive.',
+    priorities: [
+      'Rally or off-road suspension — if not already fitted, that\'s the first upgrade',
+      'Rally tires for dirt; off-road for cross country — never slick or semi-slick',
+      'AWD is the strongest choice — FWD can be competitive at lower classes',
+      'Moderate engine upgrades — traction limits output on loose surfaces before power does',
+      'A well-built rally car can compete in both dirt racing and cross country — best budget off-road option',
+    ],
+    watchOut: 'Rally cars are slow on tarmac compared to purpose-built road cars of the same PI. Keep them off asphalt.',
+  },
+  {
+    divisions: ['Unlimited Offroad', 'Offroad', 'Buggies', 'Unlimited Buggies', 'UTVs', "Pickups & 4x4s", 'Sports Utility Heroes', 'Utility Heroes'],
+    philosophy: 'Off-road cars are built for cross country dominance. They have the suspension travel and durability that other categories don\'t — build around that strength.',
+    priorities: [
+      'Off-road suspension already standard — tune for maximum travel and compliance',
+      'Off-road compound tires only',
+      'AWD is standard — these cars are designed around it',
+      'More engine PI is justified here — cross country routes have long fast sections where power matters',
+      'Soft ARBs — the car needs to articulate over uneven ground; stiff ARBs cause wheel lift',
+    ],
+    watchOut: 'Off-road cars can compete in dirt racing but Rally cars are often faster — Rally suspension is better optimised for racing on loose roads than pure off-road suspension.',
+  },
+  {
+    divisions: ['Drift Cars'],
+    philosophy: 'Drift cars are single-purpose. A great drift build is useless in road racing and vice versa. Don\'t try to hybrid them.',
+    priorities: [
+      'RWD — non-negotiable for a proper drift build',
+      'Drift compound rear, semi-slick or slick front — the mismatch is intentional',
+      'Locked rear diff (high acceleration and deceleration %) — consistent, predictable oversteer',
+      'High torque sustains slide angle — don\'t under-power a drift build',
+      'Front aero for steering grip; rear wing for stability at high drift speeds',
+    ],
+    watchOut: 'Drift zone scoring is based on angle, speed, and proximity to the line. A car set up for maximum angle beats one set up for maximum speed.',
+  },
+]
+
+/**
+ * Returns a division-level fallback guide when no race-type-specific guide exists.
+ * Matches on any of the guide's listed divisions.
+ */
+export function getDivisionFallback(division: string): DivisionGuide | null {
+  return DIVISION_GUIDES.find((g) => g.divisions.includes(division)) ?? null
+}

@@ -14,7 +14,7 @@ const ALL_TAGS = new Set<string>(CAR_TAGS)
 import { splitTagsBySource } from '@/lib/autotags'
 import { RACE_TYPES } from '@/lib/races'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
-import { getTuningGuide } from '@/lib/tuningGuides'
+import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { getDivisionsForGroup } from '@/lib/divisionGroups'
 import GarageDrawer from './GarageDrawer'
 import DivisionGroupFilter from './DivisionGroupFilter'
@@ -91,6 +91,7 @@ function ExpandedContent({
     rankedRaces.length > 0
       ? getTuningGuide(rankedRaces[0].race.id, car.division)
       : null
+  const divisionFallback = !tuningGuide ? getDivisionFallback(car.division) : null
   const statCallouts = getStatCallouts(car, car.tags ?? [])
 
   async function patchTags(nextAuto: string[], nextUser: string[]) {
@@ -246,7 +247,7 @@ function ExpandedContent({
           )}
 
           {/* Tuning guide */}
-          {rankedRaces.length > 0 && (
+          {(rankedRaces.length > 0 || divisionFallback) && (
             <div className="border-t border-fh-border pt-3 flex flex-col gap-3">
               {tuningGuide ? (
                 <>
@@ -265,9 +266,23 @@ function ExpandedContent({
                     <span className="text-xs text-fh-dark-2 leading-relaxed">{tuningGuide.watchOut}</span>
                   </div>
                 </>
-              ) : (
-                <p className="text-xs text-fh-muted italic">Tuning guide coming soon for this combination.</p>
-              )}
+              ) : divisionFallback ? (
+                <>
+                  <p className="text-xs text-fh-muted leading-relaxed">{divisionFallback.philosophy}</p>
+                  <ol className="space-y-1">
+                    {divisionFallback.priorities.map((p, i) => (
+                      <li key={i} className="flex items-start gap-1.5 text-xs">
+                        <span className="text-fh-red/50 font-mono shrink-0 w-4">{i + 1}.</span>
+                        <span className="text-fh-dark-2">{p}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <div className="rounded border border-fh-amber/20 bg-fh-amber-pale px-2.5 py-2">
+                    <span className="text-[10px] text-fh-amber uppercase tracking-wide mr-1.5">Watch out:</span>
+                    <span className="text-xs text-fh-dark-2 leading-relaxed">{divisionFallback.watchOut}</span>
+                  </div>
+                </>
+              ) : null}
             </div>
           )}
 

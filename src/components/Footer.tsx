@@ -12,6 +12,8 @@ export default function Footer() {
           <a href="https://fh6guide.com" target="_blank" rel="noopener noreferrer" className="hover:text-fh-muted underline underline-offset-2">fh6guide.com</a>
           {', '}
           <a href="https://forza.guide" target="_blank" rel="noopener noreferrer" className="hover:text-fh-muted underline underline-offset-2">forza.guide</a>
+          {', '}
+          <a href="https://forzatune.app" target="_blank" rel="noopener noreferrer" className="hover:text-fh-muted underline underline-offset-2">ForzaTune</a>
           {', FH6 community'}
         </p>
       </div>

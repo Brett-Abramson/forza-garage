@@ -6,7 +6,7 @@ import { PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { CAR_TAGS } from '@/lib/tags'
 import { splitTagsBySource } from '@/lib/autotags'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
-import { getTuningGuide } from '@/lib/tuningGuides'
+import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { getGroupForDivision } from '@/lib/divisionGroups'
 import StatBars from './StatBars'
 import { getStatCallouts } from '@/lib/statCallouts'
@@ -158,11 +158,12 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
       )
     : []
 
-  // Tuning guide for the best-matching race type
+  // Tuning guide for the best-matching race type, with division fallback
   const tuningGuide =
     displayCar && rankedRaces.length > 0
       ? getTuningGuide(rankedRaces[0].race.id, displayCar.division)
       : null
+  const divisionFallback = displayCar && !tuningGuide ? getDivisionFallback(displayCar.division) : null
 
   const hasAnyStats = Object.values(stats).some((v) => v !== '')
   const [toggling, setToggling] = useState(false)
@@ -411,6 +412,25 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                       <div className="rounded-lg border border-fh-amber/20 bg-fh-amber-pale px-3 py-2.5">
                         <div className="text-[10px] text-fh-amber uppercase tracking-wide mb-1">Watch out</div>
                         <p className="text-xs text-fh-dark-2 leading-relaxed">{tuningGuide.watchOut}</p>
+                      </div>
+                    </div>
+                  ) : divisionFallback ? (
+                    <div className="flex flex-col gap-4">
+                      <p className="text-xs text-fh-dark leading-relaxed">{divisionFallback.philosophy}</p>
+                      <div>
+                        <div className="text-[10px] text-fh-muted uppercase tracking-wide mb-2">Priorities</div>
+                        <ol className="space-y-1.5">
+                          {divisionFallback.priorities.map((p, i) => (
+                            <li key={i} className="flex items-start gap-2 text-xs text-fh-dark">
+                              <span className="text-fh-red opacity-60 font-mono shrink-0 w-4">{i + 1}.</span>
+                              {p}
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                      <div className="rounded-lg border border-fh-amber/20 bg-fh-amber-pale px-3 py-2.5">
+                        <div className="text-[10px] text-fh-amber uppercase tracking-wide mb-1">Watch out</div>
+                        <p className="text-xs text-fh-dark-2 leading-relaxed">{divisionFallback.watchOut}</p>
                       </div>
                     </div>
                   ) : (

@@ -265,11 +265,13 @@ describe('GarageDrawer — tuning guide', () => {
     expect(screen.getByText(/AWD conversion without checking PI cost/i)).toBeInTheDocument()
   })
 
-  it('shows "coming soon" when race matches but no guide exists for the division', () => {
-    // Modern Muscle has no tuning guide for Road Racing
+  it('shows division fallback guide when no race-type-specific guide exists', () => {
+    // Modern Muscle has no tuning guide for Road Racing but has a division fallback
     const noGuideCar = { ...baseCar, division: 'Modern Muscle' }
     renderDrawer(noGuideCar)
-    expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
+    // Division fallback content should appear instead of "coming soon"
+    expect(screen.queryByText(/coming soon/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/muscle cars are built around torque/i)).toBeInTheDocument()
   })
 })
 
