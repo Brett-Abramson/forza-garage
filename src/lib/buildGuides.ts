@@ -67,7 +67,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Differential',
-        items: ['Race diff. RWD: start at 40–60% acceleration lock, 20–40% deceleration lock — adjust in 2–3% increments. AWD: 70–80% rear centre bias. A good diff is more PI-efficient than more power.'],
+        items: ['Race diff (required for percentage tuning — Sport diff adds limited-slip without tuning access, useful at lower classes where Race diff costs too much PI). Starting point: RWD 40–60% acceleration lock, 20–40% deceleration lock — adjust in 2–3% increments. AWD: 70–80% rear centre bias (controls front/rear power split — found in differential tuning menu).'],
       },
       {
         label: 'Engine',
@@ -81,11 +81,11 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
     ],
     piTargets: 'S1 (700–799) is the most competitive road racing class. S2 is fast but harder to build well. A class (600–699) suits cars that can\'t be pushed to S1 without losing character.',
     tuningPriorities: [
-      'Aero balance — 40–45% front bias',
+      'Aero balance — starting point 40–45% front bias; add front aero if the car pushes wide, add rear aero if it oversteers on exit',
       'Brake bias — 52–55% front',
       'Tire pressure — 30–33 PSI cold (slick/semi-slick)',
-      'Camber front –1.5° to –2.0°, rear –1.0° to –1.5°',
-      'Damping: rebound 8–11, bump at 50–75% of rebound value',
+      'Camber starting point for tarmac: front –1.5° to –2.0°, rear –1.0° to –1.5° — verify with telemetry, correct value is car-specific',
+      'Damping starting point (mid-weight tarmac): rebound 8–11, bump at 50–75% of rebound value — heavier cars typically need higher rebound',
     ],
   },
   {
@@ -107,11 +107,11 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Drivetrain',
-        items: ['AWD helps at A class for tight corner exits. RWD is faster at S1 with a capable car but harder. FWD struggles due to understeer on exit.'],
+        items: ['AWD helps at A class for tight corner exits. RWD is faster at S1 with a capable car but harder. FWD requires more setup work — stiff rear ARB and forward brake bias reduce understeer on exit. With the right tune, FWD hot hatches are genuinely competitive at B and A class.'],
       },
       {
         label: 'Transmission',
-        items: ['Sport or Race transmission. Short, snappy gear changes and precise ratio tuning win here. Set final drive for short acceleration, not top speed.'],
+        items: ['Race transmission at A class and above for full gear ratio control. At B class, Sport transmission is a PI-efficient alternative if Race costs too much. Set final drive for acceleration, not top speed.'],
       },
       {
         label: 'Engine',
@@ -123,7 +123,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Differential',
-        items: ['RWD: 40–60% acceleration, 20–40% deceleration. Street circuits are tight — err toward the lower end of acceleration lock to avoid push on corner exit. AWD: 70–80% rear centre bias.'],
+        items: ['Race diff (required for percentage tuning). Starting point: RWD 40–60% acceleration, 20–40% deceleration — err toward the lower end of acceleration lock on tight circuits to avoid push on exit. AWD: 70–80% rear centre bias.'],
       },
     ],
     skip: [
@@ -153,7 +153,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Drivetrain',
-        items: ['AWD is the strongest choice. If your car is RWD, an AWD conversion is one of the most PI-efficient upgrades for this discipline.'],
+        items: ['AWD is the strongest choice. If your car is RWD, an AWD conversion is one of the most impactful upgrades for this discipline — but it is expensive, typically 50–100 PI. Check the PI cost on your specific car before committing; on some cars at lower classes it consumes too much budget.'],
       },
       {
         label: 'Anti-roll bars',
@@ -161,7 +161,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Differential',
-        items: ['Race diff. AWD centre bias: 70–80% rear. Loose surface diffs: 30–50% acceleration, 20–30% deceleration — less aggressive than tarmac.'],
+        items: ['Race diff. AWD centre bias: 70–80% rear. Starting point for loose surface: 30–50% acceleration, 20–30% deceleration — less aggressive than tarmac to prevent wheelspin on dirt. Adjust in 2–3% increments.'],
       },
       {
         label: 'Engine',
@@ -200,7 +200,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Drivetrain',
-        items: ['AWD is essentially mandatory — cross country includes sections where individual wheel traction becomes critical.'],
+        items: ['AWD is strongly recommended — cross country terrain puts individual wheel traction at a premium and most competitive builds are AWD. Purpose-built RWD off-road vehicles (trophy trucks, Baja cars) are the exception. AWD conversion is expensive — check the PI cost on your specific car before committing.'],
       },
       {
         label: 'Anti-roll bars',
@@ -216,7 +216,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Differential',
-        items: ['Race diff. AWD centre bias 70–80% rear. On rough terrain, too much diff lock can cause handling issues when one wheel is unloaded — 50–70% acceleration, 20–35% deceleration.'],
+        items: ['Race diff. AWD centre bias 70–80% rear. Starting point: 50–70% acceleration, 20–35% deceleration — on rough terrain, too much lock causes handling issues when one wheel is unloaded. Adjust in 2–3% increments.'],
       },
     ],
     skip: [
@@ -248,7 +248,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Drivetrain',
-        items: ['RWD. AWD cars can be drifted but initiating and sustaining is significantly harder. A RWD conversion is worth considering for a dedicated drift build.'],
+        items: ['RWD. AWD cars can be drifted but initiating and sustaining is significantly harder. FWD is extremely difficult to score with — handbrake techniques can initiate a drift but sustaining angle for scoring is nearly impossible. A RWD conversion is worth considering for a dedicated drift build.'],
       },
       {
         label: 'Engine',
@@ -256,11 +256,11 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Flywheel',
-        items: ['Lightweight flywheel improves throttle response, which is critical for drift angle control.'],
+        items: ['Lightweight flywheel improves throttle response — most impactful when combined with significant engine upgrades. Lower priority on near-stock engine builds.'],
       },
       {
         label: 'Differential',
-        items: ['Near 100% locked on both acceleration and deceleration. This is the single biggest factor in a consistent, predictable slide — both wheels spinning together maintains angle without snapping.'],
+        items: ['Acceleration lock: 80–100% — the biggest factor in a consistent slide. Deceleration lock: 30–60% — too high causes snap oversteer when lifting off throttle on corner entry. Increase decel lock carefully and test each increment.'],
       },
       {
         label: 'Anti-roll bars',
@@ -282,7 +282,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
     ],
     piTargets: 'A (600–699) and S1 (700–799). Drift zones exist at all PI levels but these are the most competitive classes.',
     tuningPriorities: [
-      'Diff: near 100% locked acceleration and deceleration',
+      'Diff: acceleration lock 80–100%, deceleration lock 30–60% (too high causes snap oversteer on entry)',
       'Stiff front ARB, soft rear ARB',
       'Front camber –4° to –5°, rear camber –0.5° to –1.0°',
       'Front toe slightly out (0.1–0.2°), caster near maximum',
@@ -309,7 +309,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Transmission',
-        items: ['Race transmission with tuned ratios. Match gears to the corners, not top speed.'],
+        items: ['Race transmission at A class and above for full ratio control. At B class, Sport transmission is a PI-efficient alternative. Match gear ratios to the hairpin speed range, not top speed.'],
       },
       {
         label: 'Drivetrain',
@@ -321,7 +321,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Differential',
-        items: ['Neutral to mild — not locked like a drift build, not fully open. Start at 30–40% acceleration, 20–30% deceleration. Touge rewards rotation into hairpins, not planted exits.'],
+        items: ['Race diff. Starting point: 30–40% acceleration, 20–30% deceleration — Touge rewards rotation into hairpins, not planted exits. Adjust in 2–3% increments.'],
       },
     ],
     skip: [
@@ -334,7 +334,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       'Brake bias 53–56% front — late, hard braking is essential',
       'Short gear ratios for the hairpin speed range',
       'Front springs slightly softer than rear — helps rotation into hairpins',
-      'Negative camber –1.5° to –2.0° front to maximise corner grip',
+      'Camber starting point: –1.5° to –2.0° front — verify with telemetry if available',
       'Tire pressure — 30–33 PSI cold',
     ],
   },
@@ -357,11 +357,11 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Transmission',
-        items: ['Race transmission — gear tuning is critical. Each gear should be timed to hit the power band perfectly. A properly tuned race gearbox is worth multiple tenths on its own.'],
+        items: ['Race transmission at A class and above. At B class, Sport transmission is a PI-efficient alternative. Gear tuning is critical — each gear timed to hit the power band is worth multiple tenths on its own.'],
       },
       {
         label: 'Engine',
-        items: ['Max it out within your class limit. Drag racing rewards power more directly than any other discipline. Turbo, supercharger, engine swaps, displacement — all valuable.'],
+        items: ['Max it out within your class limit. Drag rewards power more directly than any other discipline. Turbo, supercharger, and displacement upgrades are straightforward. Engine swaps are the most powerful option but also the riskiest for new players — they can completely change a car\'s handling character and eligible upgrades. Try all other power upgrades first.'],
       },
       {
         label: 'Weight',
@@ -369,7 +369,7 @@ export const RACE_BUILD_GUIDES: RaceBuildGuide[] = [
       },
       {
         label: 'Differential',
-        items: ['Rear diff near 100% acceleration lock. AWD centre bias 70–80% rear. Maximum power transfer to the wheels on launch.'],
+        items: ['Race diff. Starting point: rear near 100% acceleration lock. AWD centre bias 70–80% rear — maximum power transfer to the wheels on launch.'],
       },
       {
         label: 'Launch control',
@@ -414,7 +414,7 @@ export const PI_CLASS_GUIDES: PIClassGuide[] = [
     range: '400–499',
     color: 'bg-yellow-500',
     textColor: 'text-black',
-    focus: 'Balance is everything. Race suspension (unlocks full tuning) plus sport or semi-slick tires plus moderate weight reduction is the template. Don\'t chase top speed — grip wins C class. A Sport diff is achievable at C class and makes a real difference on corner exits — worth the PI over skipping it.',
+    focus: 'Balance is everything. Race suspension (unlocks full tuning) plus sport or semi-slick tires plus moderate weight reduction is the template. Don\'t chase top speed — grip wins C class. A Sport diff is achievable at C class and makes a real difference on corner exits — worth the PI. Note: Sport diff adds limited-slip without tuning access; only Race diff has adjustable percentage sliders.',
     whatWorks: 'Hot hatches (Golf GTI, Civic Type R era), compact sports cars, lightweight rally cars. Cars that naturally sit in C class without heavy upgrades.',
     whatDoesnt: 'Forced upgrades from heavier cars. If you\'re spending significant PI on engine just to reach C class, the chassis probably isn\'t suitable for the discipline.',
     tip: 'AWD can be a significant advantage at C class for dirt and cross country. On tarmac, a good RWD car with semi-slick tires often beats AWD for pure handling — save the PI for chassis work instead.',
@@ -425,7 +425,7 @@ export const PI_CLASS_GUIDES: PIClassGuide[] = [
     range: '500–599',
     color: 'bg-orange-500',
     textColor: 'text-white',
-    focus: 'This is where drivetrain upgrades start paying off significantly. An AWD conversion on a capable car can be transformative across multiple disciplines. Semi-slick tires become standard for tarmac. A Race diff is now achievable and worth fitting — AWD centre bias 70–80% rear on loose surfaces.',
+    focus: 'This is where drivetrain upgrades start paying off significantly. An AWD conversion on a capable car can be transformative across multiple disciplines — but it is expensive, typically 50–100 PI. Check the cost on your specific car before committing. Semi-slick tires are worth pursuing where PI allows, but sport tires plus a proper diff often beat semi-slick on a thin budget. A Race diff is now achievable and worth fitting — AWD centre bias 70–80% rear on loose surfaces.',
     whatWorks: 'Rally cars in their natural habitat (WRX, Evo, Focus RS era), compact sports cars, muscle cars that haven\'t grown into their weight yet.',
     whatDoesnt: 'Supercars pushed down to B class — they tend to lose too much character in the process.',
     tip: 'Build to the ceiling of the class. A car at 598–599 PI is materially more competitive than one at 575. The extra PI room should go into suspension and diff, not engine.',
@@ -436,7 +436,7 @@ export const PI_CLASS_GUIDES: PIClassGuide[] = [
     range: '600–699',
     color: 'bg-red-600',
     textColor: 'text-white',
-    focus: 'Everything matters here. Race suspension (non-negotiable for proper tuning — Sport suspension won\'t unlock camber or spring sliders in FH6), semi-slick tires minimum, upgraded brakes, Race diff. FH6 punishes over-powered A class builds that can\'t corner — chassis before engine. Diff: RWD 40–60% accel, 20–40% decel. AWD: 70–80% rear centre bias.',
+    focus: 'Everything matters here. Race suspension (required for proper tuning — Sport suspension won\'t unlock camber or spring sliders in FH6), semi-slick tires minimum, upgraded brakes, Race diff. FH6 punishes over-powered A class builds that can\'t corner — chassis before engine. Diff starting point: RWD 40–60% accel, 20–40% decel — adjust in 2–3% increments. AWD: 70–80% rear centre bias.',
     whatWorks: 'Sports cars and GT cars in their natural range, muscle cars with good torque management, hot hatches pushed up, capable rally builds for off-tarmac.',
     whatDoesnt: 'Overly heavy cars. Builds that are fast in a straight line but can\'t handle A class cornering speeds. Over-powered builds without matching chassis work.',
     tip: 'A class is where the meta shifts most with patches. Community tune databases are especially valuable here — a current meta tune will outperform a self-tuned car that hasn\'t been updated since launch.',
@@ -458,10 +458,10 @@ export const PI_CLASS_GUIDES: PIClassGuide[] = [
     range: '800–899',
     color: 'bg-pink-600',
     textColor: 'text-white',
-    focus: 'Maximum aero for stability. Full Race suspension with careful tuning. Traction management is critical — even AWD cars can struggle to put down S2 power. Race diff essential. AWD centre bias 80%+ rear at S2 — these cars have the power to overwhelm all four wheels. Chassis stability over more engine. Adding power at S2 rarely helps if the car can\'t use it.',
+    focus: 'Fit front and rear aero and balance it — starting point 40–45% front; maximum downforce is not always the goal and costs top speed on long straights. Full Race suspension with careful tuning. Traction management is critical — even AWD cars can struggle to put down S2 power. Race diff essential. AWD centre bias 80%+ rear at S2. Chassis stability over more engine — adding power rarely helps if the car can\'t use it.',
     whatWorks: 'High-end supercars (Lamborghini, Ferrari, McLaren upper range, Mercedes-AMG ONE), purpose-built track cars.',
     whatDoesnt: 'Cars forced into S2 through heavy engine upgrades without matching chassis work.',
-    tip: 'S2 multiplayer can be chaotic. Build to your class ceiling — a 898 PI car is always faster than a mid-800s build on the same platform. Every PI point matters more at this level.',
+    tip: 'Build to your class ceiling where PI allows — but tuning quality matters as much as PI. A well-tuned 850 build can beat a poorly tuned 898.',
   },
   {
     id: 'R',

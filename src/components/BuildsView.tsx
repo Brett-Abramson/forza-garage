@@ -34,7 +34,7 @@ const TUNING_ORDER = [
   { step: 'Anti-roll bars', detail: 'Balance mechanical grip front-to-rear.' },
   { step: 'Damping', detail: 'Control how fast the springs move, not how stiff they are.' },
   { step: 'Brakes', detail: 'Bias and pressure.' },
-  { step: 'Differential', detail: 'Power delivery and rotation.' },
+  { step: 'Differential', detail: 'Power delivery and rotation. AWD centre bias controls the front/rear power split — found in the differential tuning menu. 70–80% rear means more power goes to the rear wheels.' },
   { step: 'Aero', detail: 'Balance downforce once everything else is working.' },
   { step: 'Gearing', detail: 'Final step, matched to the specific track or discipline.' },
 ]
@@ -53,7 +53,7 @@ const REGIONS = [
     notes: [
       'Front suspension slightly softer than rear — helps rotation into hairpins',
       'Neutral to mild differential (30–40% accel) — rotation matters more than planted exits',
-      'Sport or semi-slick tires — full slick can overwhelm traction on tight mountain sections',
+      'Semi-slick over slick on tighter Touge routes — slick tires at low hairpin speeds can make the front grip so hard the car understeers rather than rotating. Semi-slick gives a more balanced feel at mountain hairpin speeds.',
       'Short gear ratios — match the speed range of the hairpins',
       'Maximum braking upgrade — late, hard braking is essential',
     ],
@@ -221,11 +221,12 @@ export default function BuildsView() {
               </div>
             </div>
             <div className="rounded-lg border border-fh-blue/20 bg-fh-blue-pale px-4 py-3 mb-4">
-              <div className="text-[11px] text-fh-blue uppercase tracking-wide mb-1">Starting point for FH6</div>
+              <div className="text-[11px] text-fh-blue uppercase tracking-wide mb-1">Starting point — mid-weight tarmac car</div>
               <p className="text-sm text-fh-dark-2 leading-relaxed">
                 Rebound: <span className="font-medium text-fh-dark">8–11</span> (your anchor value). Bump:{' '}
                 <span className="font-medium text-fh-dark">50–75% of your rebound value</span> — if rebound is 10,
-                bump starts at 5–7.
+                bump starts at 5–7. Heavier cars (muscle, GT) typically need higher rebound; off-road builds stay near
+                the soft end.
               </p>
             </div>
             <div>
