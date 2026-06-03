@@ -2,6 +2,7 @@
 
 import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { getBestRaceType } from '@/lib/raceMatch'
+import { formatAddedAt } from '@/lib/sort'
 
 const DIVISION_ACCENT: Record<string, string> = {
   // Supercars / hypercars
@@ -64,9 +65,10 @@ interface Props {
   onToggleOwned: (id: number, owned: boolean) => void
   onCardClick?: (car: Car) => void
   isPending?: boolean
+  showAddedAt?: boolean
 }
 
-export default function CarCard({ car, onToggleOwned, onCardClick, isPending }: Props) {
+export default function CarCard({ car, onToggleOwned, onCardClick, isPending, showAddedAt }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const accent = getDivisionAccent(car.division)
@@ -129,6 +131,11 @@ export default function CarCard({ car, onToggleOwned, onCardClick, isPending }: 
         {bestRace && (
           <div className="text-xs mt-1.5 text-fh-muted">
             {bestRace.icon} {bestRace.name}
+          </div>
+        )}
+        {showAddedAt && car.addedAt && (
+          <div className="text-[11px] mt-1.5 text-fh-muted-2">
+            {formatAddedAt(car.addedAt)}
           </div>
         )}
       </div>

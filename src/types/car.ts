@@ -39,6 +39,7 @@ export interface Car {
   rarity: string | null  // Common | Rare | Legendary | Forza Edition
 
   owned: boolean
+  addedAt?: string | null   // ISO string from UserGarage.addedAt (garage only)
   tags?: string[]
   tagDetails?: { tag: string; source: string }[]
   notes?: string | null

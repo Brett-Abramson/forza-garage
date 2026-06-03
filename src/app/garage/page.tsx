@@ -50,9 +50,10 @@ export default async function GaragePage() {
     orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
   })
 
-  const cars: Car[] = entries.map(({ car, tags, notes }) => ({
+  const cars: Car[] = entries.map(({ car, tags, notes, addedAt }) => ({
     ...car,
     owned: true,
+    addedAt: addedAt?.toISOString() ?? null,
     tags: [...new Set(tags.map((t) => t.tag))],
     tagDetails: tags.map((t) => ({ tag: t.tag, source: t.source })),
     notes,

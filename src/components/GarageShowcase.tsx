@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef, Fra
 import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
 import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS, SOURCE_CHIPS } from '@/types/car'
-import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
+import { SortKey, SortDir, compareRows, defaultSort, formatAddedAt } from '@/lib/sort'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
 import FilterBar from './FilterBar'
@@ -529,7 +529,7 @@ export default function GarageShowcase({ initialCars }: Props) {
   const [view, setView] = useState<ViewMode>(
     (searchParams.get('view') as ViewMode) ?? 'table'
   )
-  const [sort, setSort] = useState<SortState>({ key: null, dir: 'desc' })
+  const [sort, setSort] = useState<SortState>({ key: 'addedAt', dir: 'desc' })
   const [filterMode, setFilterMode] = useState<FilterMode>(
     (searchParams.get('mode') as FilterMode) ?? 'tags'
   )
@@ -1068,6 +1068,36 @@ export default function GarageShowcase({ initialCars }: Props) {
         </div>
       </div>
 
+      {/* Sort pills (grid mode — table mode uses column headers) */}
+      {view === 'grid' && sortedCars.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 items-center">
+          <span className="text-xs text-fh-muted mr-1">Sort:</span>
+          {(
+            [
+              { key: 'addedAt', label: 'Recently Added' },
+              { key: 'piRating', label: 'PI' },
+              { key: 'make', label: 'Make' },
+              { key: 'value', label: 'Value' },
+            ] as { key: SortKey; label: string }[]
+          ).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => handleSort(key)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                sort.key === key
+                  ? 'bg-fh-red-pale text-fh-red border-fh-red'
+                  : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark'
+              }`}
+            >
+              {label}
+              {sort.key === key && (
+                <span className="ml-1 opacity-60">{sort.dir === 'desc' ? '↓' : '↑'}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Results */}
       {sortedCars.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-fh-muted">
@@ -1088,7 +1118,7 @@ export default function GarageShowcase({ initialCars }: Props) {
           {view === 'grid' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {sortedCars.map((car) => (
-                <CarCard key={car.id} car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} isPending={pendingIds.has(car.id)} />
+                <CarCard key={car.id} car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} isPending={pendingIds.has(car.id)} showAddedAt={sort.key === 'addedAt'} />
               ))}
             </div>
           ) : (
@@ -1106,6 +1136,7 @@ export default function GarageShowcase({ initialCars }: Props) {
                     <SortTh label="Country" sortKey="country" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
                     <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
                     <SortTh label="Value" sortKey="value" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
+                    <SortTh label="Added" sortKey="addedAt" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
                     <th className="text-left py-2.5 px-3 text-fh-muted">Garage</th>
                   </tr>
                 </thead>
@@ -1118,6 +1149,7 @@ export default function GarageShowcase({ initialCars }: Props) {
                         isPending={pendingIds.has(car.id)}
                         isExpanded={expandedCarId === car.id}
                         onCardClick={(c) => toggleExpanded(c.id)}
+                        showAddedAt={sort.key === 'addedAt'}
                       />
                       {expandedCarId === car.id && (
                         <ExpandedRow
