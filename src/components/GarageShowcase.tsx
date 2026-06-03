@@ -27,6 +27,42 @@ import BackToTop from './BackToTop'
 type ViewMode = 'grid' | 'table'
 type FilterMode = 'tags' | 'race'
 
+// ─── CSV export ───────────────────────────────────────────────────────────────
+
+function csvCell(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return ''
+  const str = String(value)
+  // Wrap in quotes if value contains comma, quote, or newline
+  return /[,"\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str
+}
+
+function exportGarageCsv(cars: Car[], totalCount: number) {
+  const headers = ['Year', 'Make', 'Model', 'Division', 'Class', 'PI', 'Country', 'Value (Cr)']
+  const rows = cars.map((c) => [
+    csvCell(c.year),
+    csvCell(c.make),
+    csvCell(c.model),
+    csvCell(c.division),
+    csvCell(c.piClass),
+    csvCell(c.piRating),
+    csvCell(c.country),
+    csvCell(c.value ?? ''),
+  ].join(','))
+
+  const csv = [headers.join(','), ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const today = new Date().toISOString().slice(0, 10)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `forza-garage-${today}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+
+  const isFiltered = cars.length < totalCount
+  return isFiltered ? `Exported ${cars.length} of ${totalCount} cars (filtered)` : null
+}
+
 interface SortState {
   key: SortKey | null
   dir: SortDir
@@ -469,6 +505,8 @@ export default function GarageShowcase({ initialCars }: Props) {
   const searchParams = useSearchParams()
   const searchRef = useRef<HTMLInputElement>(null)
 
+  const [exportToast, setExportToast] = useState<string | null>(null)
+
   const [cars, setCars] = useState<Car[]>(() =>
     initialCars.map((car) => {
       // Only apply auto-tags to cars with no stored tags (unowned cars).
@@ -621,6 +659,14 @@ export default function GarageShowcase({ initialCars }: Props) {
     return copy
   }, [filteredCars, sort])
 
+  const handleExport = useCallback(() => {
+    const msg = exportGarageCsv(sortedCars, cars.length)
+    if (msg) {
+      setExportToast(msg)
+      setTimeout(() => setExportToast(null), 3500)
+    }
+  }, [sortedCars, cars.length])
+
   const handleSort = useCallback((key: SortKey) => {
     setSort((prev) => ({
       key,
@@ -742,7 +788,7 @@ export default function GarageShowcase({ initialCars }: Props) {
     <>
     <div className="flex flex-col gap-6">
       {/* Page header */}
-      <header className="flex items-center gap-6">
+      <header className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-6">
           <h1 className="text-2xl font-bold tracking-tight">My Garage</h1>
           <div className="flex items-center gap-4">
@@ -769,7 +815,39 @@ export default function GarageShowcase({ initialCars }: Props) {
             )}
           </div>
         </div>
+
+        {/* Export CSV */}
+        {cars.length === 0 ? (
+          <button
+            disabled
+            title="No cars to export"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-fh-border text-fh-muted opacity-40 cursor-not-allowed"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 1v7M3 5l3 3 3-3M1 9v1a1 1 0 001 1h8a1 1 0 001-1V9" />
+            </svg>
+            Export CSV
+          </button>
+        ) : (
+          <button
+            onClick={handleExport}
+            title={sortedCars.length < cars.length ? `Export ${sortedCars.length} filtered cars` : `Export all ${cars.length} cars`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-fh-border text-fh-muted hover:text-fh-dark hover:border-fh-dark transition-colors"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 1v7M3 5l3 3 3-3M1 9v1a1 1 0 001 1h8a1 1 0 001-1V9" />
+            </svg>
+            Export CSV
+          </button>
+        )}
       </header>
+
+      {/* Export toast */}
+      {exportToast && (
+        <div className="fixed bottom-20 right-6 z-50 px-4 py-2.5 rounded-lg bg-fh-panel border border-fh-border shadow-lg text-sm text-fh-dark-2 pointer-events-none">
+          {exportToast}
+        </div>
+      )}
 
       {/* Active filter badge */}
       {activeFilterCount > 0 && (
