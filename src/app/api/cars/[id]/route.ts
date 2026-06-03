@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getAutoTags } from '@/lib/autotags'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 // Fields on the Car model that can be updated directly (not per-user garage data)
 const CAR_STAT_FIELDS = [
@@ -23,6 +24,9 @@ export async function PATCH(
   if ('owned' in body) {
     const { userId } = await auth()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!checkRateLimit(userId)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
 
     const car = await prisma.car.findUnique({
       where: { id: carId },
