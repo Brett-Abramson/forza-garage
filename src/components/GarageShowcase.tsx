@@ -32,11 +32,13 @@ type FilterMode = 'tags' | 'race'
 function csvCell(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return ''
   const str = String(value)
+  // Sanitise against spreadsheet formula injection (=, +, -, @)
+  const sanitised = /^[=+\-@]/.test(str) ? `'${str}` : str
   // Wrap in quotes if value contains comma, quote, or newline
-  return /[,"\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str
+  return /[,"\n]/.test(sanitised) ? `"${sanitised.replace(/"/g, '""')}"` : sanitised
 }
 
-function exportGarageCsv(cars: Car[], totalCount: number) {
+function triggerCsvDownload(cars: Car[]) {
   const headers = ['Year', 'Make', 'Model', 'Division', 'Class', 'PI', 'Country', 'Value (Cr)']
   const rows = cars.map((c) => [
     csvCell(c.year),
@@ -58,9 +60,6 @@ function exportGarageCsv(cars: Car[], totalCount: number) {
   a.download = `forza-garage-${today}.csv`
   a.click()
   URL.revokeObjectURL(url)
-
-  const isFiltered = cars.length < totalCount
-  return isFiltered ? `Exported ${cars.length} of ${totalCount} cars (filtered)` : null
 }
 
 interface SortState {
@@ -505,7 +504,7 @@ export default function GarageShowcase({ initialCars }: Props) {
   const searchParams = useSearchParams()
   const searchRef = useRef<HTMLInputElement>(null)
 
-  const [exportToast, setExportToast] = useState<string | null>(null)
+  const [exportPending, setExportPending] = useState(false)
 
   const [cars, setCars] = useState<Car[]>(() =>
     initialCars.map((car) => {
@@ -660,10 +659,10 @@ export default function GarageShowcase({ initialCars }: Props) {
   }, [filteredCars, sort])
 
   const handleExport = useCallback(() => {
-    const msg = exportGarageCsv(sortedCars, cars.length)
-    if (msg) {
-      setExportToast(msg)
-      setTimeout(() => setExportToast(null), 3500)
+    if (sortedCars.length < cars.length) {
+      setExportPending(true)
+    } else {
+      triggerCsvDownload(sortedCars)
     }
   }, [sortedCars, cars.length])
 
@@ -831,7 +830,7 @@ export default function GarageShowcase({ initialCars }: Props) {
         ) : (
           <button
             onClick={handleExport}
-            title={sortedCars.length < cars.length ? `Export ${sortedCars.length} filtered cars` : `Export all ${cars.length} cars`}
+            title={sortedCars.length < cars.length ? `${sortedCars.length} of ${cars.length} cars (filtered)` : `Export all ${cars.length} cars`}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-fh-border text-fh-muted hover:text-fh-dark hover:border-fh-dark transition-colors"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -842,10 +841,35 @@ export default function GarageShowcase({ initialCars }: Props) {
         )}
       </header>
 
-      {/* Export toast */}
-      {exportToast && (
-        <div className="fixed bottom-20 right-6 z-50 px-4 py-2.5 rounded-lg bg-fh-panel border border-fh-border shadow-lg text-sm text-fh-dark-2 pointer-events-none">
-          {exportToast}
+      {/* Export confirmation (filtered subset) */}
+      {exportPending && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setExportPending(false)}>
+          <div
+            className="bg-fh-panel border border-fh-border rounded-xl shadow-xl px-6 py-5 max-w-sm w-full mx-4 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <p className="font-semibold text-fh-dark">Export filtered results?</p>
+              <p className="text-sm text-fh-muted mt-1">
+                Exporting <span className="font-medium text-fh-dark">{sortedCars.length}</span> of{' '}
+                <span className="font-medium text-fh-dark">{cars.length}</span> cars — active filters are applied.
+              </p>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setExportPending(false)}
+                className="px-4 py-1.5 rounded-lg text-sm font-medium border border-fh-border text-fh-muted hover:text-fh-dark transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { triggerCsvDownload(sortedCars); setExportPending(false) }}
+                className="px-4 py-1.5 rounded-lg text-sm font-medium bg-fh-red text-white hover:opacity-90 transition-opacity"
+              >
+                Export {sortedCars.length} cars
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
