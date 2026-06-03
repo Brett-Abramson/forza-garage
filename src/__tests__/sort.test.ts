@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { compareRows, defaultSort, PI_CLASS_INDEX } from '@/lib/sort'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { compareRows, defaultSort, formatAddedAt, PI_CLASS_INDEX } from '@/lib/sort'
 import type { Car } from '@/types/car'
 import type { SortKey } from '@/lib/sort'
 
@@ -148,5 +148,91 @@ describe('defaultSort', () => {
     const a = makeCar({ owned: false, piClass: 'S1', piRating: 850 })
     const b = makeCar({ owned: false, piClass: 'S1', piRating: 850 })
     expect(defaultSort(a, b)).toBe(0)
+  })
+})
+
+// ─── compareRows — addedAt ────────────────────────────────────────────────────
+
+describe('compareRows — addedAt', () => {
+  const newer = '2026-06-01T12:00:00.000Z'
+  const older = '2026-01-01T12:00:00.000Z'
+
+  it('sorts older date first (asc)', () => {
+    expect(compareRows(makeCar({ addedAt: older }), makeCar({ addedAt: newer }), 'addedAt', 'asc')).toBeLessThan(0)
+  })
+
+  it('sorts newer date first (desc)', () => {
+    expect(compareRows(makeCar({ addedAt: newer }), makeCar({ addedAt: older }), 'addedAt', 'desc')).toBeLessThan(0)
+  })
+
+  it('returns 0 for equal dates', () => {
+    expect(compareRows(makeCar({ addedAt: newer }), makeCar({ addedAt: newer }), 'addedAt', 'asc')).toBe(0)
+  })
+
+  it('null addedAt always sinks to bottom (asc) — null after non-null', () => {
+    expect(compareRows(makeCar({ addedAt: null }), makeCar({ addedAt: older }), 'addedAt', 'asc')).toBeGreaterThan(0)
+  })
+
+  it('null addedAt always sinks to bottom (desc) — null still after non-null', () => {
+    expect(compareRows(makeCar({ addedAt: null }), makeCar({ addedAt: older }), 'addedAt', 'desc')).toBeGreaterThan(0)
+  })
+
+  it('non-null sorts before null (asc)', () => {
+    expect(compareRows(makeCar({ addedAt: older }), makeCar({ addedAt: null }), 'addedAt', 'asc')).toBeLessThan(0)
+  })
+
+  it('both null returns 0', () => {
+    expect(compareRows(makeCar({ addedAt: null }), makeCar({ addedAt: null }), 'addedAt', 'asc')).toBe(0)
+  })
+})
+
+// ─── formatAddedAt ────────────────────────────────────────────────────────────
+
+describe('formatAddedAt', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const freeze = (iso: string) => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(iso))
+  }
+
+  it('returns null for null input', () => {
+    expect(formatAddedAt(null)).toBeNull()
+  })
+
+  it('returns null for undefined input', () => {
+    expect(formatAddedAt(undefined)).toBeNull()
+  })
+
+  it('returns null for invalid date string', () => {
+    expect(formatAddedAt('not-a-date')).toBeNull()
+  })
+
+  it('returns "Added today" for same-day date', () => {
+    freeze('2026-06-02T15:00:00.000Z')
+    expect(formatAddedAt('2026-06-02T08:00:00.000Z')).toBe('Added today')
+  })
+
+  it('returns "Added yesterday" for ~1 day ago', () => {
+    freeze('2026-06-02T15:00:00.000Z')
+    expect(formatAddedAt('2026-06-01T08:00:00.000Z')).toBe('Added yesterday')
+  })
+
+  it('returns "Added N days ago" for 2–6 days', () => {
+    freeze('2026-06-06T12:00:00.000Z')
+    expect(formatAddedAt('2026-06-03T12:00:00.000Z')).toBe('Added 3 days ago')
+  })
+
+  it('returns "Added last week" for 7–13 days ago', () => {
+    freeze('2026-06-10T12:00:00.000Z')
+    expect(formatAddedAt('2026-06-03T12:00:00.000Z')).toBe('Added last week')
+  })
+
+  it('returns a short date string for 14+ days ago', () => {
+    freeze('2026-06-20T12:00:00.000Z')
+    const result = formatAddedAt('2026-06-01T12:00:00.000Z')
+    expect(result).toMatch(/^Added \d+ \w+$/)
   })
 })

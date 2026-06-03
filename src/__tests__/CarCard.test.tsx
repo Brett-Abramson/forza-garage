@@ -145,3 +145,24 @@ describe('CarCard — isPending', () => {
     expect(onToggleOwned).not.toHaveBeenCalled()
   })
 })
+
+// ─── showAddedAt ──────────────────────────────────────────────────────────────
+
+describe('CarCard — showAddedAt', () => {
+  const carWithDate: Car = { ...baseCar, addedAt: '2026-06-01T12:00:00.000Z' }
+
+  it('shows "Added" label when showAddedAt=true and addedAt is set', () => {
+    render(<CarCard car={carWithDate} onToggleOwned={vi.fn()} showAddedAt />)
+    expect(screen.getByText(/Added/)).toBeInTheDocument()
+  })
+
+  it('does not show "Added" label when showAddedAt is false', () => {
+    render(<CarCard car={carWithDate} onToggleOwned={vi.fn()} showAddedAt={false} />)
+    expect(screen.queryByText(/Added/)).not.toBeInTheDocument()
+  })
+
+  it('does not show "Added" label when addedAt is null even if showAddedAt=true', () => {
+    render(<CarCard car={{ ...baseCar, addedAt: null }} onToggleOwned={vi.fn()} showAddedAt />)
+    expect(screen.queryByText(/Added/)).not.toBeInTheDocument()
+  })
+})

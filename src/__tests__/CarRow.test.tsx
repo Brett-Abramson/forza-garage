@@ -28,7 +28,7 @@ const baseCar: Car = {
 
 function renderRow(
   car: Car,
-  extra: { onToggleOwned?: () => void; isPending?: boolean; onCardClick?: (car: Car) => void; isExpanded?: boolean } = {}
+  extra: { onToggleOwned?: () => void; isPending?: boolean; onCardClick?: (car: Car) => void; isExpanded?: boolean; showAddedAt?: boolean } = {}
 ) {
   const onToggleOwned = extra.onToggleOwned ?? vi.fn()
   return render(
@@ -40,6 +40,7 @@ function renderRow(
           isPending={extra.isPending}
           onCardClick={extra.onCardClick}
           isExpanded={extra.isExpanded}
+          showAddedAt={extra.showAddedAt}
         />
       </tbody>
     </table>
@@ -166,5 +167,26 @@ describe('CarRow — onCardClick', () => {
   it('does not add cursor-pointer when onCardClick is absent', () => {
     renderRow(baseCar)
     expect(screen.getByRole('row').className).not.toContain('cursor-pointer')
+  })
+})
+
+// ─── showAddedAt ──────────────────────────────────────────────────────────────
+
+describe('CarRow — showAddedAt', () => {
+  const carWithDate: Car = { ...baseCar, addedAt: '2026-06-01T12:00:00.000Z' }
+
+  it('shows "Added" label when showAddedAt=true and addedAt is set', () => {
+    renderRow(carWithDate, { showAddedAt: true })
+    expect(screen.getByText(/Added/)).toBeInTheDocument()
+  })
+
+  it('does not show "Added" label when showAddedAt is false', () => {
+    renderRow(carWithDate, { showAddedAt: false })
+    expect(screen.queryByText(/Added/)).not.toBeInTheDocument()
+  })
+
+  it('does not show "Added" label when addedAt is null even if showAddedAt=true', () => {
+    renderRow({ ...baseCar, addedAt: null }, { showAddedAt: true })
+    expect(screen.queryByText(/Added/)).not.toBeInTheDocument()
   })
 })
