@@ -17,6 +17,8 @@ import BackToTop from './BackToTop'
 
 type ViewMode = 'grid' | 'table'
 
+const PAGE_SIZE = 50
+
 interface SortState {
   key: SortKey | null
   dir: SortDir
@@ -69,6 +71,7 @@ export default function GarageView({ initialCars }: Props) {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(
     searchParams.get('group') ?? null
   )
+  const [page, setPage] = useState(1)
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(() => {
     const openId = searchParams.get('open')
@@ -174,6 +177,15 @@ export default function GarageView({ initialCars }: Props) {
     copy.sort(sort.key ? (a, b) => compareRows(a, b, sort.key!, sort.dir) : defaultSort)
     return copy
   }, [filteredCars, sort])
+
+  // Reset to page 1 whenever the filtered/sorted set changes
+  useEffect(() => { setPage(1) }, [sortedCars.length])
+
+  const totalPages = Math.ceil(sortedCars.length / PAGE_SIZE)
+  const pagedCars = useMemo(
+    () => sortedCars.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [sortedCars, page]
+  )
 
   const handleSort = useCallback((key: SortKey) => {
     setSort((prev) => ({
@@ -360,44 +372,50 @@ export default function GarageView({ initialCars }: Props) {
           )}
         </div>
       ) : view === 'grid' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          {sortedCars.map((car) => (
-            <div key={car.id} className={pendingIds.has(car.id) ? 'opacity-60 pointer-events-none' : ''}>
-              <CarCard car={car} onToggleOwned={toggleOwned} onCardClick={setDrawerCar} />
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {pagedCars.map((car) => (
+              <div key={car.id} className={pendingIds.has(car.id) ? 'opacity-60 pointer-events-none' : ''}>
+                <CarCard car={car} onToggleOwned={toggleOwned} onCardClick={setDrawerCar} />
+              </div>
+            ))}
+          </div>
+          <Pagination page={page} totalPages={totalPages} total={sortedCars.length} onPage={setPage} />
+        </>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-fh-border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-fh-panel-2 border-b border-fh-border text-xs uppercase tracking-wide select-none">
-                <SortTh label="Class" sortKey="piClass" sort={sort} onSort={handleSort} />
-                <SortTh label="PI" sortKey="piRating" sort={sort} onSort={handleSort} />
-                <SortTh label="Year" sortKey="year" sort={sort} onSort={handleSort} />
-                <SortTh label="Make" sortKey="make" sort={sort} onSort={handleSort} />
-                <SortTh label="Model" sortKey="model" sort={sort} onSort={handleSort} />
-                <SortTh label="Division" sortKey="division" sort={sort} onSort={handleSort} className="hidden md:table-cell" />
-                <SortTh label="Drive" sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
-                <SortTh label="Country" sortKey="country" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
-                <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
-                <SortTh label="Value" sortKey="value" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
-                <th className="text-left py-2.5 px-3 text-fh-muted">Garage</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedCars.map((car) => (
-                <CarRow
-                  key={car.id}
-                  car={car}
-                  onToggleOwned={toggleOwned}
-                  isPending={pendingIds.has(car.id)}
-                  onCardClick={setDrawerCar}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className="overflow-x-auto rounded-xl border border-fh-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-fh-panel-2 border-b border-fh-border text-xs uppercase tracking-wide select-none">
+                  <SortTh label="Class" sortKey="piClass" sort={sort} onSort={handleSort} />
+                  <SortTh label="PI" sortKey="piRating" sort={sort} onSort={handleSort} />
+                  <SortTh label="Year" sortKey="year" sort={sort} onSort={handleSort} />
+                  <SortTh label="Make" sortKey="make" sort={sort} onSort={handleSort} />
+                  <SortTh label="Model" sortKey="model" sort={sort} onSort={handleSort} />
+                  <SortTh label="Division" sortKey="division" sort={sort} onSort={handleSort} className="hidden md:table-cell" />
+                  <SortTh label="Drive" sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
+                  <SortTh label="Country" sortKey="country" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
+                  <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
+                  <SortTh label="Value" sortKey="value" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
+                  <th className="text-left py-2.5 px-3 text-fh-muted">Garage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedCars.map((car) => (
+                  <CarRow
+                    key={car.id}
+                    car={car}
+                    onToggleOwned={toggleOwned}
+                    isPending={pendingIds.has(car.id)}
+                    onCardClick={setDrawerCar}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={page} totalPages={totalPages} total={sortedCars.length} onPage={setPage} />
+        </>
       )}
     </div>
 
@@ -409,6 +427,48 @@ export default function GarageView({ initialCars }: Props) {
     />
     <BackToTop />
     </>
+  )
+}
+
+function Pagination({
+  page,
+  totalPages,
+  total,
+  onPage,
+}: {
+  page: number
+  totalPages: number
+  total: number
+  onPage: (p: number) => void
+}) {
+  if (totalPages <= 1) return null
+  const start = (page - 1) * PAGE_SIZE + 1
+  const end = Math.min(page * PAGE_SIZE, total)
+  return (
+    <div className="flex items-center justify-between pt-2 select-none">
+      <span className="text-xs text-fh-muted tabular-nums">
+        {start}–{end} of {total} cars
+      </span>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => { onPage(page - 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+          disabled={page === 1}
+          className="px-3 py-1.5 rounded-lg text-xs font-medium border border-fh-border text-fh-muted hover:text-fh-dark hover:border-fh-dark transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          ← Prev
+        </button>
+        <span className="text-xs text-fh-muted tabular-nums">
+          {page} / {totalPages}
+        </span>
+        <button
+          onClick={() => { onPage(page + 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+          disabled={page === totalPages}
+          className="px-3 py-1.5 rounded-lg text-xs font-medium border border-fh-border text-fh-muted hover:text-fh-dark hover:border-fh-dark transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          Next →
+        </button>
+      </div>
+    </div>
   )
 }
 

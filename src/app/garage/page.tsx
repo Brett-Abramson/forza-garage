@@ -3,7 +3,8 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getAutoTags } from '@/lib/autotags'
-import GarageShowcase from '@/components/GarageShowcase'
+import GarageShowcaseClient from '@/components/GarageShowcaseClient'
+import GarageSkeleton from '@/components/GarageSkeleton'
 import type { Car } from '@/types/car'
 
 export const dynamic = 'force-dynamic'
@@ -38,9 +39,14 @@ async function ensureStarterCars(userId: string) {
   }
 }
 
-export default async function GaragePage() {
+interface PageProps {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}
+
+export default async function GaragePage({ searchParams }: PageProps) {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
+  const params = await searchParams
 
   await ensureStarterCars(userId)
 
@@ -59,10 +65,20 @@ export default async function GaragePage() {
     notes,
   }))
 
+  // Respect the user's last-used view preference from the URL so the skeleton
+  // matches what they'll see when the component hydrates.
+  const viewParam = params?.view
+  const view = viewParam === 'grid' ? 'grid' : 'table'
+
   return (
     <main className="max-w-screen-2xl mx-auto px-4 py-8">
-      <Suspense fallback={null}>
-        <GarageShowcase initialCars={cars} />
+      {/*
+        GarageShowcaseClient uses next/dynamic with ssr:false internally.
+        The server sends GarageSkeleton as HTML immediately (FCP ≈ TTFB),
+        then the JS chunk for GarageShowcase loads and replaces it.
+      */}
+      <Suspense fallback={<GarageSkeleton view={view} />}>
+        <GarageShowcaseClient initialCars={cars} />
       </Suspense>
     </main>
   )
