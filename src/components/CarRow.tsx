@@ -11,10 +11,15 @@ interface Props {
   isPending?: boolean
   onCardClick?: (car: Car) => void
   isExpanded?: boolean
+  /** Show the date text in the Added column (e.g. when sorted by addedAt) */
   showAddedAt?: boolean
+  /** Render a dedicated <td> for the Added column — pass from GarageShowcase to keep column counts aligned */
+  showAddedAtColumn?: boolean
+  /** Hide the Garage action column — pass from GarageShowcase where every car is already owned */
+  hideGarage?: boolean
 }
 
-export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt }: Props) {
+export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined)
@@ -65,10 +70,12 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
           )
         }
       </td>
-      <td className="py-2.5 px-3">
-        {showAddedAt && car.addedAt && (
-          <div className="text-[11px] text-fh-muted-2 mb-1">{formatAddedAt(car.addedAt)}</div>
-        )}
+      {showAddedAtColumn && (
+        <td className="py-2.5 px-3 text-fh-muted-2 tabular-nums hidden xl:table-cell text-[11px]">
+          {showAddedAt && car.addedAt ? formatAddedAt(car.addedAt) : null}
+        </td>
+      )}
+      {!hideGarage && <td className="py-2.5 px-3">
         {car.owned && confirmRemove ? (
           <div
             onClick={(e) => e.stopPropagation()}
@@ -116,7 +123,7 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
             )}
           </button>
         )}
-      </td>
+      </td>}
     </tr>
   )
 }

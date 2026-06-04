@@ -398,7 +398,7 @@ function ExpandedRow(props: {
 }) {
   return (
     <tr className="hidden sm:table-row border-b border-fh-border bg-fh-panel">
-      <td colSpan={10} className="px-5 py-3">
+      <td colSpan={11} className="px-5 py-3">
         <div className="max-w-2xl">
           <ExpandedContent {...props} />
         </div>
@@ -1137,7 +1137,6 @@ export default function GarageShowcase({ initialCars }: Props) {
                     <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
                     <SortTh label="Value" sortKey="value" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
                     <SortTh label="Added" sortKey="addedAt" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
-                    <th className="text-left py-2.5 px-3 text-fh-muted">Garage</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1150,6 +1149,8 @@ export default function GarageShowcase({ initialCars }: Props) {
                         isExpanded={expandedCarId === car.id}
                         onCardClick={(c) => toggleExpanded(c.id)}
                         showAddedAt={sort.key === 'addedAt'}
+                        showAddedAtColumn
+                        hideGarage
                       />
                       {expandedCarId === car.id && (
                         <ExpandedRow

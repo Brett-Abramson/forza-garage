@@ -28,7 +28,7 @@ const baseCar: Car = {
 
 function renderRow(
   car: Car,
-  extra: { onToggleOwned?: () => void; isPending?: boolean; onCardClick?: (car: Car) => void; isExpanded?: boolean; showAddedAt?: boolean } = {}
+  extra: { onToggleOwned?: () => void; isPending?: boolean; onCardClick?: (car: Car) => void; isExpanded?: boolean; showAddedAt?: boolean; showAddedAtColumn?: boolean } = {}
 ) {
   const onToggleOwned = extra.onToggleOwned ?? vi.fn()
   return render(
@@ -41,6 +41,7 @@ function renderRow(
           onCardClick={extra.onCardClick}
           isExpanded={extra.isExpanded}
           showAddedAt={extra.showAddedAt}
+          showAddedAtColumn={extra.showAddedAtColumn}
         />
       </tbody>
     </table>
@@ -175,18 +176,23 @@ describe('CarRow — onCardClick', () => {
 describe('CarRow — showAddedAt', () => {
   const carWithDate: Car = { ...baseCar, addedAt: '2026-06-01T12:00:00.000Z' }
 
-  it('shows "Added" label when showAddedAt=true and addedAt is set', () => {
-    renderRow(carWithDate, { showAddedAt: true })
+  it('shows "Added" label when showAddedAtColumn + showAddedAt=true and addedAt is set', () => {
+    renderRow(carWithDate, { showAddedAtColumn: true, showAddedAt: true })
     expect(screen.getByText(/Added/)).toBeInTheDocument()
   })
 
   it('does not show "Added" label when showAddedAt is false', () => {
-    renderRow(carWithDate, { showAddedAt: false })
+    renderRow(carWithDate, { showAddedAtColumn: true, showAddedAt: false })
     expect(screen.queryByText(/Added/)).not.toBeInTheDocument()
   })
 
   it('does not show "Added" label when addedAt is null even if showAddedAt=true', () => {
-    renderRow({ ...baseCar, addedAt: null }, { showAddedAt: true })
+    renderRow({ ...baseCar, addedAt: null }, { showAddedAtColumn: true, showAddedAt: true })
+    expect(screen.queryByText(/Added/)).not.toBeInTheDocument()
+  })
+
+  it('does not render the addedAt cell when showAddedAtColumn is false', () => {
+    renderRow(carWithDate, { showAddedAtColumn: false, showAddedAt: true })
     expect(screen.queryByText(/Added/)).not.toBeInTheDocument()
   })
 })
