@@ -226,7 +226,7 @@ const REGIONS: {
 
 export default function BuildsView() {
   const [tab, setTab] = useState<Tab>('fundamentals')
-  const [openRace, setOpenRace] = useState<string | null>(RACE_BUILD_GUIDES[0].id)
+  const [openRace, setOpenRace] = useState<string | null>(null)
   const [openClass, setOpenClass] = useState<string | null>(null)
 
   return (
