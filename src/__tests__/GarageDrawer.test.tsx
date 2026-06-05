@@ -5,7 +5,9 @@ import GarageDrawer from '@/components/GarageDrawer'
 import type { Car } from '@/types/car'
 import { CAR_TAGS } from '@/lib/tags'
 
-// baseCar has 'asphalt' as an auto tag and 'grip' as a user tag
+// baseCar: Modern Sports Cars, auto-tags asphalt + street racing (v2 mapping),
+// plus user tags long straights + technical so Road Racing wins by stable-sort
+// tie-break (road scores 3, street also scores 3, road appears first in RACE_TYPES).
 const baseCar: Car = {
   id: 42,
   make: 'Porsche',
@@ -26,10 +28,12 @@ const baseCar: Car = {
   source: 'Autoshow',
   sourceInfo: null,
   owned: true,
-  tags: ['asphalt', 'grip'],
+  tags: ['asphalt', 'street racing', 'long straights', 'technical'],
   tagDetails: [
-    { tag: 'asphalt', source: 'auto' },
-    { tag: 'grip',    source: 'user' },
+    { tag: 'asphalt',       source: 'auto' },
+    { tag: 'street racing', source: 'auto' },
+    { tag: 'long straights', source: 'user' },
+    { tag: 'technical',     source: 'user' },
   ],
   notes: null,
 }
@@ -124,21 +128,21 @@ describe('GarageDrawer — close', () => {
 describe('GarageDrawer — tag display', () => {
   it('shows both auto and user tags', () => {
     renderDrawer()
-    expect(screen.getByText('asphalt')).toBeInTheDocument() // auto
-    expect(screen.getByText('grip')).toBeInTheDocument()    // user
+    expect(screen.getByText('asphalt')).toBeInTheDocument()       // auto
+    expect(screen.getByText('street racing')).toBeInTheDocument() // auto
+    expect(screen.getByText('long straights')).toBeInTheDocument() // user
+    expect(screen.getByText('technical')).toBeInTheDocument()     // user
   })
 
   it('both user and auto tags have remove buttons', () => {
     renderDrawer()
-    expect(screen.getByRole('button', { name: 'Remove grip' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove long straights' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Remove asphalt' })).toBeInTheDocument()
   })
 
   it('auto tag remove button has a descriptive title', () => {
     renderDrawer()
-    // auto-tag wrapper element carries a tooltip explaining it is removable
     const autoTagBtn = screen.getByRole('button', { name: 'Remove asphalt' })
-    // the outer span/button group for auto tags has the title
     expect(autoTagBtn.closest('[title]')).toBeTruthy()
   })
 
@@ -151,10 +155,14 @@ describe('GarageDrawer — tag display', () => {
     const user = userEvent.setup()
     const onTagDetailsChange = vi.fn()
     renderDrawer(baseCar, { onTagDetailsChange })
-    await user.click(screen.getByRole('button', { name: 'Remove grip' }))
+    await user.click(screen.getByRole('button', { name: 'Remove long straights' }))
     expect(onTagDetailsChange).toHaveBeenCalledWith(
       baseCar.id,
-      [{ tag: 'asphalt', source: 'auto' }]
+      expect.arrayContaining([
+        { tag: 'asphalt', source: 'auto' },
+        { tag: 'street racing', source: 'auto' },
+        { tag: 'technical', source: 'user' },
+      ])
     )
     expect(fetch).toHaveBeenCalledWith(
       `/api/garage/${baseCar.id}`,
@@ -174,8 +182,10 @@ describe('GarageDrawer — add tags', () => {
 
   it('does not offer already-applied tags (auto or user) as addable', () => {
     renderDrawer()
-    expect(screen.queryByRole('button', { name: '+ grip' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ asphalt' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '+ street racing' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '+ long straights' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '+ technical' })).not.toBeInTheDocument()
   })
 
   it('hides the add section when all tags are applied', () => {
@@ -191,11 +201,13 @@ describe('GarageDrawer — add tags', () => {
     await user.click(screen.getByRole('button', { name: '+ dirt' }))
     expect(onTagDetailsChange).toHaveBeenCalledWith(
       baseCar.id,
-      [
-        { tag: 'asphalt', source: 'auto' },
-        { tag: 'grip',    source: 'user' },
-        { tag: 'dirt',    source: 'user' },
-      ]
+      expect.arrayContaining([
+        { tag: 'asphalt',        source: 'auto' },
+        { tag: 'street racing',  source: 'auto' },
+        { tag: 'long straights', source: 'user' },
+        { tag: 'technical',      source: 'user' },
+        { tag: 'dirt',           source: 'user' },
+      ])
     )
     expect(fetch).toHaveBeenCalledWith(
       `/api/garage/${baseCar.id}`,
@@ -227,12 +239,13 @@ describe('GarageDrawer — race types', () => {
     expect(screen.getByRole('link', { name: /Street Racing/i })).toBeInTheDocument()
   })
 
-  it('does not show Race types when the car has no tag matches', () => {
-    // A division not in DIVISION_TAGS returns no auto tags; with no user
-    // tags either, every race type scores 0 and the section is hidden
-    const emptyTagsCar = { ...baseCar, tags: [], tagDetails: [], division: 'Unknown Division' }
-    renderDrawer(emptyTagsCar)
-    expect(screen.queryByText('Race types')).not.toBeInTheDocument()
+  it('shows Race types even for an unknown division (asphalt fallback applies)', () => {
+    // v2: unknown divisions fall back to ["asphalt"], so any car gets at
+    // least one race type recommendation (Road Racing scores 1 via asphalt).
+    // The old behaviour (empty tags → no section) is no longer reachable.
+    const unknownDivCar = { ...baseCar, tags: [], tagDetails: [], division: 'Unknown Division' }
+    renderDrawer(unknownDivCar)
+    expect(screen.getByText('Race types')).toBeInTheDocument()
   })
 })
 

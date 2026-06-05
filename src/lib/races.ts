@@ -57,7 +57,7 @@ export const RACE_TYPES: RaceType[] = [
       "Cars that need long straights to build momentum",
       "Loose rear-end setups that punish tight exits",
     ],
-    recommendedTags: ["asphalt", "grip", "tight", "technical"],
+    recommendedTags: ["street racing", "asphalt", "grip", "tight", "technical"],
     piSweetSpot: "600–800 (A / S1)",
     drivetrainNote:
       "AWD dominates street racing for traction consistency. RWD can work with a very clean tune.",

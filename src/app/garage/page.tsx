@@ -39,6 +39,34 @@ async function ensureStarterCars(userId: string) {
   }
 }
 
+/**
+ * One-time backfill for garage entries that have zero stored CarTag rows.
+ *
+ * Cars added before the auto-tag fix never had tags written to the DB.
+ * On the user's first garage load after this fix, we write getAutoTags()
+ * results as source:'auto' for each such entry. Once any tag row exists
+ * for an entry we never touch it again — the user owns their tag state.
+ */
+async function backfillMissingTags(
+  entries: { id: number; car: { division: string; drivetrain: string | null }; tags: { tag: string }[] }[]
+) {
+  const toBackfill = entries.filter((e) => e.tags.length === 0)
+  if (toBackfill.length === 0) return
+
+  for (const entry of toBackfill) {
+    const autoTags = getAutoTags(entry.car.division, entry.car.drivetrain ?? undefined)
+    if (autoTags.length > 0) {
+      await prisma.carTag.createMany({
+        data: autoTags.map((tag) => ({ userGarageId: entry.id, tag, source: 'auto' })),
+        skipDuplicates: true,
+      })
+      // Patch the in-memory entry so the page renders the correct tags
+      // without a second DB round-trip.
+      entry.tags = autoTags.map((tag) => ({ tag }))
+    }
+  }
+}
+
 interface PageProps {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
@@ -56,6 +84,9 @@ export default async function GaragePage({ searchParams }: PageProps) {
     orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
   })
 
+  // One-time backfill: write auto-tags for any entry with zero stored tags.
+  await backfillMissingTags(entries)
+
   const cars: Car[] = entries.map(({ car, tags, notes, addedAt }) => ({
     ...car,
     owned: true,
@@ -65,18 +96,11 @@ export default async function GaragePage({ searchParams }: PageProps) {
     notes,
   }))
 
-  // Respect the user's last-used view preference from the URL so the skeleton
-  // matches what they'll see when the component hydrates.
   const viewParam = params?.view
   const view = viewParam === 'grid' ? 'grid' : 'table'
 
   return (
     <main className="max-w-screen-2xl mx-auto px-4 py-8">
-      {/*
-        GarageShowcaseClient uses next/dynamic with ssr:false internally.
-        The server sends GarageSkeleton as HTML immediately (FCP ≈ TTFB),
-        then the JS chunk for GarageShowcase loads and replaces it.
-      */}
       <Suspense fallback={<GarageSkeleton view={view} />}>
         <GarageShowcaseClient initialCars={cars} />
       </Suspense>

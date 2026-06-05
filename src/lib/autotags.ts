@@ -4,82 +4,90 @@ export type TagSource = "auto" | "user"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Division → default tags
-// Based on FH6 division names from the official car list
+//
+// Mapping updated to the v2 reference (June 2026). Key changes:
+//   - "street racing" tag added for hot hatch / sports / saloon divisions
+//   - Rally divisions (Modern Rally, Classic Rally, Retro Rally) now include
+//     "offroad" alongside "dirt" — AWD rally cars are competitive off-road
+//   - Sports Utility Heroes moved to asphalt (road-circuit racing in FH6)
+//   - Drift Cars stripped to drift only (was also asphalt, tight)
+//   - Muscle divisions simplified to asphalt + drag (removed long straights)
+//   - Any division absent from this list falls back to ["asphalt"] in code
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DIVISION_TAGS: Record<string, CarTag[]> = {
-  // Off-road
+  // ── Hypercars / Supercars ─────────────────────────────────────────────────
+  "Hypercars":              ["asphalt", "long straights"],
+  "Modern Supercars":       ["asphalt"],
+  "Retro Supercars":        ["asphalt"],
+
+  // ── Track / GT ────────────────────────────────────────────────────────────
+  "Extreme Track Toys":     ["asphalt", "technical"],
+  "Track Toys":             ["asphalt"],
+  "Classic Racers":         ["asphalt"],
+  "Retro Racers":           ["asphalt"],
+  "Super GT":               ["asphalt", "long straights"],
+  "GT Cars":                ["asphalt"],
+  "Modern Super Saloons":   ["asphalt", "street racing"],
+  "Retro Super Saloons":    ["asphalt"],
+
+  // ── Sports cars ───────────────────────────────────────────────────────────
+  "Modern Sports Cars":     ["asphalt", "street racing"],
+  "Retro Sports Cars":      ["asphalt", "street racing"],
+  "Classic Sports Cars":    ["asphalt", "street racing"],
+  "Sports Utility Heroes":  ["asphalt"],
+
+  // ── Hot Hatch ─────────────────────────────────────────────────────────────
+  "Super Hot Hatch":        ["asphalt", "street racing", "tight"],
+  "Retro Hot Hatch":        ["asphalt", "street racing", "tight"],
+  "Hot Hatch":              ["asphalt", "street racing", "tight"],
+
+  // ── Muscle / Drag ─────────────────────────────────────────────────────────
+  "Modern Muscle":          ["asphalt", "drag"],
+  "Retro Muscle":           ["asphalt", "drag"],
+  "Classic Muscle":         ["asphalt", "drag"],
+
+  // ── Rally ─────────────────────────────────────────────────────────────────
+  "Rally Monsters":         ["dirt", "offroad", "mixed"],
+  "Modern Rally":           ["dirt", "offroad", "mixed"],
+  "Classic Rally":          ["dirt", "offroad", "mixed"],
+  // Retro Rally is not in the v2 reference but is clearly a rally division
+  "Retro Rally":            ["dirt", "offroad", "mixed"],
+
+  // ── Off-road ──────────────────────────────────────────────────────────────
   "Unlimited Offroad":      ["offroad", "mixed", "dirt"],
-  "Unlimited Buggies":      ["offroad", "mixed", "dirt"],
+  "Unlimited Buggies":      ["offroad", "mixed"],
   "Buggies":                ["offroad", "dirt"],
   "Offroad":                ["offroad", "mixed", "dirt"],
-  "Pickups & 4x4s":         ["offroad", "mixed"],
+  "Pickups & 4x4s":         ["offroad", "mixed", "dirt"],
   "UTVs":                   ["offroad", "dirt"],
-  "Sports Utility Heroes":  ["offroad", "mixed"],
 
-  // Rally
-  "Rally Monsters":         ["dirt", "offroad", "mixed"],
-  "Classic Rally":          ["dirt", "mixed"],
-  "Retro Rally":            ["dirt", "mixed"],
-  "Modern Rally":           ["dirt", "mixed"],
+  // ── Drift ─────────────────────────────────────────────────────────────────
+  "Drift Cars":             ["drift"],
+  "Formula Drift":          ["drift"],
 
-  // Drift
-  "Drift Cars":             ["drift", "asphalt", "tight"],
-
-  // Drag / Muscle
-  "Classic Muscle":         ["asphalt", "long straights", "drag"],
-  "Retro Muscle":           ["asphalt", "long straights", "drag"],
-  "Modern Muscle":          ["asphalt", "long straights", "drag"],
-
-  // Hot Hatch
-  "Hot Hatch":              ["asphalt", "tight", "technical", "grip"],
-  "Super Hot Hatch":        ["asphalt", "tight", "technical", "grip"],
-  "Retro Hot Hatch":        ["asphalt", "tight", "technical"],
-
-  // Sports / GT
-  "Classic Sports Cars":    ["asphalt", "grip", "technical", "tight"],
-  "Retro Sports Cars":      ["asphalt", "grip", "technical", "tight"],
-  "Modern Sports Cars":     ["asphalt", "grip", "technical"],
-  "GT Cars":                ["asphalt", "grip", "long straights"],
-  "Super GT":               ["asphalt", "grip", "long straights"],
-
-  // Supercars / Hypercars
-  "Retro Supercars":        ["asphalt", "grip", "long straights"],
-  "Modern Supercars":       ["asphalt", "grip", "long straights"],
-  "Hypercars":              ["asphalt", "grip", "long straights"],
-
-  // Track
-  "Extreme Track Toys":     ["asphalt", "grip", "technical"],
-  "Track Toys":             ["asphalt", "grip", "technical"],
-
-  // Saloons / Sedans
-  "Classic Racers":         ["asphalt", "technical"],
-  "Retro Racers":           ["asphalt", "technical"],
-  "Retro Super Saloons":    ["asphalt", "technical"],
-  "Modern Super Saloons":   ["asphalt", "grip", "technical"],
-
-  // Misc
+  // ── Miscellaneous ─────────────────────────────────────────────────────────
+  // Divisions below are not in the v2 reference; "asphalt" is the safe default
+  // per spec ("any division not in this list should get asphalt").
   "Rods and Customs":       ["asphalt"],
   "Cult Cars":              ["asphalt"],
   "Eclectic Domestics":     ["asphalt", "tight"],
   "Rare Classics":          ["asphalt"],
-  "Classic Street Cars":    ["asphalt", "tight"],
-  "Utility Heroes":         ["mixed"],
+  "Utility Heroes":         ["asphalt"],
 
-  // Legacy key aliases — kept for any existing CarTag data that may reference old names
-  "Pickups & 4x4's":        ["offroad", "mixed"],
+  // Legacy key aliases — kept for any existing CarTag rows with old division names
+  "Pickups & 4x4's":        ["offroad", "mixed", "dirt"],
   "UTV's":                  ["offroad", "dirt"],
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Drivetrain → additional tags
-// Call this when drivetrain data becomes available
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DRIVETRAIN_TAGS: Record<string, CarTag[]> = {
   RWD: ["drift"],
   AWD: ["dirt", "offroad"],
-  FWD: ["tight", "technical"],
+  FWD: ["tight", "street racing"],
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -91,7 +99,7 @@ export function getAutoTags(
   division: string,
   drivetrain?: string
 ): CarTag[] {
-  const divisionTags = DIVISION_TAGS[division] ?? []
+  const divisionTags = DIVISION_TAGS[division] ?? ["asphalt"] // safe default
   const drivetrainTags = drivetrain ? (DRIVETRAIN_TAGS[drivetrain] ?? []) : []
 
   // Merge and deduplicate
@@ -103,7 +111,6 @@ export function getAutoTags(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper — splits a car's tags into auto vs user for display purposes
-// Use this in the drawer/row expand to render them differently
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function splitTagsBySource(

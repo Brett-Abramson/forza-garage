@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Car } from '@/types/car'
 import { PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { CAR_TAGS } from '@/lib/tags'
-import { splitTagsBySource } from '@/lib/autotags'
+import { splitTagsBySource, getAutoTags } from '@/lib/autotags'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
 import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { getGroupForDivision } from '@/lib/divisionGroups'
@@ -48,6 +48,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
   const [notes, setNotes] = useState<string>(displayCar?.notes ?? '')
   const [notesDirty, setNotesDirty] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [confirmResetTags, setConfirmResetTags] = useState(false)
 
   // Stat entry state
   const [stats, setStats] = useState<StatFields>(() => carToStats(displayCar))
@@ -65,6 +66,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
       setStats(carToStats(displayCar))
       setStatsDirty(false)
       setConfirmRemove(false)
+      setConfirmResetTags(false)
       prevId.current = displayCar.id
     }
   }, [displayCar])
@@ -115,6 +117,13 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
 
   async function removeUserTag(tag: string) {
     await patchTags(autoTags, userTags.filter((t) => t !== tag))
+  }
+
+  async function resetTagsToDefault() {
+    if (!displayCar) return
+    const fresh = getAutoTags(displayCar.division, displayCar.drivetrain ?? undefined)
+    await patchTags(fresh, [])
+    setConfirmResetTags(false)
   }
 
   async function saveNotes() {
@@ -317,6 +326,32 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                         </span>
                       ))}
                     </div>
+                  )}
+
+                  {/* Reset to defaults — subtle, below tag chips */}
+                  {confirmResetTags ? (
+                    <div className="mt-3 flex items-center gap-2 text-xs text-fh-muted">
+                      <span>Remove custom tags and restore defaults?</span>
+                      <button
+                        onClick={resetTagsToDefault}
+                        className="text-fh-red font-medium hover:opacity-75 transition-opacity"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => setConfirmResetTags(false)}
+                        className="hover:text-fh-dark transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmResetTags(true)}
+                      className="mt-3 text-[11px] text-fh-muted-2 hover:text-fh-muted transition-colors"
+                    >
+                      Reset tags to defaults
+                    </button>
                   )}
                 </div>
               )}
