@@ -45,6 +45,33 @@ const DAMPING_DIAGNOSE = [
   { symptom: 'Car feels planted but slow to respond', fix: 'Reduce rebound slightly' },
 ]
 
+const CORNER_PHASES = [
+  {
+    phase: 'Braking',
+    sub: 'straight-line approach',
+    settings: 'Brake bias, brake pressure, front bump damping, front weight',
+    problems: 'Instability under braking, nose-diving, locking wheels',
+  },
+  {
+    phase: 'Turn-in',
+    sub: 'first steering input',
+    settings: 'Camber, caster, front rebound damping, deceleration diff lock, front ARB',
+    problems: 'Car won\'t rotate, turn-in feels dead or too sharp',
+  },
+  {
+    phase: 'Mid-corner',
+    sub: 'steady cornering load',
+    settings: 'ARBs (both), spring rates, ride height, aero downforce balance',
+    problems: 'Car drifts wide through the corner, inconsistent balance',
+  },
+  {
+    phase: 'Exit',
+    sub: 'power applied',
+    settings: 'Acceleration diff lock, rear springs/ARB, rear damping, rear toe',
+    problems: 'Rear steps out under throttle, car won\'t put power down cleanly',
+  },
+]
+
 const REGIONS: {
   name: string
   icon: string
@@ -229,6 +256,32 @@ export default function BuildsView() {
       {tab === 'fundamentals' && (
         <div className="flex flex-col gap-8 max-w-2xl">
 
+          {/* Go Deeper — resource callout */}
+          <div className="rounded-xl border border-fh-border bg-fh-panel px-5 py-4">
+            <div className="text-[11px] text-fh-muted uppercase tracking-wide font-semibold mb-2">Go Deeper</div>
+            <p className="text-sm text-fh-dark-2 leading-relaxed mb-3">
+              This section covers the concepts behind the build guides. For full in-depth breakdowns with specific values:
+            </p>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-fh-red/50 shrink-0 mt-1">—</span>
+                <p className="text-fh-dark-2 leading-relaxed">
+                  <a href="https://forza.guide" target="_blank" rel="noopener noreferrer" className="font-medium text-fh-dark underline underline-offset-2 hover:text-fh-red transition-colors">forza.guide</a>
+                  {' '}— the most practical FH6 tuning reference. Covers every slider with specific values, diagnostic rules,
+                  and a balance-first approach. First stop for any setting you want to go deeper on.
+                </p>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-fh-red/50 shrink-0 mt-1">—</span>
+                <p className="text-fh-dark-2 leading-relaxed">
+                  <a href="https://forzatune.com/guide/the-fully-updated-forza-tuning-guide/" target="_blank" rel="noopener noreferrer" className="font-medium text-fh-dark underline underline-offset-2 hover:text-fh-red transition-colors">ForzaTune Tuning Guide</a>
+                  {' '}— thorough walkthrough of every tuning category with telemetry-based methods for setting tire
+                  pressure and camber correctly.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* FH6 Meta Note */}
           <div className="rounded-xl border border-fh-amber/30 bg-fh-amber-pale px-5 py-4">
             <div className="text-[11px] text-fh-amber uppercase tracking-wide font-semibold mb-2">FH6 Meta Note</div>
@@ -238,6 +291,65 @@ export default function BuildsView() {
               and FH5 meta builds — creates inconsistent turn-in under trail-braking in FH6. Balanced spring rates with
               mild overall softness produce more consistent lap times, especially on FH6&apos;s rougher road surfaces.
               If a tune from a previous Forza game feels wrong, this is often why.
+            </p>
+          </div>
+
+          {/* Mechanical Balance */}
+          <div>
+            <h2 className="text-base font-semibold text-fh-dark mb-1">Mechanical Balance</h2>
+            <p className="text-sm text-fh-muted mb-4">
+              FH6 shows a Mechanical Balance reading in the tuning menu. It&apos;s one of the most useful tools the game
+              gives you and most new players ignore it.
+            </p>
+            <p className="text-sm text-fh-dark-2 leading-relaxed mb-4">
+              The number represents how grip is distributed between the front and rear of the car. Too high means the
+              rear has relatively more grip (oversteer tendency). Too low means the front has more grip (understeer tendency).
+            </p>
+            <div className="rounded-lg border border-fh-blue/20 bg-fh-blue-pale px-4 py-3 mb-4">
+              <div className="text-[11px] text-fh-blue uppercase tracking-wide mb-1">Target range</div>
+              <p className="text-sm text-fh-dark-2 leading-relaxed">
+                <span className="font-medium text-fh-dark">0.55–0.65.</span> Sweet spot: around <span className="font-medium text-fh-dark">0.60</span>.
+              </p>
+            </div>
+            <div className="text-[11px] text-fh-muted uppercase tracking-wide mb-2">How to use it</div>
+            <div className="flex flex-col gap-1.5">
+              {[
+                'If your car understeers → front has less grip than the rear → soften the front ARB, reduce front spring stiffness, or add front aero',
+                'If your car oversteers → rear has less grip → soften the rear ARB, reduce rear spring stiffness, or add rear aero',
+                'Always fix the weak end — don\'t stiffen the strong end to compensate',
+              ].map((note, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm">
+                  <span className="text-fh-red/50 shrink-0 mt-1">—</span>
+                  <p className="text-fh-dark-2 leading-relaxed">{note}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-fh-muted mt-3 leading-relaxed">
+              The Mechanical Balance number updates in real time as you adjust ARBs and springs. Use it as your guide
+              while making adjustments, not after.
+            </p>
+          </div>
+
+          {/* Fix the Weak End */}
+          <div>
+            <h2 className="text-base font-semibold text-fh-dark mb-1">Fix the Weak End</h2>
+            <p className="text-sm text-fh-muted mb-4">
+              Almost every handling problem comes down to one end of the car having less grip than the other.
+            </p>
+            <div className="flex flex-col gap-2 mb-4">
+              <div className="rounded-lg border border-fh-border bg-fh-panel px-4 py-3 flex gap-3">
+                <span className="text-sm font-medium text-fh-dark shrink-0 w-24 pt-0.5">Understeer</span>
+                <p className="text-sm text-fh-dark-2 leading-relaxed">Car won&apos;t turn, pushes wide → front has less grip → soften the front</p>
+              </div>
+              <div className="rounded-lg border border-fh-border bg-fh-panel px-4 py-3 flex gap-3">
+                <span className="text-sm font-medium text-fh-dark shrink-0 w-24 pt-0.5">Oversteer</span>
+                <p className="text-sm text-fh-dark-2 leading-relaxed">Rear steps out, car rotates too much → rear has less grip → soften the rear</p>
+              </div>
+            </div>
+            <p className="text-sm text-fh-dark-2 leading-relaxed">
+              The instinct is to stiffen the other end to compensate. This works temporarily but makes the car less
+              predictable and harder to drive at the limit. Adding grip to the weak end is more consistent and easier
+              to build on. This rule applies to ARBs, springs, and tire compound choices.
             </p>
           </div>
 
@@ -294,6 +406,36 @@ export default function BuildsView() {
             </p>
           </div>
 
+          {/* Four Phases of a Corner */}
+          <div>
+            <h2 className="text-base font-semibold text-fh-dark mb-1">Diagnosing Corner Problems</h2>
+            <p className="text-sm text-fh-muted mb-4">
+              A corner isn&apos;t one event — it&apos;s four. Different settings dominate each phase. When something
+              feels wrong, identify which phase the problem happens in first. That tells you exactly which settings to adjust.
+            </p>
+            <div className="flex flex-col gap-2">
+              {CORNER_PHASES.map(({ phase, sub, settings, problems }, i) => (
+                <div key={phase} className="rounded-lg border border-fh-border bg-fh-panel px-4 py-3">
+                  <div className="flex items-baseline gap-2 mb-1.5">
+                    <span className="text-fh-red/60 font-mono text-xs shrink-0">{i + 1}.</span>
+                    <span className="text-sm font-semibold text-fh-dark">{phase}</span>
+                    <span className="text-xs text-fh-muted">{sub}</span>
+                  </div>
+                  <p className="text-xs text-fh-muted leading-relaxed mb-0.5">
+                    <span className="text-fh-dark-2">Settings:</span> {settings}
+                  </p>
+                  <p className="text-xs text-fh-muted leading-relaxed">
+                    <span className="text-fh-dark-2">Problems:</span> {problems}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-fh-muted mt-3 leading-relaxed">
+              Most tuning guides give you values. This framework tells you where to look when those values don&apos;t
+              feel right on your specific car.
+            </p>
+          </div>
+
           {/* Damping Basics */}
           <div>
             <h2 className="text-base font-semibold text-fh-dark mb-1">Damping Basics</h2>
@@ -318,11 +460,11 @@ export default function BuildsView() {
               </div>
             </div>
             <div className="rounded-lg border border-fh-blue/20 bg-fh-blue-pale px-4 py-3 mb-4">
-              <div className="text-[11px] text-fh-blue uppercase tracking-wide mb-1">Starting point — mid-weight tarmac car</div>
+              <div className="text-[11px] text-fh-blue uppercase tracking-wide mb-1">Starting point — mid-weight tarmac car (FH6 slider range 1–20)</div>
               <p className="text-sm text-fh-dark-2 leading-relaxed">
-                Rebound: <span className="font-medium text-fh-dark">8–11</span> (your anchor value). Bump:{' '}
-                <span className="font-medium text-fh-dark">50–75% of your rebound value</span> — if rebound is 10,
-                bump starts at 5–7. Heavier cars (muscle, GT) typically need higher rebound; off-road builds stay near
+                Rebound: <span className="font-medium text-fh-dark">13–16</span> (your anchor value). Bump:{' '}
+                <span className="font-medium text-fh-dark">40–55% of your rebound value</span> — if rebound is 14,
+                bump starts at 5–8. Heavier cars (muscle, GT) typically need higher rebound; off-road builds stay near
                 the soft end.
               </p>
             </div>
@@ -346,6 +488,53 @@ export default function BuildsView() {
               balance instead.
             </p>
           </div>
+
+          {/* Caster */}
+          <div>
+            <h2 className="text-base font-semibold text-fh-dark mb-1">Caster</h2>
+            <p className="text-sm text-fh-muted mb-4">
+              The angle of the steering axis viewed from the side of the car. Higher caster increases steering
+              self-centering and generates more dynamic camber under cornering load — the wheel leans further into the
+              corner, adding grip.
+            </p>
+            <p className="text-sm text-fh-dark-2 leading-relaxed mb-4">
+              It&apos;s one of the most overlooked alignment settings because it&apos;s less intuitive than camber, but
+              it has a meaningful effect on how the car feels through high-speed corners.
+            </p>
+            <div className="rounded-lg border border-fh-blue/20 bg-fh-blue-pale px-4 py-3 mb-3">
+              <div className="text-[11px] text-fh-blue uppercase tracking-wide mb-1">Starting point — road race builds</div>
+              <p className="text-sm text-fh-dark-2 leading-relaxed">
+                <span className="font-medium text-fh-dark">5.5° to 6.5°.</span> Higher caster (toward 7°) suits cars with lighter
+                steering feel that need more self-centering. Lower caster suits heavier cars or builds where steering weight is
+                already high.
+              </p>
+            </div>
+            <p className="text-xs text-fh-muted leading-relaxed">
+              In most cases, set caster once based on the car&apos;s weight class and leave it. It rarely needs adjustment
+              between builds on the same car.
+            </p>
+          </div>
+
+          {/* FWD Brake Bias */}
+          <div>
+            <h2 className="text-base font-semibold text-fh-dark mb-1">FWD Brake Bias</h2>
+            <p className="text-sm text-fh-muted mb-4">
+              FWD cars need significantly more front brake bias than RWD or AWD. The default 50% balance leaves real
+              stopping performance unused on front-wheel drive.
+            </p>
+            <div className="rounded-lg border border-fh-blue/20 bg-fh-blue-pale px-4 py-3 mb-3">
+              <div className="text-[11px] text-fh-blue uppercase tracking-wide mb-1">Starting point for FWD</div>
+              <p className="text-sm text-fh-dark-2 leading-relaxed">
+                <span className="font-medium text-fh-dark">55–62% front bias.</span>
+              </p>
+            </div>
+            <p className="text-xs text-fh-muted leading-relaxed">
+              One of the most commonly missed adjustments on hot hatches and compact FWD sports cars. If a FWD car feels
+              like it can&apos;t brake hard enough, or slides under braking rather than stopping cleanly, check the brake
+              bias first.
+            </p>
+          </div>
+
         </div>
       )}
 
