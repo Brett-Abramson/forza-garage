@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-import { PI_CLASS_ORDER, PI_CLASS_COLORS } from '@/types/car'
+import { PI_CLASS_COLORS } from '@/types/car'
 import { FujiSvg, BlossomSvg, ToriiSvg } from '@/components/JapanDecor'
 import { getRandomFeaturedCar } from '@/lib/featuredCars'
 import { RACE_TYPES } from '@/lib/races'
@@ -58,21 +58,18 @@ async function getGarageStats(userId: string) {
 
 async function UserDashboard({
   userId,
+  carCount,
   featured,
   featuredCarUrl,
   featuredRaceName,
 }: {
   userId: string
+  carCount: number
   featured: ReturnType<typeof getRandomFeaturedCar>
   featuredCarUrl: string
   featuredRaceName: string | null
 }) {
   const stats = await getGarageStats(userId)
-
-  const classMap: Record<string, number> = {}
-  for (const row of stats.byClass) {
-    classMap[row.piClass] = Number(row._count_id)
-  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start">
@@ -101,14 +98,10 @@ async function UserDashboard({
                 <span className="text-xs font-bold uppercase tracking-wide">Car Database</span>
                 <span className="text-xs text-fh-red">→</span>
               </div>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {PI_CLASS_ORDER.filter((cls) => classMap[cls]).reverse().map((cls) => (
-                  <span key={cls} className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[cls] ?? 'bg-gray-600 text-white'}`}>
-                    {classMap[cls]}
-                  </span>
-                ))}
-              </div>
-              <span className="text-xs text-fh-muted">owned by class</span>
+              <span className="text-3xl font-bold text-fh-dark">{carCount}</span>
+              <span className="text-xs text-fh-muted">
+                {carCount} cars · {stats.total} owned
+              </span>
             </Link>
           </div>
         </section>
@@ -322,6 +315,7 @@ export default async function LandingPage() {
           <Suspense fallback={<DashboardSkeleton />}>
             <UserDashboard
               userId={userId}
+              carCount={carCount}
               featured={featured}
               featuredCarUrl={featuredCarUrl}
               featuredRaceName={featuredRaceName}
