@@ -80,20 +80,9 @@ export default function GarageView({ initialCars }: Props) {
   const [selectedRace, setSelectedRace] = useState<string | null>(
     searchParams.get('race') ?? null
   )
-  const [displayedRaceId, setDisplayedRaceId] = useState<string | null>(
-    searchParams.get('race') ?? null
-  )
-
-  // Keep the race tray content visible while it animates out
-  useEffect(() => { if (selectedRace) setDisplayedRaceId(selectedRace) }, [selectedRace])
-
   const activeRace = useMemo(
     () => RACE_TYPES.find((r) => r.id === selectedRace) ?? null,
     [selectedRace]
-  )
-  const displayedRace = useMemo(
-    () => RACE_TYPES.find((r) => r.id === displayedRaceId) ?? null,
-    [displayedRaceId]
   )
 
   const options = useMemo(() => buildOptions(cars), [cars])
@@ -384,76 +373,60 @@ export default function GarageView({ initialCars }: Props) {
             )}
           </div>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {RACE_TYPES.map((race) => (
-              <button
-                key={race.id}
-                onClick={() => toggleRace(race.id)}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  selectedRace === race.id
-                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                    : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark-2'
-                }`}
-              >
-                <span>{race.icon}</span>
-                {race.name}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+          <>
+            {/* Pills + inline description in one stable row — no layout shift */}
+            <div className="flex items-start gap-4">
+              <div className="flex flex-wrap gap-2">
+                {RACE_TYPES.map((race) => (
+                  <button
+                    key={race.id}
+                    onClick={() => toggleRace(race.id)}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                      selectedRace === race.id
+                        ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                        : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark-2'
+                    }`}
+                  >
+                    <span>{race.icon}</span>
+                    {race.name}
+                  </button>
+                ))}
+              </div>
 
-      {/* Race tray — slides in when a race pill is active */}
-      <div className={`grid transition-all duration-300 ease-in-out ${selectedRace ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-        <div className="overflow-hidden">
-          {displayedRace && (
-            <div className="pb-2">
-              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg leading-none">{displayedRace.icon}</span>
-                    <span className="text-sm font-semibold text-amber-300">{displayedRace.name}</span>
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-900/40 text-amber-400 border border-amber-500/20">
-                      {displayedRace.surface}
+              {/* Desktop inline description — never expands the row height */}
+              {activeRace && (
+                <div className="hidden md:flex flex-col gap-1.5 shrink-0 max-w-xs border-l border-amber-500/20 pl-4">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-semibold text-amber-300">
+                      {activeRace.icon} {activeRace.name}
+                    </span>
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-900/30 text-amber-400/80">
+                      {activeRace.surface}
                     </span>
                   </div>
-                  <button
-                    onClick={() => setSelectedRace(null)}
-                    aria-label="Close race tray"
-                    className="shrink-0 text-fh-muted hover:text-fh-dark-2 transition-colors"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <ul className="space-y-1">
-                    {displayedRace.demands.map((d) => (
-                      <li key={d} className="flex items-start gap-1.5 text-xs text-fh-dark-2">
-                        <span className="text-amber-500 mt-0.5 shrink-0">▸</span>
-                        {d}
+                  <ul className="space-y-0.5">
+                    {activeRace.demands.slice(0, 3).map((d) => (
+                      <li key={d} className="flex items-start gap-1 text-[11px] text-fh-muted leading-snug">
+                        <span className="text-amber-500/60 mt-px shrink-0">▸</span>
+                        <span>{d}</span>
                       </li>
                     ))}
                   </ul>
-                  <div>
-                    <p className="text-[10px] text-fh-muted uppercase tracking-wide mb-1.5">Filtering by</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {displayedRace.recommendedTags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/15 text-amber-400 border border-amber-500/30"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
                 </div>
-              </div>
+              )}
             </div>
-          )}
-        </div>
+
+            {/* Mobile: compact single-line description — replaces the full accordion */}
+            {activeRace && (
+              <div className="md:hidden flex items-center gap-1.5 mt-2 text-xs">
+                <span>{activeRace.icon}</span>
+                <span className="font-medium text-amber-300">{activeRace.name}</span>
+                <span className="text-amber-500/30 select-none">·</span>
+                <span className="text-fh-muted">{activeRace.surface}</span>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Results */}

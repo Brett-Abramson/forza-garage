@@ -252,12 +252,14 @@ describe('GarageShowcase — race filter', () => {
     expect(screen.getByText('Jimmy')).toBeInTheDocument()
   })
 
-  it('race tray slides in when a race pill is selected', async () => {
+  it('inline description appears when a race pill is selected', async () => {
     const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
+    renderShowcase(mockCars)
     await user.click(screen.getByRole('button', { name: 'Race type' }))
     await user.click(screen.getByRole('button', { name: /Road Racing/i }))
-    expect(container.querySelector('.grid-rows-\\[1fr\\]')).toBeTruthy()
+    // The description panel renders the surface label (both desktop and mobile
+    // variants are in the DOM — at least one must exist).
+    expect(screen.getAllByText(/Asphalt/i).length).toBeGreaterThan(0)
   })
 })
 
