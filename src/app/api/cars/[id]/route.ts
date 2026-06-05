@@ -53,7 +53,10 @@ export async function PATCH(
   }
 
   // ── Stat / spec updates ───────────────────────────────────────────────────
-  // Stats are shared (not per-user), so no auth required here.
+  // SECURITY AUDIT (found during API auth test writing): stat updates previously
+  // had no auth check on the grounds that stats are shared/crowd-sourced data.
+  // That reasoning doesn't justify allowing anonymous writes — any unauthenticated
+  // request could corrupt car stats for all users. Auth is now required.
   const statUpdates: Record<string, unknown> = {}
   for (const field of CAR_STAT_FIELDS) {
     if (field in body) {
@@ -62,6 +65,9 @@ export async function PATCH(
   }
 
   if (Object.keys(statUpdates).length > 0) {
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const updated = await prisma.car.update({
       where: { id: carId },
       data: statUpdates,
