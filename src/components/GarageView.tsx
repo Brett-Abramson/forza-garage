@@ -272,18 +272,6 @@ export default function GarageView({ initialCars }: Props) {
         </div>
       </div>
 
-      {/* Active filter badge */}
-      {activeFilterCount > 0 && (
-        <div className="flex">
-          <button
-            onClick={clearAllFilters}
-            className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red hover:opacity-80 transition-opacity whitespace-nowrap"
-          >
-            {activeFilterCount} active · clear
-          </button>
-        </div>
-      )}
-
       {/* Division group filter */}
       <DivisionGroupFilter
         selectedGroupId={selectedGroupId}
@@ -344,6 +332,15 @@ export default function GarageView({ initialCars }: Props) {
           >
             Race type
           </button>
+          {/* Inline clear — only appears when something is active, no layout shift */}
+          {activeFilterCount > 0 && (
+            <button
+              onClick={clearAllFilters}
+              className="ml-auto text-xs text-fh-muted hover:text-fh-dark-2 transition-colors"
+            >
+              Clear all
+            </button>
+          )}
         </div>
 
         {filterMode === 'tags' ? (
@@ -389,6 +386,14 @@ export default function GarageView({ initialCars }: Props) {
                   >
                     <span>{race.icon}</span>
                     {race.name}
+                    {selectedRace === race.id && (
+                      <span
+                        aria-label={`Clear ${race.name} filter`}
+                        className="ml-0.5 opacity-60 hover:opacity-100"
+                      >
+                        ×
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>

@@ -134,9 +134,9 @@ describe('GarageShowcase — tag filter chips', () => {
     renderShowcase(mockCars)
     expect(screen.queryByRole('button', { name: /clear/i })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'technical' }))
-    // Both the tag-chip "✕ clear" and the active filter badge should appear
+    // Tag-chip "✕ clear" appears; the inline "Clear all" link also appears
     expect(screen.getByRole('button', { name: /✕ clear/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /active · clear/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /clear all/i })).toBeInTheDocument()
   })
 
   it('clear pill removes all tag filters and shows all cars', async () => {
