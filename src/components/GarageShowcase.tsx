@@ -926,7 +926,8 @@ export default function GarageShowcase({ initialCars }: Props) {
         ) : (
           <>
             {/* Pills + inline description in one stable row — no layout shift */}
-            <div className="flex items-start gap-4">
+            {/* Relative wrapper so the floating panel anchors above the pills row */}
+            <div className="relative">
               <div className="flex flex-wrap gap-2">
                 {RACE_TYPES.map((race) => (
                   <button
@@ -944,30 +945,40 @@ export default function GarageShowcase({ initialCars }: Props) {
                 ))}
               </div>
 
-              {/* Desktop inline description — never expands the row height */}
+              {/*
+                Desktop floating description — absolutely positioned above the pills row.
+                Out of document flow so the car list never moves.
+                Grows upward from bottom: 100% of the pills wrapper.
+              */}
               {activeRace && (
-                <div className="hidden md:flex flex-col gap-1.5 shrink-0 max-w-xs border-l border-amber-500/20 pl-4">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-semibold text-amber-300">
-                      {activeRace.icon} {activeRace.name}
-                    </span>
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-900/30 text-amber-400/80">
-                      {activeRace.surface}
-                    </span>
+                <div className="hidden md:block absolute right-0 bottom-full mb-2 w-72 z-10
+                                rounded-xl border border-amber-500/30 bg-fh-panel shadow-lg">
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 flex-wrap mb-3">
+                      <span className="text-sm font-semibold text-amber-300">
+                        {activeRace.icon} {activeRace.name}
+                      </span>
+                      {/* Surface badge — theme-aware for light/dark contrast */}
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded
+                                       bg-amber-100 text-amber-900
+                                       dark:bg-amber-900/40 dark:text-amber-400">
+                        {activeRace.surface}
+                      </span>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {activeRace.demands.map((d) => (
+                        <li key={d} className="flex items-start gap-1.5 text-xs text-fh-dark-2 leading-snug">
+                          <span className="text-amber-500 mt-0.5 shrink-0">▸</span>
+                          <span>{d}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <ul className="space-y-0.5">
-                    {activeRace.demands.slice(0, 3).map((d) => (
-                      <li key={d} className="flex items-start gap-1 text-[11px] text-fh-muted leading-snug">
-                        <span className="text-amber-500/60 mt-px shrink-0">▸</span>
-                        <span>{d}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               )}
             </div>
 
-            {/* Mobile: compact single-line description — replaces the full accordion */}
+            {/* Mobile: compact single-line description below the pills */}
             {activeRace && (
               <div className="md:hidden flex items-center gap-1.5 mt-2 text-xs">
                 <span>{activeRace.icon}</span>
