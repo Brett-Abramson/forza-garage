@@ -496,7 +496,7 @@ export default function GarageShowcase({ initialCars }: Props) {
   )
   const [sort, setSort] = useState<SortState>({ key: 'addedAt', dir: 'desc' })
   const [filterMode, setFilterMode] = useState<FilterMode>(
-    (searchParams.get('mode') as FilterMode) ?? 'tags'
+    (searchParams.get('mode') as FilterMode) ?? 'race'
   )
   const [selectedTags, setSelectedTags] = useState<Set<string>>(
     () => new Set((searchParams.get('tags')?.split(',') ?? []).filter((t) => ALL_TAGS.has(t)))
@@ -541,7 +541,7 @@ export default function GarageShowcase({ initialCars }: Props) {
     if (filters.source) params.set('src', filters.source)
     if (selectedTags.size > 0) params.set('tags', [...selectedTags].sort().join(','))
     if (selectedRace) params.set('race', selectedRace)
-    if (filterMode !== 'tags') params.set('mode', filterMode)
+    if (filterMode !== 'race') params.set('mode', filterMode)
     if (view !== 'table') params.set('view', view)
     const qs = params.toString()
     const timer = setTimeout(() => {

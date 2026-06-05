@@ -82,8 +82,15 @@ beforeEach(() => {
 // ─── Tag filter chips ─────────────────────────────────────────────────────────
 
 describe('GarageShowcase — tag filter chips', () => {
-  it('renders all CAR_TAGS as filter chips', () => {
+  // Default mode is now Race type — switch to Tags mode before testing tag chips.
+  async function switchToTags(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole('button', { name: 'Tags' }))
+  }
+
+  it('renders all CAR_TAGS as filter chips when in Tags mode', async () => {
+    const user = userEvent.setup()
     renderShowcase(mockCars)
+    await switchToTags(user)
     expect(screen.getByRole('button', { name: 'grip' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'drift' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'offroad' })).toBeInTheDocument()
@@ -92,6 +99,7 @@ describe('GarageShowcase — tag filter chips', () => {
   it('selecting a tag hides cars that do not have it', async () => {
     const user = userEvent.setup()
     renderShowcase(mockCars)
+    await switchToTags(user)
     // 'technical' is only on 911 GT3 (Modern Sports Cars); Silvia and Jimmy don't have it
     await user.click(screen.getByRole('button', { name: 'technical' }))
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
@@ -102,6 +110,7 @@ describe('GarageShowcase — tag filter chips', () => {
   it('selecting multiple tags applies AND logic', async () => {
     const user = userEvent.setup()
     renderShowcase(mockCars)
+    await switchToTags(user)
     // asphalt: 911 GT3 + Silvia. Adding 'technical' narrows to 911 GT3 only.
     await user.click(screen.getByRole('button', { name: 'asphalt' }))
     await user.click(screen.getByRole('button', { name: 'technical' }))
@@ -113,6 +122,7 @@ describe('GarageShowcase — tag filter chips', () => {
   it('active tag chip gets highlighted styles', async () => {
     const user = userEvent.setup()
     renderShowcase(mockCars)
+    await switchToTags(user)
     const chip = screen.getByRole('button', { name: 'technical' })
     await user.click(chip)
     expect(chip.className).toContain('text-fh-red')
@@ -121,6 +131,7 @@ describe('GarageShowcase — tag filter chips', () => {
   it('clicking an active tag chip deselects it and restores cars', async () => {
     const user = userEvent.setup()
     renderShowcase(mockCars)
+    await switchToTags(user)
     const chip = screen.getByRole('button', { name: 'technical' })
     await user.click(chip)
     await user.click(chip)
@@ -132,7 +143,7 @@ describe('GarageShowcase — tag filter chips', () => {
   it('clear pill appears when a tag is selected', async () => {
     const user = userEvent.setup()
     renderShowcase(mockCars)
-    expect(screen.queryByRole('button', { name: /clear/i })).not.toBeInTheDocument()
+    await switchToTags(user)
     await user.click(screen.getByRole('button', { name: 'technical' }))
     // Tag-chip "✕ clear" appears; the inline "Clear all" link also appears
     expect(screen.getByRole('button', { name: /✕ clear/i })).toBeInTheDocument()
@@ -142,6 +153,7 @@ describe('GarageShowcase — tag filter chips', () => {
   it('clear pill removes all tag filters and shows all cars', async () => {
     const user = userEvent.setup()
     renderShowcase(mockCars)
+    await switchToTags(user)
     await user.click(screen.getByRole('button', { name: 'technical' }))
     await user.click(screen.getByRole('button', { name: /✕ clear/i }))
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
@@ -176,33 +188,31 @@ describe('GarageShowcase — PI class chips', () => {
 // ─── Filter mode toggle ───────────────────────────────────────────────────────
 
 describe('GarageShowcase — filter mode toggle', () => {
-  it('defaults to tags mode — tag chips are visible', () => {
+  it('defaults to Race type mode — race pills are visible', () => {
     renderShowcase(mockCars)
-    expect(screen.getByRole('button', { name: 'grip' })).toBeInTheDocument()
-  })
-
-  it('switching to Race type mode shows race pills', async () => {
-    const user = userEvent.setup()
-    renderShowcase(mockCars)
-    await user.click(screen.getByRole('button', { name: 'Race type' }))
     for (const race of RACE_TYPES) {
       expect(screen.getByRole('button', { name: new RegExp(race.name, 'i') })).toBeInTheDocument()
     }
   })
 
-  it('switching to Race type mode hides tag chips', async () => {
-    const user = userEvent.setup()
+  it('race type mode hides tag chips', () => {
     renderShowcase(mockCars)
-    await user.click(screen.getByRole('button', { name: 'Race type' }))
     expect(screen.queryByRole('button', { name: 'grip' })).not.toBeInTheDocument()
   })
 
-  it('switching back to Tags mode shows tag chips again', async () => {
+  it('switching to Tags mode shows tag chips', async () => {
     const user = userEvent.setup()
     renderShowcase(mockCars)
-    await user.click(screen.getByRole('button', { name: 'Race type' }))
     await user.click(screen.getByRole('button', { name: 'Tags' }))
     expect(screen.getByRole('button', { name: 'grip' })).toBeInTheDocument()
+  })
+
+  it('switching back to Race type mode hides tag chips again', async () => {
+    const user = userEvent.setup()
+    renderShowcase(mockCars)
+    await user.click(screen.getByRole('button', { name: 'Tags' }))
+    await user.click(screen.getByRole('button', { name: 'Race type' }))
+    expect(screen.queryByRole('button', { name: 'grip' })).not.toBeInTheDocument()
   })
 
   it('switching to Tags mode clears the active race', async () => {
@@ -280,6 +290,7 @@ describe('GarageShowcase — car count', () => {
   it('count updates when a tag filter is applied', async () => {
     const user = userEvent.setup()
     renderShowcase(mockCars)
+    await user.click(screen.getByRole('button', { name: 'Tags' }))
     await user.click(screen.getByRole('button', { name: 'technical' }))
     expect(screen.getAllByText(byCount(/showing 1/i))[0]).toBeInTheDocument()
   })
@@ -287,6 +298,7 @@ describe('GarageShowcase — car count', () => {
   it('shows singular "car" when exactly one result', async () => {
     const user = userEvent.setup()
     renderShowcase(mockCars)
+    await user.click(screen.getByRole('button', { name: 'Tags' }))
     await user.click(screen.getByRole('button', { name: 'technical' }))
     // "Showing 1 of 3 cars" — check the count is 1 and "cars" (plural) is not shown alone
     const countEl = screen.getAllByText(byCount(/showing 1/i))[0]
@@ -453,8 +465,9 @@ describe('GarageShowcase — expanded row tuning content', () => {
 // ─── URL param tag init ────────────────────────────────────────────────────────
 
 describe('GarageShowcase — URL param tag init', () => {
-  it('pre-activates tag chips from ?tags= URL param', () => {
-    vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=technical') as ReturnType<typeof useSearchParams>)
+  it('pre-activates tag chips from ?tags= URL param when mode=tags', () => {
+    // mode=tags required: default is now 'race', tag chips are hidden otherwise
+    vi.mocked(useSearchParams).mockReturnValueOnce(new URLSearchParams('tags=technical&mode=tags') as ReturnType<typeof useSearchParams>)
     renderShowcase(mockCars)
     const chip = screen.getByRole('button', { name: 'technical' })
     expect(chip.className).toContain('text-fh-red')

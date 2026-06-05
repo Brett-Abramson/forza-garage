@@ -75,7 +75,7 @@ export default function GarageView({ initialCars }: Props) {
     () => new Set((searchParams.get('tags')?.split(',') ?? []).filter((t) => ALL_TAGS.has(t)))
   )
   const [filterMode, setFilterMode] = useState<FilterMode>(
-    (searchParams.get('mode') as FilterMode) ?? 'tags'
+    (searchParams.get('mode') as FilterMode) ?? 'race'
   )
   const [selectedRace, setSelectedRace] = useState<string | null>(
     searchParams.get('race') ?? null
@@ -130,7 +130,7 @@ export default function GarageView({ initialCars }: Props) {
     if (filters.owned !== 'all') params.set('owned', filters.owned)
     if (selectedTags.size > 0) params.set('tags', [...selectedTags].sort().join(','))
     if (selectedRace) params.set('race', selectedRace)
-    if (filterMode !== 'tags') params.set('mode', filterMode)
+    if (filterMode !== 'race') params.set('mode', filterMode)
     if (view !== 'grid') params.set('view', view)
     const qs = params.toString()
     const timer = setTimeout(() => {
