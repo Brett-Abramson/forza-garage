@@ -15,7 +15,7 @@ import { splitTagsBySource, getAutoTags } from '@/lib/autotags'
 import { RACE_TYPES } from '@/lib/races'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
 import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
-import { getDivisionsForGroup } from '@/lib/divisionGroups'
+import { filterCars, DEFAULT_FILTERS } from '@/lib/filterCars'
 import GarageDrawer from './GarageDrawer'
 import DivisionGroupFilter from './DivisionGroupFilter'
 import StatBars from './StatBars'
@@ -79,16 +79,7 @@ function buildOptions(cars: Car[]) {
   }
 }
 
-const DEFAULT_FILTERS: FilterState = {
-  search: '',
-  piClass: '',
-  division: '',
-  make: '',
-  drivetrain: '',
-  country: '',
-  source: '',
-  owned: 'all',
-}
+// DEFAULT_FILTERS is re-exported from filterCars — imported above.
 
 // ─── Inline expansion row for list view ──────────────────────────────────────
 
@@ -616,41 +607,10 @@ export default function GarageShowcase({ initialCars }: Props) {
     [cars]
   )
 
-  const filteredCars = useMemo(() => {
-    return cars.filter((car) => {
-      if (filters.search) {
-        const haystack = `${car.year} ${car.make} ${car.model} ${car.division}`.toLowerCase()
-        const tokens = filters.search.toLowerCase().trim().split(/\s+/)
-        if (!tokens.every((t) => haystack.includes(t))) return false
-      }
-      if (filters.piClass && car.piClass !== filters.piClass) return false
-      if (selectedGroupId) {
-        const groupDivisions = getDivisionsForGroup(selectedGroupId)
-        if (filters.division) {
-          if (car.division !== filters.division) return false
-        } else {
-          if (!groupDivisions.includes(car.division)) return false
-        }
-      } else if (filters.division) {
-        if (car.division !== filters.division) return false
-      }
-      if (filters.make && car.make !== filters.make) return false
-      if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false
-      if (filters.country && car.country !== filters.country) return false
-      if (filters.source && !car.source.includes(filters.source)) return false
-      // Race filter: OR — car matches any of the recommended tags
-      if (activeRace) {
-        const carTags = car.tags ?? []
-        if (!activeRace.recommendedTags.some((t) => carTags.includes(t))) return false
-      }
-      // Tag filter: AND — car must have every selected tag
-      if (selectedTags.size > 0) {
-        const carTags = car.tags ?? []
-        if (![...selectedTags].every((t) => carTags.includes(t))) return false
-      }
-      return true
-    })
-  }, [cars, filters, activeRace, selectedGroupId, selectedTags])
+  const filteredCars = useMemo(
+    () => filterCars(cars, { filters, selectedGroupId, selectedTags, activeRace }),
+    [cars, filters, activeRace, selectedGroupId, selectedTags]
+  )
 
   const sortedCars = useMemo(() => {
     const copy = [...filteredCars]

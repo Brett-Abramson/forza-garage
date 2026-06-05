@@ -12,7 +12,7 @@ import FilterBar from './FilterBar'
 import DivisionGroupFilter from './DivisionGroupFilter'
 import GarageDrawer from './GarageDrawer'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
-import { getDivisionsForGroup } from '@/lib/divisionGroups'
+import { filterCars, DEFAULT_FILTERS } from '@/lib/filterCars'
 import BackToTop from './BackToTop'
 
 type ViewMode = 'grid' | 'table'
@@ -38,16 +38,7 @@ function buildOptions(cars: Car[]) {
 
 const ALL_TAGS = new Set<string>(CAR_TAGS)
 
-const DEFAULT_FILTERS: FilterState = {
-  search: '',
-  piClass: '',
-  division: '',
-  make: '',
-  drivetrain: '',
-  country: '',
-  source: '',
-  owned: 'all',
-}
+// DEFAULT_FILTERS is re-exported from filterCars — imported above.
 
 export default function GarageView({ initialCars }: Props) {
   const searchParams = useSearchParams()
@@ -138,39 +129,10 @@ export default function GarageView({ initialCars }: Props) {
     selectedGroupId, selectedTags, view,
   ])
 
-  const filteredCars = useMemo(() => {
-    return cars.filter((car) => {
-      if (filters.search) {
-        const haystack = `${car.year} ${car.make} ${car.model} ${car.division}`.toLowerCase()
-        const tokens = filters.search.toLowerCase().trim().split(/\s+/)
-        if (!tokens.every((t) => haystack.includes(t))) return false
-      }
-      if (filters.piClass && car.piClass !== filters.piClass) return false
-      // Group + division filter
-      if (selectedGroupId) {
-        const groupDivisions = getDivisionsForGroup(selectedGroupId)
-        if (filters.division) {
-          if (car.division !== filters.division) return false
-        } else {
-          if (!groupDivisions.includes(car.division)) return false
-        }
-      } else if (filters.division) {
-        if (car.division !== filters.division) return false
-      }
-      if (filters.make && car.make !== filters.make) return false
-      if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false
-      if (filters.country && car.country !== filters.country) return false
-      if (filters.source && !car.source.includes(filters.source)) return false
-      if (filters.owned === 'owned' && !car.owned) return false
-      if (filters.owned === 'not-owned' && car.owned) return false
-      // Tag filter — AND logic; non-owned cars have no tags so they won't match
-      if (selectedTags.size > 0) {
-        const carTags = car.tags ?? []
-        if (![...selectedTags].every((t) => carTags.includes(t))) return false
-      }
-      return true
-    })
-  }, [cars, filters, selectedGroupId, selectedTags])
+  const filteredCars = useMemo(
+    () => filterCars(cars, { filters, selectedGroupId, selectedTags }),
+    [cars, filters, selectedGroupId, selectedTags]
+  )
 
   const sortedCars = useMemo(() => {
     const copy = [...filteredCars]
