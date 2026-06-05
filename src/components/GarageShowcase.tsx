@@ -5,6 +5,7 @@ import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
 import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS, SOURCE_CHIPS } from '@/types/car'
 import { SortKey, SortDir, compareRows, defaultSort, formatAddedAt } from '@/lib/sort'
+import { buildCsvString, csvFilename } from '@/lib/exportCsv'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
 import FilterBar from './FilterBar'
@@ -28,36 +29,15 @@ type ViewMode = 'grid' | 'table'
 type FilterMode = 'tags' | 'race'
 
 // ─── CSV export ───────────────────────────────────────────────────────────────
-
-function csvCell(value: string | number | null | undefined): string {
-  if (value === null || value === undefined) return ''
-  const str = String(value)
-  // Sanitise against spreadsheet formula injection (=, +, -, @)
-  const sanitised = /^[=+\-@]/.test(str) ? `'${str}` : str
-  // Wrap in quotes if value contains comma, quote, or newline
-  return /[,"\n]/.test(sanitised) ? `"${sanitised.replace(/"/g, '""')}"` : sanitised
-}
+// Pure logic lives in src/lib/exportCsv.ts — only the browser trigger is here.
 
 function triggerCsvDownload(cars: Car[]) {
-  const headers = ['Year', 'Make', 'Model', 'Division', 'Class', 'PI', 'Country', 'Value (Cr)']
-  const rows = cars.map((c) => [
-    csvCell(c.year),
-    csvCell(c.make),
-    csvCell(c.model),
-    csvCell(c.division),
-    csvCell(c.piClass),
-    csvCell(c.piRating),
-    csvCell(c.country),
-    csvCell(c.value ?? ''),
-  ].join(','))
-
-  const csv = [headers.join(','), ...rows].join('\n')
+  const csv = buildCsvString(cars)
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
-  const today = new Date().toISOString().slice(0, 10)
   const a = document.createElement('a')
   a.href = url
-  a.download = `forza-garage-${today}.csv`
+  a.download = csvFilename()
   a.click()
   URL.revokeObjectURL(url)
 }
