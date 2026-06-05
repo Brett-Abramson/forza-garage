@@ -78,17 +78,18 @@ describe('getRaceFilterUrl', () => {
     expect(getRaceFilterUrl('unknown')).toBe('/garage')
   })
 
-  it('returns a URL starting with /garage?tags= for a known race', () => {
-    const url = getRaceFilterUrl('road')
-    expect(url.startsWith('/garage?tags=')).toBe(true)
+  it('returns /garage?mode=race&race=<id> for a known race', () => {
+    expect(getRaceFilterUrl('road')).toBe('/garage?mode=race&race=road')
+    expect(getRaceFilterUrl('dirt')).toBe('/garage?mode=race&race=dirt')
   })
 
-  it('includes all recommendedTags for the road race', () => {
-    const road = RACE_TYPES.find((r) => r.id === 'road')!
+  it('uses the race id (not tags) so the garage activates OR/inclusion logic', () => {
+    // The garage reads ?race=<id> and filters via activeRace.recommendedTags.some()
+    // The old ?tags= approach used AND logic and returned 0 results.
     const url = getRaceFilterUrl('road')
-    const tagsPart = url.replace('/garage?tags=', '')
-    const urlTags = tagsPart.split(',')
-    expect(urlTags).toEqual(road.recommendedTags)
+    expect(url).not.toContain('tags=')
+    expect(url).toContain('mode=race')
+    expect(url).toContain('race=road')
   })
 
   it('produces a distinct URL for each race type', () => {

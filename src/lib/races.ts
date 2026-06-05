@@ -187,11 +187,18 @@ export const RACE_TYPES: RaceType[] = [
   },
 ]
 
-// Helper — given a race type id, returns the recommended tags as a query string
-// Usage: /garage?tags=asphalt,grip,tight
+/**
+ * Returns the /garage URL that activates the race-type filter for the given race.
+ *
+ * Uses ?mode=race&race=<id> — the same parameters the garage writes to the URL
+ * when a user manually clicks a race type pill. This triggers OR/inclusion logic
+ * (a car matches if it has ANY of the race's recommendedTags), unlike the tag
+ * chips which use AND logic (car must have ALL selected tags).
+ *
+ * The old implementation used ?tags=asphalt,grip,... which applied AND logic and
+ * returned 0 results because no car has every tag simultaneously.
+ */
 export function getRaceFilterUrl(raceId: string): string {
-  const race = RACE_TYPES.find((r) => r.id === raceId)
-  if (!race) return "/garage"
-  const tags = race.recommendedTags.join(",")
-  return `/garage?tags=${tags}`
+  if (!RACE_TYPES.find((r) => r.id === raceId)) return "/garage"
+  return `/garage?mode=race&race=${raceId}`
 }
