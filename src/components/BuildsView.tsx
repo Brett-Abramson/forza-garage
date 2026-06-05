@@ -45,53 +45,150 @@ const DAMPING_DIAGNOSE = [
   { symptom: 'Car feels planted but slow to respond', fix: 'Reduce rebound slightly' },
 ]
 
-const REGIONS = [
+const REGIONS: {
+  name: string
+  icon: string
+  desc: string
+  tuning: string[]
+  piRange: string
+  cars: string
+  districts?: { name: string; char: string }[]
+  span2?: boolean
+}[] = [
   {
-    name: 'Touge / Hakone Mountain Routes',
-    icon: '⛰️',
-    desc: 'Narrow, technical, low-speed sections dominate. Hairpins are the deciding factor.',
-    notes: [
-      'Front suspension slightly softer than rear — helps rotation into hairpins',
-      'Neutral to mild differential (30–40% accel) — rotation matters more than planted exits',
-      'Semi-slick over slick on tighter Touge routes — slick tires at low hairpin speeds can make the front grip so hard the car understeers rather than rotating. Semi-slick gives a more balanced feel at mountain hairpin speeds.',
-      'Short gear ratios — match the speed range of the hairpins',
-      'Maximum braking upgrade — late, hard braking is essential',
-    ],
-  },
-  {
-    name: 'Tokyo Street Circuit',
+    name: 'Tokyo City',
     icon: '🏙️',
-    desc: 'Short, tight, technical. Stop-start acceleration profile.',
-    notes: [
-      'Short gearing — acceleration out of corners beats top speed',
-      'Stiffer rear ARB — prevents understeer from weight transfer on tight exits',
-      'Semi-slick or slick tires — tarmac surface rewards grip',
-      'Brake bias slightly forward (53–55%) — lots of hard braking zones',
-      'AWD advantage here — short acceleration zones reward traction over top speed',
+    span2: true,
+    desc: 'The largest urban environment in any Horizon game. Split into four distinct districts, each with different racing characteristics.',
+    districts: [
+      { name: 'Downtown Core / C1 Loop', char: 'Tight, fast, punishing. Hard braking, narrow lanes, right-angle intersections.' },
+      { name: 'Waterfront / Industrial Island', char: 'Wider sweeping curves and port roads. More forgiving, suits higher-speed builds.' },
+      { name: 'Commercial Districts', char: 'Neon-lit multi-level interchanges. Multi-layered elevation changes.' },
+      { name: 'Residential Outskirts', char: 'Where Tokyo meets countryside. Wider roads, gentler.' },
     ],
+    tuning: [
+      'Short gearing — Tokyo never gets fast enough to need top-end speed, corner exits win',
+      'Stiff rear ARB — prevents understeer through the C1\'s tight exits',
+      'Upgrade brakes — Tokyo demands late, hard braking consistently',
+      'Semi-slick or slick compound — tarmac everywhere, grip is rewarded',
+      'AWD advantage in the city — short acceleration zones reward traction over top speed',
+      'Brake bias forward (53–55%)',
+    ],
+    piRange: 'A (600–699) and S1 (700–799) for street racing. B class (500–599) for tighter city events.',
+    cars: 'Compact sports cars, hot hatches, JDM street cars. Long-wheelbase hypercars and supercars struggle with the city\'s narrow geometry.',
   },
   {
-    name: 'Hokkaido Snow / Winter Conditions',
-    icon: '❄️',
-    desc: 'Loose, low-grip, requires compliance.',
-    notes: [
-      'AWD essential — snow dramatically reduces individual wheel grip',
-      'Soft spring rates — compliance over snow and ice',
-      'Rally tires — designed for the mixed grip of snow and loose surfaces',
-      'Lower tire pressure (26–28 PSI cold) — more contact patch on slippery surfaces',
-      'Soft ARBs — wheels need to work independently, same logic as dirt racing',
+    name: 'Ohtani — Starting Zone',
+    icon: '🏠',
+    desc: 'Your home base. Mixed terrain transitioning from flat plains into low hills and forested roads. The most varied region for race types.',
+    tuning: [
+      'A balanced road build works here more than any other region — no extreme adaptations needed',
+      'Semi-slick tires cover most events',
+      'AWD is broadly useful given the surface variety',
+      'Medium spring rates — neither the stiffest tarmac setup nor the softest rally setup',
     ],
+    piRange: 'All classes — Ohtani has events at every level as the starting region.',
+    cars: 'Versatile all-rounders. This is where you learn what your car can and can\'t do before specialising.',
   },
   {
-    name: 'Pacific Coast / Open Roads',
+    name: 'Minamino — Southern Plains',
+    icon: '🌾',
+    desc: 'The flattest region. Wide-open fields, agricultural land, and the longest uninterrupted straight roads on the map. Speed zone and drag racing territory.',
+    tuning: [
+      'Long final drive gearing — maximize top speed on the straights',
+      'Minimize aero drag if competing in speed zones — downforce costs top speed',
+      'AWD for drag events — launch traction is the limiting factor',
+      'Race transmission with ratios tuned for maximum acceleration through gears',
+      'Weight reduction — every kilogram costs time in a straight line',
+    ],
+    piRange: 'Any class for drag events. S2 and R produce the fastest speed zone times.',
+    cars: 'Muscle cars, high-power AWD builds, drag-spec cars. Anything optimised for straight-line performance.',
+  },
+  {
+    name: 'Nangan — Far South (Coastal)',
+    icon: '🏖️',
+    desc: 'The southernmost region, bordering the coast. Open terrain with good visibility and wide beaches. Fewer tight sections than most regions.',
+    tuning: [
+      'Mid-range gearing — balance between acceleration and top speed',
+      'Semi-slick on the coastal tarmac sections',
+      'Rally or off-road compound for beach and open cross-country sections',
+      'Moderate spring rates — the terrain is varied but not extreme',
+    ],
+    piRange: 'B (500–599) and A (600–699). Open terrain rewards well-rounded builds over specialists.',
+    cars: 'Versatile sports cars and rally cars that can handle both tarmac and light off-road sections without specialised builds.',
+  },
+  {
+    name: 'Ito — Coastal Mid-Band',
     icon: '🌊',
-    desc: 'Higher-speed sections, crests, and longer sweeping corners.',
-    notes: [
-      'Mid-range gearing — balance between acceleration and top speed on longer straights',
-      'Slight rake (front ride height lower than rear) — helps stability over crests by keeping the rear planted when the car goes light over the top',
-      'Aero if class allows — sweeping corners at speed reward downforce',
-      'Firm but balanced spring rates — road is smoother but speeds are higher',
+    desc: 'The middle section between the southern plains and northern highlands. Mixed terrain — seawall roads, wooded hills, and crossroad junctions.',
+    tuning: [
+      'Semi-slick tires for the tarmac majority',
+      'AWD helps on the mixed-surface transitions',
+      'Medium-stiff suspension — the roads vary enough that extremes don\'t suit',
+      'Brake bias neutral to slightly forward',
     ],
+    piRange: 'B (500–599) and A (600–699).',
+    cars: 'Sports cars and compact GTs that can carry pace through varied conditions without needing a rebuild between events.',
+  },
+  {
+    name: 'Hokubu — Northern Circuit',
+    icon: '🏁',
+    desc: 'The northern region wrapping around the approach to the Alps. The roads become technical — tighter turns, steeper gradients, occasional gravel mixed into paved routes.',
+    tuning: [
+      'Race suspension, properly tuned — gradient changes put real load through the chassis',
+      'Brakes upgraded — the downhill sections require confident late braking',
+      'Semi-slick or slick compound depending on PI class',
+      'Front camber –1.5° to –2.0° for tarmac grip through the technical sections',
+      'Differential tuned for rotation — Hokubu\'s corners reward rotation over planted exits',
+    ],
+    piRange: 'A (600–699) and S1 (700–799). Circuit events here suit the upper half of each class.',
+    cars: 'GT cars, sports cars with proper suspension tuning. Cars with good braking stability are especially valuable on the descents.',
+  },
+  {
+    name: 'Takashiro — Highland Passes',
+    icon: '⛰️',
+    desc: 'Mountain territory. Narrow roads carved into hillsides with blind corners, elevation drops, and guardrails as the only safety net. Pure touge.',
+    tuning: [
+      'Race suspension, front slightly softer than rear — rotation into hairpins is essential',
+      'Short gear ratios — the speed range never gets high',
+      'Full race brakes — late, hard braking into hairpins is the core skill',
+      'Brake bias forward (54–57%) — Takashiro demands confident trail braking',
+      'Neutral to mild differential (30–40% accel) — rotation matters more than planted exits',
+      'Semi-slick over slick on the tightest passes — full slick grip can cause understeer through very tight hairpins at low speed',
+      'Strip weight aggressively — faster direction changes through the hairpin sequences',
+      'Negative front camber –1.5° to –2.0° for corner grip',
+    ],
+    piRange: 'B (500–599) up to A (600–699). Class caps vary per route — check the specific event before building.',
+    cars: 'Lightweight sports cars, JDM sports cars (RX-7, Supra, NSX, WRX), compact RWD cars with good rotation. Avoid long-wheelbase supercars — they physically struggle with Takashiro\'s narrow geometry.',
+  },
+  {
+    name: 'Shimanoyama — Alpine Zone',
+    icon: '❄️',
+    desc: 'The highest elevation region. Snow-capped peaks, alpine forests, and winding roads that test car control in low-grip conditions. Snow is common.',
+    tuning: [
+      'AWD — individual wheel grip is dramatically reduced in snow and ice conditions',
+      'Rally tires for snow/mixed conditions — designed for the grip range',
+      'Soft spring rates — compliance over snow and uneven alpine surfaces',
+      'Lower tire pressure (26–28 PSI cold) — more contact patch on slippery surfaces',
+      'Soft ARBs — wheels need to work independently on the uneven alpine terrain',
+      'Moderate power — traction limits output in low-grip conditions, raw power is wasted',
+    ],
+    piRange: 'B (500–599) and A (600–699). High-PI builds can\'t use their power advantage in low-grip conditions.',
+    cars: 'AWD rally cars (WRX, Evo), all-wheel-drive sports cars, purpose-built snow/rally builds. RWD cars are at a significant disadvantage.',
+  },
+  {
+    name: 'Sotoyama — Mountain Lodge',
+    icon: '🏔️',
+    desc: 'Home of the Hakusan Mountain Lodge (+10% credit house). Snow is common. Longer, more flowing mountain roads than Shimanoyama.',
+    tuning: [
+      'AWD recommended — snow conditions are common even outside winter season events',
+      'Rally compound tires — the mixed surface between snow and tarmac suits rally compound',
+      'Medium-soft suspension — more compliance than a tarmac build, less extreme than full off-road',
+      'Soft ARBs — surface articulation matters',
+      'Mid-range gearing — Sotoyama\'s roads are longer than Shimanoyama\'s tight passes',
+    ],
+    piRange: 'A (600–699). Sotoyama suits capable all-rounders over specialists.',
+    cars: 'AWD sports cars and modern rally cars that can handle mixed conditions without a dedicated off-road build. The WRX, Evo, and GR Yaris are particularly well-suited.',
   },
 ]
 
@@ -387,30 +484,68 @@ export default function BuildsView() {
 
       {/* ── Region notes ──────────────────────────────────────────────────── */}
       {tab === 'regions' && (
-        <div className="flex flex-col gap-4 max-w-2xl">
+        <div className="flex flex-col gap-4">
           <p className="text-sm text-fh-muted leading-relaxed">
-            FH6 is set in Japan. The map&apos;s distinct regions reward meaningfully different setups — a tune optimised
-            for mountain hairpins will be slower on open coastal roads.
+            FH6 is set in Japan. The map&apos;s nine distinct regions reward meaningfully different setups — a tune
+            optimised for mountain hairpins will be slower on open coastal roads.
           </p>
-          {REGIONS.map(({ name, icon, desc, notes }) => (
-            <div key={name} className="rounded-xl border border-fh-border bg-fh-panel overflow-hidden">
-              <div className="px-5 py-4 border-b border-fh-border">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">{icon}</span>
-                  <span className="font-semibold text-fh-dark">{name}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+            {REGIONS.map(({ name, icon, desc, tuning, piRange, cars, districts, span2 }) => (
+              <div
+                key={name}
+                className={`rounded-xl border border-fh-border bg-fh-panel overflow-hidden flex flex-col${span2 ? ' sm:col-span-2' : ''}`}
+              >
+                {/* Card header */}
+                <div className="px-5 py-4 border-b border-fh-border shrink-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">{icon}</span>
+                    <span className="font-semibold text-fh-dark">{name}</span>
+                  </div>
+                  <p className="text-sm text-fh-muted leading-relaxed">{desc}</p>
                 </div>
-                <p className="text-sm text-fh-muted">{desc}</p>
+
+                {/* Districts (Tokyo only) */}
+                {districts && (
+                  <div className="px-5 pt-4 pb-0 shrink-0">
+                    <div className="text-[11px] text-fh-muted uppercase tracking-wide mb-2">Districts</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                      {districts.map(({ name: dname, char }) => (
+                        <div key={dname} className="rounded-lg border border-fh-border bg-fh-panel-2 px-3 py-2">
+                          <div className="text-xs font-medium text-fh-dark mb-0.5">{dname}</div>
+                          <div className="text-xs text-fh-muted leading-relaxed">{char}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tuning priorities */}
+                <div className="px-5 pt-4 shrink-0">
+                  <div className="text-[11px] text-fh-muted uppercase tracking-wide mb-2">Tuning priorities</div>
+                  <ul className="flex flex-col gap-1.5 mb-4">
+                    {tuning.map((note, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-fh-dark-2 leading-relaxed">
+                        <span className="text-fh-red/50 shrink-0 mt-1">—</span>
+                        {note}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* PI range + Cars footer */}
+                <div className="mt-auto border-t border-fh-border px-5 py-3 flex flex-col gap-1.5 shrink-0 bg-fh-panel-2">
+                  <p className="text-xs text-fh-dark-2 leading-relaxed">
+                    <span className="font-medium text-fh-muted uppercase tracking-wide text-[10px] mr-1.5">PI</span>
+                    {piRange}
+                  </p>
+                  <p className="text-xs text-fh-dark-2 leading-relaxed">
+                    <span className="font-medium text-fh-muted uppercase tracking-wide text-[10px] mr-1.5">Cars</span>
+                    {cars}
+                  </p>
+                </div>
               </div>
-              <ul className="px-5 py-4 flex flex-col gap-1.5">
-                {notes.map((note, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-fh-dark-2 leading-relaxed">
-                    <span className="text-fh-red/50 shrink-0 mt-1">—</span>
-                    {note}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
