@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { RACE_BUILD_GUIDES, PI_CLASS_GUIDES } from '@/lib/buildGuides'
 
+// ─── Feature flags ────────────────────────────────────────────────────────────
+const SHOW_FUNDAMENTALS = false
+
 type Tab = 'fundamentals' | 'race' | 'class' | 'regions'
 
 // ─── Static content ───────────────────────────────────────────────────────────
@@ -232,7 +235,7 @@ export default function BuildsView() {
       <div className="flex flex-wrap gap-1 bg-fh-panel-2 rounded-lg p-1 w-fit">
         {(
           [
-            { id: 'fundamentals', label: 'Fundamentals' },
+            ...(SHOW_FUNDAMENTALS ? [{ id: 'fundamentals' as Tab, label: 'Fundamentals' }] : []),
             { id: 'race',         label: 'By Race Type' },
             { id: 'class',        label: 'By PI Class'  },
             { id: 'regions',      label: 'Regions'      },
@@ -253,7 +256,7 @@ export default function BuildsView() {
       </div>
 
       {/* ── Fundamentals ─────────────────────────────────────────────────── */}
-      {tab === 'fundamentals' && (
+      {SHOW_FUNDAMENTALS && tab === 'fundamentals' && (
         <div className="flex flex-col gap-8 max-w-2xl">
 
           {/* Go Deeper — resource callout */}
