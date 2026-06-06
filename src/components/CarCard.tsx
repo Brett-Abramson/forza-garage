@@ -2,6 +2,7 @@
 
 import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { getBestRaceType } from '@/lib/raceMatch'
+import { RaceIcon } from '@/components/RaceIcons'
 import { formatAddedAt } from '@/lib/sort'
 
 const DIVISION_ACCENT: Record<string, string> = {
@@ -130,7 +131,7 @@ export default function CarCard({ car, onToggleOwned, onCardClick, isPending, sh
         </div>
         {bestRace && (
           <div className="text-xs mt-1.5 text-fh-muted">
-            {bestRace.icon} {bestRace.name}
+            <RaceIcon id={bestRace.id} emoji={bestRace.icon} /> {bestRace.name}
           </div>
         )}
         {showAddedAt && car.addedAt && (

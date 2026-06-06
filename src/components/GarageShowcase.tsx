@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef, Fragment } from 'react'
+import { RaceIcon } from '@/components/RaceIcons'
 import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
 import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS, SOURCE_CHIPS } from '@/types/car'
@@ -216,7 +217,7 @@ function ExpandedContent({
                 href={`/races/${rankedRaces[0].race.id}`}
                 className="text-fh-dark-2 hover:text-fh-red transition-colors"
               >
-                {rankedRaces[0].race.icon} {rankedRaces[0].race.name}
+                <RaceIcon id={rankedRaces[0].race.id} emoji={rankedRaces[0].race.icon} /> {rankedRaces[0].race.name}
               </a>
               {rankedRaces.slice(1).map(({ race }) => (
                 <span key={race.id} className="flex items-center gap-1.5">
@@ -225,7 +226,7 @@ function ExpandedContent({
                     href={`/races/${race.id}`}
                     className="text-fh-muted hover:text-fh-dark-2 transition-colors"
                   >
-                    {race.icon} {race.name}
+                    <RaceIcon id={race.id} emoji={race.icon} /> {race.name}
                   </a>
                 </span>
               ))}
@@ -936,7 +937,7 @@ export default function GarageShowcase({ initialCars }: Props) {
                         : 'bg-fh-panel text-fh-muted border-fh-border hover:border-fh-border hover:text-fh-dark-2'
                     }`}
                   >
-                    <span>{race.icon}</span>
+                    <RaceIcon id={race.id} emoji={race.icon} />
                     {race.name}
                     {selectedRace === race.id && (
                       <span

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { RACE_TYPES, getRaceFilterUrl, type RaceType } from '@/lib/races'
+import { RaceIcon } from '@/components/RaceIcons'
 import { getGuidesByRaceType, type TuningGuide } from '@/lib/tuningGuides'
 
 const SURFACE_COLORS: Record<string, string> = {
@@ -90,7 +91,7 @@ export default function RacesView() {
           >
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-3">
-                <span className="text-2xl leading-none">{race.icon}</span>
+                <span className="text-2xl leading-none"><RaceIcon id={race.id} emoji={race.icon} size={24} /></span>
                 <div>
                   <h2 className="text-sm font-semibold group-hover:text-fh-red transition-colors">
                     {race.name}

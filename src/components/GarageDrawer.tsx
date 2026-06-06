@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Car } from '@/types/car'
 import { PI_CLASS_COLORS, getSourceColor } from '@/types/car'
+import { RaceIcon } from '@/components/RaceIcons'
 import { CAR_TAGS } from '@/lib/tags'
 import { splitTagsBySource, getAutoTags } from '@/lib/autotags'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
@@ -385,7 +386,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                         href={`/races/${rankedRaces[0].race.id}`}
                         className="flex items-center gap-1 text-fh-red hover:opacity-75 hover:underline text-xs"
                       >
-                        <span>{rankedRaces[0].race.icon}</span>
+                        <RaceIcon id={rankedRaces[0].race.id} emoji={rankedRaces[0].race.icon} />
                         <span>{rankedRaces[0].race.name}</span>
                       </a>
                     </div>
@@ -396,7 +397,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                           href={`/races/${race.id}`}
                           className="flex items-center gap-1 text-fh-muted hover:text-fh-dark hover:underline text-xs"
                         >
-                          <span>{race.icon}</span>
+                          <RaceIcon id={race.id} emoji={race.icon} />
                           <span>{race.name}</span>
                         </a>
                       </div>

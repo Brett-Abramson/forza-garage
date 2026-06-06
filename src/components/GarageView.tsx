@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect, useRef, useLayoutEffect } from 'react'
+import { RaceIcon } from '@/components/RaceIcons'
 import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
 import { Car, FilterState, SOURCE_CHIPS } from '@/types/car'
@@ -384,7 +385,7 @@ export default function GarageView({ initialCars }: Props) {
                         : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark-2'
                     }`}
                   >
-                    <span>{race.icon}</span>
+                    <RaceIcon id={race.id} emoji={race.icon} />
                     {race.name}
                     {selectedRace === race.id && (
                       <span

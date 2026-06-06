@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { getBestRaceType } from '@/lib/raceMatch'
+import { RaceIcon } from '@/components/RaceIcons'
 import { formatAddedAt } from '@/lib/sort'
 
 interface Props {
@@ -51,7 +52,7 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
       <td className="py-2.5 px-3 text-fh-dark-2 hidden md:table-cell">
         <div>{car.division}</div>
         {bestRace && (
-          <div className="text-xs text-fh-muted mt-0.5">{bestRace.icon} {bestRace.name}</div>
+          <div className="text-xs text-fh-muted mt-0.5 flex items-center gap-1"><RaceIcon id={bestRace.id} emoji={bestRace.icon} /> {bestRace.name}</div>
         )}
       </td>
       <td className="py-2.5 px-3 text-fh-dark-2 hidden lg:table-cell">{car.drivetrain ?? '—'}</td>

@@ -74,7 +74,7 @@ export const PI_CLASS_COLORS: Record<string, string> = {
   A:  'bg-red-600 text-white',
   S1: 'bg-purple-600 text-white',
   S2: 'bg-blue-600 text-white',
-  R:  'bg-cyan-400 text-black',   // R class — confirm colour if wrong
+  R:  'bg-[#D4018B] text-white',
 }
 
 // Color the source badge by how hard the car is to obtain
