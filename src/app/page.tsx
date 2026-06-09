@@ -1,11 +1,11 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { auth } from '@clerk/nextjs/server'
+import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { PI_CLASS_COLORS } from '@/types/car'
 import { FujiSvg, BlossomSvg, ToriiSvg } from '@/components/JapanDecor'
-import { getRandomFeaturedCar } from '@/lib/featuredCars'
-import { RACE_TYPES } from '@/lib/races'
+import { MetaCarousel, type MetaCarEntry } from '@/components/MetaCarousel'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +20,35 @@ interface PinnedCar {
 interface RecentCar extends PinnedCar {
   addedAt: Date
 }
+
+// Cached for 24 hours — CarMeta changes infrequently; purge with revalidateTag('featured-cars')
+const getFeaturedCars = unstable_cache(
+  async (): Promise<MetaCarEntry[]> => {
+    const rows = await prisma.carMeta.findMany({
+      where: { active: true },
+      orderBy: { recordedAt: 'desc' },
+      include: {
+        car: { select: { id: true, make: true, model: true, year: true, piClass: true, piRating: true } },
+      },
+    })
+    return rows.map((r) => ({
+      id: r.id,
+      carId: r.car.id,
+      make: r.car.make,
+      model: r.car.model,
+      year: r.car.year,
+      piClass: r.car.piClass,
+      piRating: r.car.piRating,
+      raceType: r.raceType,
+      rank: r.rank,
+      label: r.label,
+      notes: r.notes,
+      source: r.source,
+    }))
+  },
+  ['featured-cars'],
+  { tags: ['featured-cars'], revalidate: 86400 },
+)
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
@@ -44,7 +73,7 @@ async function getGarageStats(userId: string) {
 
     prisma.userGarage.findMany({
       where: { userId },
-      take: 5,
+      take: 3,
       include: { car: { select: { id: true, make: true, model: true, year: true, piClass: true, piRating: true, division: true } } },
       orderBy: { addedAt: 'desc' },
     }) as Promise<RecentCar[]>,
@@ -59,15 +88,11 @@ async function getGarageStats(userId: string) {
 async function UserDashboard({
   userId,
   carCount,
-  featured,
-  featuredCarUrl,
-  featuredRaceName,
+  featuredCars,
 }: {
   userId: string
   carCount: number
-  featured: ReturnType<typeof getRandomFeaturedCar>
-  featuredCarUrl: string
-  featuredRaceName: string | null
+  featuredCars: MetaCarEntry[]
 }) {
   const stats = await getGarageStats(userId)
 
@@ -121,17 +146,24 @@ async function UserDashboard({
           <section>
             <SectionHeader label="Recently Added" />
             <div className="flex flex-col gap-2">
-              {stats.recent.map(({ car }) => (
+              {stats.recent.slice(0, 3).map(({ car }) => (
                 <CarListItem key={car.id} car={car} />
               ))}
             </div>
+            <Link
+              href="/garage?sort=recent"
+              className="inline-flex items-center gap-1 mt-3 text-xs text-fh-muted hover:text-fh-dark transition-colors"
+            >
+              View all in garage
+              <span className="text-fh-red">→</span>
+            </Link>
           </section>
         )}
       </div>
 
-      {/* RIGHT — featured car */}
+      {/* RIGHT — featured cars carousel */}
       <div className="flex flex-col gap-6 order-first lg:order-last">
-        <FeaturedCarCard featured={featured} featuredCarUrl={featuredCarUrl} featuredRaceName={featuredRaceName} />
+        <MetaCarousel entries={featuredCars} />
       </div>
     </div>
   )
@@ -151,20 +183,21 @@ function DashboardSkeleton() {
             <div className="h-28 rounded-xl bg-fh-panel-2" />
           </div>
         </div>
-        {/* Recently added */}
+        {/* Recently added — 3 rows + "View all" link */}
         <div>
           <div className="h-4 w-32 rounded bg-fh-panel-2 mb-5" />
           <div className="flex flex-col gap-2">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="h-12 rounded-lg bg-fh-panel-2" />
             ))}
           </div>
+          <div className="h-3 w-36 rounded bg-fh-panel-2 mt-4" />
         </div>
       </div>
-      {/* Featured card */}
+      {/* Featured card — full-width single card */}
       <div className="order-first lg:order-last">
         <div className="h-4 w-24 rounded bg-fh-panel-2 mb-5" />
-        <div className="h-72 rounded-xl bg-fh-panel-2" />
+        <div className="h-96 rounded-xl bg-fh-panel-2" />
       </div>
     </div>
   )
@@ -174,14 +207,10 @@ function DashboardSkeleton() {
 
 function SignedOutLayout({
   carCount,
-  featured,
-  featuredCarUrl,
-  featuredRaceName,
+  featuredCars,
 }: {
   carCount: number
-  featured: ReturnType<typeof getRandomFeaturedCar>
-  featuredCarUrl: string
-  featuredRaceName: string | null
+  featuredCars: MetaCarEntry[]
 }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start">
@@ -229,7 +258,7 @@ function SignedOutLayout({
       </div>
 
       <div className="order-first lg:order-last">
-        <FeaturedCarCard featured={featured} featuredCarUrl={featuredCarUrl} featuredRaceName={featuredRaceName} />
+        <MetaCarousel entries={featuredCars} />
       </div>
     </div>
   )
@@ -238,27 +267,13 @@ function SignedOutLayout({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function LandingPage() {
-  const { userId } = await auth()
-  const featured = getRandomFeaturedCar()
-
-  // Only fast queries run before the first HTML byte ships.
-  // getGarageStats (4 queries) is deferred to a Suspense boundary below.
-  const [carCount, featuredCar] = await Promise.all([
+  // Start all three concurrently — auth(), carCount, and the cached CarMeta
+  // fetch are independent and can all run at the same time.
+  const [{ userId }, carCount, featuredCars] = await Promise.all([
+    auth(),
     prisma.car.count(),
-    prisma.car.findFirst({
-      where: { make: featured.make, model: featured.model, year: featured.year },
-      select: { id: true },
-    }),
+    getFeaturedCars(),
   ])
-
-  const featuredCarUrl = featuredCar
-    ? `/cars?q=${encodeURIComponent(`${featured.year} ${featured.make} ${featured.model}`)}&open=${featuredCar.id}`
-    : '/cars'
-
-  const featuredRace = featured.raceType
-    ? RACE_TYPES.find((r) => r.id === featured.raceType)
-    : null
-  const featuredRaceName = featuredRace?.name ?? null
 
   return (
     <div>
@@ -316,17 +331,13 @@ export default async function LandingPage() {
             <UserDashboard
               userId={userId}
               carCount={carCount}
-              featured={featured}
-              featuredCarUrl={featuredCarUrl}
-              featuredRaceName={featuredRaceName}
+              featuredCars={featuredCars}
             />
           </Suspense>
         ) : (
           <SignedOutLayout
             carCount={carCount}
-            featured={featured}
-            featuredCarUrl={featuredCarUrl}
-            featuredRaceName={featuredRaceName}
+            featuredCars={featuredCars}
           />
         )}
       </div>
@@ -335,63 +346,6 @@ export default async function LandingPage() {
 }
 
 // ── Shared sub-components ─────────────────────────────────────────────────────
-
-function FeaturedCarCard({
-  featured,
-  featuredCarUrl,
-  featuredRaceName,
-}: {
-  featured: ReturnType<typeof getRandomFeaturedCar>
-  featuredCarUrl: string
-  featuredRaceName: string | null
-}) {
-  return (
-    <section>
-      <SectionHeader label="Featured Car" />
-      <div className="rounded-xl border border-fh-red-border bg-fh-panel overflow-hidden [border-left-width:3px] [border-left-color:var(--fh-red)]">
-        <div className="bg-fh-red px-4 py-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white">
-            {featured.badge}
-          </span>
-        </div>
-        <div className="p-5 flex flex-col gap-3">
-          <div>
-            <div className="text-xl font-extrabold leading-tight uppercase tracking-tight">
-              {featured.model}
-            </div>
-            <div className="text-xs text-fh-muted mt-1">
-              {featured.year} · {featured.make}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[featured.piClass] ?? 'bg-gray-600 text-white'}`}>
-              {featured.piClass}
-            </span>
-            <span className="text-lg font-bold tabular-nums text-fh-dark">{featured.piRating}</span>
-          </div>
-          <p className="text-xs text-fh-dark-2 leading-relaxed">{featured.reason}</p>
-          <div className="border-t border-fh-border" />
-          {featuredRaceName && (
-            <Link
-              href="/races"
-              className="inline-flex items-center gap-1.5 text-xs text-fh-muted hover:text-fh-dark transition-colors"
-            >
-              <span>🏁</span>
-              <span>Best for: <span className="font-semibold text-fh-dark">{featuredRaceName}</span></span>
-            </Link>
-          )}
-          <Link
-            href={featuredCarUrl}
-            className="btn-clip flex items-center justify-center py-2.5 text-xs font-bold uppercase tracking-widest text-white bg-fh-red transition-opacity hover:opacity-80"
-          >
-            View in Database
-          </Link>
-          <span className="text-[10px] text-fh-muted-2 text-center">meta as of May 2026</span>
-        </div>
-      </div>
-    </section>
-  )
-}
 
 function SectionHeader({ label }: { label: string }) {
   return (

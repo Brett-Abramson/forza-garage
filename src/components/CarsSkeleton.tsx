@@ -59,9 +59,9 @@ export default function CarsSkeleton({ view = 'table', totalCars }: Props) {
         <Bone className="h-4 w-64 mt-2" />
       </div>
 
-      {/* Stats bar */}
+      {/* Stats bar — h-9 matches the text-2xl font-bold line-height in the real component */}
       <div className="flex items-center gap-6">
-        <Bone className="h-7 w-28" />
+        <Bone className="h-9 w-28" />
         <Bone className="h-1.5 flex-1 rounded-full" />
       </div>
 

@@ -45,9 +45,10 @@ model Car {
   value   Int?     // purchase price in credits
   rarity  String?  // Common | Rare | Legendary | Forza Edition
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  garage      UserGarage[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  garage       UserGarage[]
+  metaEntries  CarMeta[]
 
   @@unique([year, make, model])
   @@index([make])
@@ -67,6 +68,27 @@ model UserGarage {
 
   @@index([userId])
   @@unique([userId, carId])
+}
+
+model CarMeta {
+  id         Int       @id @default(autoincrement())
+  carId      Int
+  car        Car       @relation(fields: [carId], references: [id], onDelete: Cascade)
+  piClass    String
+  raceType   String
+  rank       Int?
+  label      String
+  notes      String?
+  source     String
+  active     Boolean   @default(true)
+  recordedAt DateTime  @default(now())
+  replacedAt DateTime?
+
+  @@index([carId])
+  @@index([piClass])
+  @@index([raceType])
+  @@index([recordedAt])
+  @@index([active, piClass, raceType])
 }
 
 model CarTag {

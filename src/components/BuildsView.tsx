@@ -225,12 +225,14 @@ const REGIONS: {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function BuildsView() {
-  const [tab, setTab] = useState<Tab>('fundamentals')
+  // Default to 'race' while SHOW_FUNDAMENTALS is false — avoids an empty
+  // initial render that makes the content area collapse and causes CLS.
+  const [tab, setTab] = useState<Tab>(SHOW_FUNDAMENTALS ? 'fundamentals' : 'race')
   const [openRace, setOpenRace] = useState<string | null>(null)
   const [openClass, setOpenClass] = useState<string | null>(null)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 min-h-screen">
       {/* Tab bar */}
       <div className="flex flex-wrap gap-1 bg-fh-panel-2 rounded-lg p-1 w-fit">
         {(
