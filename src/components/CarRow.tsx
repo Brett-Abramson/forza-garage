@@ -18,9 +18,11 @@ interface Props {
   showAddedAtColumn?: boolean
   /** Hide the Garage action column — pass from GarageShowcase where every car is already owned */
   hideGarage?: boolean
+  /** Garage only — callback to toggle pinned/favourite state */
+  onTogglePin?: (id: number, pinned: boolean) => void
 }
 
-export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage }: Props) {
+export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined)
@@ -40,6 +42,23 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
         ${isPending ? 'opacity-60 pointer-events-none' : ''}
       `}
     >
+      {/* Star — only rendered in garage (when onTogglePin is provided) */}
+      {onTogglePin && (
+        <td className="py-2.5 pl-3 pr-1 w-6">
+          <button
+            onClick={(e) => { e.stopPropagation(); onTogglePin(car.id, !car.pinned) }}
+            aria-label={car.pinned ? 'Unpin car' : 'Pin car'}
+            title={car.pinned ? 'Remove from favourites' : 'Add to favourites'}
+            className={`text-base leading-none transition-colors ${
+              car.pinned
+                ? 'text-amber-400 hover:text-amber-300'
+                : 'text-fh-border hover:text-amber-400'
+            }`}
+          >
+            {car.pinned ? '★' : '☆'}
+          </button>
+        </td>
+      )}
       <td className="py-2.5 px-3">
         <span className={`text-xs font-bold px-2 py-0.5 rounded ${classBadge}`}>
           {car.piClass}

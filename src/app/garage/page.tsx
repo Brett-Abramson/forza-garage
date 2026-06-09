@@ -87,9 +87,10 @@ export default async function GaragePage({ searchParams }: PageProps) {
   // One-time backfill: write auto-tags for any entry with zero stored tags.
   await backfillMissingTags(entries)
 
-  const cars: Car[] = entries.map(({ car, tags, notes, addedAt }) => ({
+  const cars: Car[] = entries.map(({ car, tags, notes, addedAt, pinned }) => ({
     ...car,
     owned: true,
+    pinned,
     addedAt: addedAt?.toISOString() ?? null,
     tags: [...new Set(tags.map((t) => t.tag))],
     tagDetails: tags.map((t) => ({ tag: t.tag, source: t.source })),

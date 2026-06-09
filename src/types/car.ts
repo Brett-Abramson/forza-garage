@@ -39,6 +39,7 @@ export interface Car {
   rarity: string | null  // Common | Rare | Legendary | Forza Edition
 
   owned: boolean
+  pinned?: boolean          // garage only — mirrors UserGarage.pinned
   addedAt?: string | null   // ISO string from UserGarage.addedAt (garage only)
   tags?: string[]
   tagDetails?: { tag: string; source: string }[]
@@ -54,6 +55,7 @@ export interface FilterState {
   country: string
   source: string   // empty = all; non-empty = car.source.includes(value)
   owned: 'all' | 'owned' | 'not-owned'
+  pinned: boolean  // garage only — true = show only pinned/favourite cars
 }
 
 // Broad acquisition-method categories used for source chips

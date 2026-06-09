@@ -23,6 +23,7 @@ export const DEFAULT_FILTERS: FilterState = {
   country: '',
   source: '',
   owned: 'all',
+  pinned: false,
 }
 
 /**
@@ -88,6 +89,10 @@ export function filterCars(
     // Used in GarageView (/cars). Omitting or passing 'all' is a no-op.
     if (filters.owned === 'owned' && !car.owned) return false
     if (filters.owned === 'not-owned' && car.owned) return false
+
+    // ── Pinned / favourites filter ────────────────────────────────────────────
+    // Garage-only. When active, only pinned cars pass.
+    if (filters.pinned && !car.pinned) return false
 
     // ── Race-type filter (OR) ─────────────────────────────────────────────────
     // Used in GarageShowcase (/garage). Car must match at least one tag from

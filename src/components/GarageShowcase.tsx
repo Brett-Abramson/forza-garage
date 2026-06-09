@@ -491,6 +491,7 @@ export default function GarageShowcase({ initialCars }: Props) {
     country: searchParams.get('country') ?? '',
     source: searchParams.get('src') ?? '',
     owned: 'all',
+    pinned: searchParams.get('fav') === '1',
   })
   const [view, setView] = useState<ViewMode>(
     (searchParams.get('view') as ViewMode) ?? 'table'
@@ -540,6 +541,7 @@ export default function GarageShowcase({ initialCars }: Props) {
     if (filters.drivetrain) params.set('drive', filters.drivetrain)
     if (filters.country) params.set('country', filters.country)
     if (filters.source) params.set('src', filters.source)
+    if (filters.pinned) params.set('fav', '1')
     if (selectedTags.size > 0) params.set('tags', [...selectedTags].sort().join(','))
     if (selectedRace) params.set('race', selectedRace)
     if (filterMode !== 'race') params.set('mode', filterMode)
@@ -551,7 +553,7 @@ export default function GarageShowcase({ initialCars }: Props) {
     return () => clearTimeout(timer)
   }, [
     filters.search, filters.piClass, filters.division, filters.make,
-    filters.drivetrain, filters.country, filters.source,
+    filters.drivetrain, filters.country, filters.source, filters.pinned,
     selectedGroupId, selectedTags, selectedRace, filterMode, view,
   ])
 
@@ -660,6 +662,7 @@ export default function GarageShowcase({ initialCars }: Props) {
     filters.drivetrain !== '',
     filters.country !== '',
     filters.source !== '',
+    filters.pinned,
     selectedTags.size > 0,
     selectedRace !== null,
   ].filter(Boolean).length
@@ -690,6 +693,24 @@ export default function GarageShowcase({ initialCars }: Props) {
     }
   }, [])
 
+  // Optimistic pin toggle — update UI immediately, revert on failure
+  const handleTogglePin = useCallback(async (id: number, pinned: boolean) => {
+    // Optimistic update
+    setCars((prev) => prev.map((c) => (c.id === id ? { ...c, pinned } : c)))
+    try {
+      const res = await fetch(`/api/garage/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinned }),
+      })
+      if (!res.ok) throw new Error('Failed')
+    } catch (err) {
+      // Revert on failure
+      setCars((prev) => prev.map((c) => (c.id === id ? { ...c, pinned: !pinned } : c)))
+      console.error(err)
+    }
+  }, [])
+
   if (cars.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-center">
@@ -711,6 +732,7 @@ export default function GarageShowcase({ initialCars }: Props) {
   const carsWithValue = cars.filter((c) => c.value != null)
   const totalValue = carsWithValue.reduce((sum, c) => sum + c.value!, 0)
   const unknownCount = cars.length - carsWithValue.length
+  const pinnedCount = cars.filter((c) => c.pinned).length
 
   return (
     <>
@@ -739,6 +761,19 @@ export default function GarageShowcase({ initialCars }: Props) {
                     )}
                   </span>
                 </div>
+              </>
+            )}
+            {pinnedCount > 0 && (
+              <>
+                <span className="text-fh-border select-none">|</span>
+                <button
+                  onClick={() => setFilters((f) => ({ ...f, pinned: !f.pinned }))}
+                  title={filters.pinned ? 'Clear favourites filter' : 'Show only favourites'}
+                  className={`flex flex-col transition-colors ${filters.pinned ? 'text-amber-400' : 'text-fh-muted hover:text-amber-400'}`}
+                >
+                  <span className="text-[10px] uppercase tracking-wide leading-none mb-0.5">Favourites</span>
+                  <span className="text-sm font-medium tabular-nums">★ {pinnedCount}</span>
+                </button>
               </>
             )}
           </div>
@@ -845,7 +880,7 @@ export default function GarageShowcase({ initialCars }: Props) {
         hideDivision
       />
 
-      {/* Source chips */}
+      {/* Source chips + Favourites toggle */}
       <div className="flex flex-wrap gap-2">
         {SOURCE_CHIPS.map(({ label, match }) => (
           <button
@@ -860,6 +895,19 @@ export default function GarageShowcase({ initialCars }: Props) {
             {label}
           </button>
         ))}
+        {/* Favourites — only shown when at least one car is pinned */}
+        {pinnedCount > 0 && (
+          <button
+            onClick={() => setFilters((f) => ({ ...f, pinned: !f.pinned }))}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              filters.pinned
+                ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                : 'bg-fh-panel text-fh-muted border-fh-border hover:border-fh-border hover:text-amber-400'
+            }`}
+          >
+            ★ Favourites
+          </button>
+        )}
       </div>
 
       {/* Filter mode toggle + chip row */}
@@ -1047,7 +1095,7 @@ export default function GarageShowcase({ initialCars }: Props) {
           {view === 'grid' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {sortedCars.map((car) => (
-                <CarCard key={car.id} car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} isPending={pendingIds.has(car.id)} showAddedAt={sort.key === 'addedAt'} />
+                <CarCard key={car.id} car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} onTogglePin={handleTogglePin} isPending={pendingIds.has(car.id)} showAddedAt={sort.key === 'addedAt'} />
               ))}
             </div>
           ) : (
@@ -1055,6 +1103,8 @@ export default function GarageShowcase({ initialCars }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-fh-panel border-b border-fh-border text-xs uppercase tracking-wide select-none">
+                    {/* Star column header — no sort, just spacing */}
+                    <th className="py-2.5 pl-3 pr-1 w-6" aria-label="Favourite" />
                     <SortTh label="Class" sortKey="piClass" sort={sort} onSort={handleSort} />
                     <SortTh label="PI" sortKey="piRating" sort={sort} onSort={handleSort} />
                     <SortTh label="Year" sortKey="year" sort={sort} onSort={handleSort} />
@@ -1074,6 +1124,7 @@ export default function GarageShowcase({ initialCars }: Props) {
                       <CarRow
                         car={car}
                         onToggleOwned={handleToggle}
+                        onTogglePin={handleTogglePin}
                         isPending={pendingIds.has(car.id)}
                         isExpanded={expandedCarId === car.id}
                         onCardClick={(c) => toggleExpanded(c.id)}

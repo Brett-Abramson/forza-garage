@@ -68,6 +68,7 @@ export default function GarageView({ initialCars }: Props) {
     country:   searchParams.get('country')?? '',
     source:    searchParams.get('src')    ?? '',
     owned:     (searchParams.get('owned') as FilterState['owned']) ?? 'all',
+    pinned:    false,  // pin/star is garage-only; always false on the Car Database
   })
   const [view, setView]                     = useState<ViewMode>(
     (searchParams.get('view') as ViewMode) ?? 'grid'

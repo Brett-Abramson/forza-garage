@@ -65,11 +65,12 @@ interface Props {
   car: Car
   onToggleOwned: (id: number, owned: boolean) => void
   onCardClick?: (car: Car) => void
+  onTogglePin?: (id: number, pinned: boolean) => void
   isPending?: boolean
   showAddedAt?: boolean
 }
 
-export default function CarCard({ car, onToggleOwned, onCardClick, isPending, showAddedAt }: Props) {
+export default function CarCard({ car, onToggleOwned, onCardClick, onTogglePin, isPending, showAddedAt }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const accent = getDivisionAccent(car.division)
@@ -95,13 +96,28 @@ export default function CarCard({ car, onToggleOwned, onCardClick, isPending, sh
           </span>
           <span className="text-xs text-fh-dark-2">{car.piRating}</span>
         </div>
-        {car.owned && (
-          <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1.5">
+          {/* Star / pin — garage only, only rendered when onTogglePin is provided */}
+          {onTogglePin && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onTogglePin(car.id, !car.pinned) }}
+              aria-label={car.pinned ? 'Unpin car' : 'Pin car'}
+              title={car.pinned ? 'Remove from favourites' : 'Add to favourites'}
+              className={`transition-colors leading-none ${
+                car.pinned
+                  ? 'text-amber-400 hover:text-amber-300'
+                  : 'text-fh-border hover:text-amber-400'
+              }`}
+            >
+              {car.pinned ? '★' : '☆'}
+            </button>
+          )}
+          {car.owned && !onTogglePin && (
             <span className="text-xs font-semibold text-fh-red bg-fh-red-pale border border-fh-red px-2 py-0.5 rounded-full">
               Owned
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Info */}

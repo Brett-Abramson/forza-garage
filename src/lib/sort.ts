@@ -7,7 +7,18 @@ export const PI_CLASS_INDEX: Record<string, number> = Object.fromEntries(
   PI_CLASS_ORDER.map((c, i) => [c, i])
 )
 
+// Sort keys where pinned cars float to the top within their sort group.
+// Numeric sorts (PI, Value) are intentionally excluded — don't break those.
+const PIN_FLOAT_KEYS: Set<SortKey> = new Set(['addedAt', 'make', 'model', 'year'])
+
 export function compareRows(a: Car, b: Car, key: SortKey, dir: SortDir): number {
+  // Pinned cars float to the top for non-numeric sort keys.
+  if (PIN_FLOAT_KEYS.has(key)) {
+    const aPinned = a.pinned ? 1 : 0
+    const bPinned = b.pinned ? 1 : 0
+    if (aPinned !== bPinned) return bPinned - aPinned  // pinned first, direction-independent
+  }
+
   let result = 0
   if (key === 'piClass') {
     result = (PI_CLASS_INDEX[a.piClass] ?? -1) - (PI_CLASS_INDEX[b.piClass] ?? -1)

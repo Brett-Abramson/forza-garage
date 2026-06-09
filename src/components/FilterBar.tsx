@@ -126,7 +126,7 @@ export default function FilterBar({ filters, options, onChange, totalCount, filt
         {hasActiveFilters && (
           <button
             onClick={() =>
-              onChange({ search: filters.search, piClass: '', division: '', make: '', drivetrain: '', country: '', source: '', owned: 'all' })
+              onChange({ search: filters.search, piClass: '', division: '', make: '', drivetrain: '', country: '', source: '', owned: 'all', pinned: false })
             }
             className="text-xs text-fh-muted hover:text-fh-dark underline pb-1.5 transition-colors"
           >
