@@ -47,14 +47,16 @@ export default async function CarsPage({ searchParams }: PageProps) {
   const view = viewParam === 'grid' ? 'grid' : 'table'
 
   return (
-    <main className="max-w-screen-2xl mx-auto px-4 py-8">
+    // min-h-screen prevents layout shifts above/below the virtual list container
+    // from being measured as CLS when the skeleton swaps for the real component.
+    <main className="max-w-screen-2xl mx-auto px-4 py-8 min-h-screen">
       {/*
         GarageViewClient uses next/dynamic with ssr:false internally.
         The server sends CarsSkeleton as HTML immediately (FCP ≈ TTFB),
         then the JS chunk for GarageView loads and replaces it.
       */}
       <Suspense fallback={<CarsSkeleton view={view} totalCars={cars.length} />}>
-        <GarageViewClient initialCars={cars} />
+        <GarageViewClient initialCars={cars} totalCars={cars.length} />
       </Suspense>
     </main>
   )

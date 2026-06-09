@@ -49,14 +49,21 @@ interface Props {
 export default function GarageSkeleton({ view = 'table' }: Props) {
   return (
     <div className="flex flex-col gap-6">
-      {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
+      {/* Page header — mirrors the two-line stat layout in GarageShowcase */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-6">
           <Bone className="h-8 w-36" />
-          <Bone className="h-5 w-10" />
-          <Bone className="h-5 w-24 hidden sm:block" />
+          {/* Two-line stat block: 10px label + 14px value — matches GarageShowcase header */}
+          <div className="flex flex-col gap-0.5">
+            <Bone className="h-2.5 w-6" />
+            <Bone className="h-4 w-10" />
+          </div>
+          <div className="hidden sm:flex flex-col gap-0.5">
+            <Bone className="h-2.5 w-16" />
+            <Bone className="h-4 w-24" />
+          </div>
         </div>
-        <Bone className="h-8 w-28 hidden sm:block" />
+        <Bone className="h-7 w-28 hidden sm:block" />
       </div>
 
       {/* Class chips */}

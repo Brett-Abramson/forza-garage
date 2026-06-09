@@ -10,6 +10,12 @@ import type { Car } from '@/types/car'
 
 const GarageView = dynamic(() => import('./GarageView'), { ssr: false })
 
-export default function GarageViewClient({ initialCars }: { initialCars: Car[] }) {
+interface Props {
+  initialCars: Car[]
+  /** Unused at runtime but accepted so the call-site type-checks cleanly. */
+  totalCars?: number
+}
+
+export default function GarageViewClient({ initialCars }: Props) {
   return <GarageView initialCars={initialCars} />
 }
