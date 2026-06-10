@@ -44,7 +44,7 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
     >
       {/* Star — only rendered in garage (when onTogglePin is provided) */}
       {onTogglePin && (
-        <td className="py-2.5 pl-3 pr-1 w-6">
+        <td className="py-2.5 pl-3 pr-1 overflow-hidden">
           <button
             onClick={(e) => { e.stopPropagation(); onTogglePin(car.id, !car.pinned) }}
             aria-label={car.pinned ? 'Unpin car' : 'Pin car'}
@@ -59,27 +59,30 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
           </button>
         </td>
       )}
-      <td className="py-2.5 px-3">
+      <td className="py-2.5 px-3 overflow-hidden whitespace-nowrap">
         <span className={`text-xs font-bold px-2 py-0.5 rounded ${classBadge}`}>
           {car.piClass}
         </span>
       </td>
-      <td className="py-2.5 px-3 text-fh-dark-2 tabular-nums">{car.piRating}</td>
-      <td className="py-2.5 px-3 text-fh-dark-2">{car.year}</td>
-      <td className="py-2.5 px-3 font-medium">{car.make}</td>
-      <td className="py-2.5 px-3">{car.model}</td>
-      <td className="py-2.5 px-3 text-fh-dark-2 hidden md:table-cell">
-        <div>{car.division}</div>
+      <td className="py-2.5 px-3 text-fh-dark-2 tabular-nums overflow-hidden whitespace-nowrap text-ellipsis">{car.piRating}</td>
+      <td className="py-2.5 px-3 text-fh-dark-2 overflow-hidden whitespace-nowrap text-ellipsis">{car.year}</td>
+      <td className="py-2.5 px-3 font-medium overflow-hidden whitespace-nowrap text-ellipsis">{car.make}</td>
+      <td className="py-2.5 px-3 overflow-hidden whitespace-nowrap text-ellipsis">{car.model}</td>
+      <td className="py-2.5 px-3 text-fh-dark-2 hidden md:table-cell overflow-hidden">
+        <div className="truncate">{car.division}</div>
         {bestRace && (
-          <div className="text-xs text-fh-muted mt-0.5 flex items-center gap-1"><RaceIcon id={bestRace.id} emoji={bestRace.icon} /> {bestRace.name}</div>
+          <div className="text-xs text-fh-muted mt-0.5 flex items-center gap-1 min-w-0">
+            <RaceIcon id={bestRace.id} emoji={bestRace.icon} />
+            <span className="truncate">{bestRace.name}</span>
+          </div>
         )}
       </td>
-      <td className="py-2.5 px-3 text-fh-dark-2 hidden lg:table-cell">{car.drivetrain ?? '—'}</td>
-      <td className="py-2.5 px-3 text-fh-dark-2 hidden lg:table-cell">{car.country}</td>
-      <td className={`py-2.5 px-3 hidden xl:table-cell text-xs font-medium ${sourceColor}`}>
+      <td className="py-2.5 px-3 text-fh-dark-2 hidden lg:table-cell overflow-hidden whitespace-nowrap text-ellipsis">{car.drivetrain ?? '—'}</td>
+      <td className="py-2.5 px-3 text-fh-dark-2 hidden lg:table-cell overflow-hidden whitespace-nowrap text-ellipsis">{car.country}</td>
+      <td className={`py-2.5 px-3 hidden xl:table-cell text-xs font-medium overflow-hidden whitespace-nowrap text-ellipsis ${sourceColor}`}>
         {car.source}
       </td>
-      <td className="py-2.5 px-3 text-fh-dark-2 tabular-nums hidden xl:table-cell text-xs">
+      <td className="py-2.5 px-3 text-fh-dark-2 tabular-nums hidden xl:table-cell text-xs overflow-hidden whitespace-nowrap text-ellipsis">
         {car.value != null
           ? `${car.value.toLocaleString()} Cr`
           : (
@@ -91,11 +94,11 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
         }
       </td>
       {showAddedAtColumn && (
-        <td className="py-2.5 px-3 text-fh-muted-2 tabular-nums hidden xl:table-cell text-[11px]">
+        <td className="py-2.5 px-3 text-fh-muted-2 tabular-nums hidden xl:table-cell text-[11px] overflow-hidden whitespace-nowrap text-ellipsis">
           {showAddedAt && car.addedAt ? formatAddedAt(car.addedAt) : null}
         </td>
       )}
-      {!hideGarage && <td className="py-2.5 px-3">
+      {!hideGarage && <td className="py-2.5 px-3 overflow-hidden">
         {car.owned && confirmRemove ? (
           <div
             onClick={(e) => e.stopPropagation()}

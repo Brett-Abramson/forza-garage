@@ -912,22 +912,22 @@ export default function GarageShowcase({ initialCars }: Props) {
             </div>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-fh-border">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
                 <thead>
                   <tr className="bg-fh-panel border-b border-fh-border text-xs uppercase tracking-wide select-none">
                     {/* Star column header — no sort, just spacing */}
-                    <th className="py-2.5 pl-3 pr-1 w-6" aria-label="Favourite" />
-                    <SortTh label="Class" sortKey="piClass" sort={sort} onSort={handleSort} />
-                    <SortTh label="PI" sortKey="piRating" sort={sort} onSort={handleSort} />
-                    <SortTh label="Year" sortKey="year" sort={sort} onSort={handleSort} />
-                    <SortTh label="Make" sortKey="make" sort={sort} onSort={handleSort} />
-                    <SortTh label="Model" sortKey="model" sort={sort} onSort={handleSort} />
-                    <SortTh label="Division" sortKey="division" sort={sort} onSort={handleSort} className="hidden md:table-cell" />
-                    <SortTh label="Drive" sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
-                    <SortTh label="Country" sortKey="country" sort={sort} onSort={handleSort} className="hidden lg:table-cell" />
-                    <SortTh label="Source" sortKey="source" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
-                    <SortTh label="Value" sortKey="value" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
-                    <SortTh label="Added" sortKey="addedAt" sort={sort} onSort={handleSort} className="hidden xl:table-cell" />
+                    <th className="py-2.5 pl-3 pr-1" style={{ width: '3%' }} aria-label="Favourite" />
+                    <SortTh label="Class"    sortKey="piClass"    sort={sort} onSort={handleSort} width="5%" />
+                    <SortTh label="PI"       sortKey="piRating"   sort={sort} onSort={handleSort} width="4%" />
+                    <SortTh label="Year"     sortKey="year"       sort={sort} onSort={handleSort} width="5%" />
+                    <SortTh label="Make"     sortKey="make"       sort={sort} onSort={handleSort} width="10%" />
+                    <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} width="14%" />
+                    <SortTh label="Division" sortKey="division"   sort={sort} onSort={handleSort} className="hidden md:table-cell" width="17%" />
+                    <SortTh label="Drive"    sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="5%" />
+                    <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="8%" />
+                    <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="11%" />
+                    <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="9%" />
+                    <SortTh label="Added"    sortKey="addedAt"    sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="9%" />
                   </tr>
                 </thead>
                 <tbody>

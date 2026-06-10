@@ -13,12 +13,14 @@ export function SortTh({
   sort,
   onSort,
   className = '',
+  width,
 }: {
   label: string
   sortKey: SortKey
   sort: SortState
   onSort: (key: SortKey) => void
   className?: string
+  width?: string
 }) {
   const active = sort.key === sortKey
   return (
@@ -26,6 +28,7 @@ export function SortTh({
       className={`text-left py-2.5 px-3 cursor-pointer group ${className}`}
       onClick={() => onSort(sortKey)}
       aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
+      style={width ? { width } : undefined}
     >
       <span
         className={`flex items-center gap-1 transition-colors ${
