@@ -103,7 +103,7 @@ export default async function GaragePage({ searchParams }: PageProps) {
   return (
     // min-h-screen prevents layout shifts above/below the content area
     // from registering as CLS when the skeleton swaps for the real component.
-    <main className="max-w-screen-2xl mx-auto px-4 py-8 min-h-screen">
+    <main className="max-w-screen-2xl mx-auto min-h-screen">
       <Suspense fallback={<GarageSkeleton view={view} />}>
         <GarageShowcaseClient initialCars={cars} />
       </Suspense>

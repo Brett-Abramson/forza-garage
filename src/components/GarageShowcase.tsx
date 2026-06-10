@@ -4,12 +4,11 @@ import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef, Fra
 import { RaceIcon } from '@/components/RaceIcons'
 import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
-import { Car, FilterState, PI_CLASS_ORDER, PI_CLASS_COLORS, SOURCE_CHIPS } from '@/types/car'
+import { Car, FilterState } from '@/types/car'
 import { SortKey, SortDir, compareRows, defaultSort, formatAddedAt } from '@/lib/sort'
 import { buildCsvString, csvFilename } from '@/lib/exportCsv'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
-import FilterBar from './FilterBar'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
 import { CAR_TAGS } from '@/lib/tags'
 const ALL_TAGS = new Set<string>(CAR_TAGS)
@@ -19,15 +18,14 @@ import { getRankedRaceTypes } from '@/lib/raceMatch'
 import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { filterCars, DEFAULT_FILTERS } from '@/lib/filterCars'
 import GarageDrawer from './GarageDrawer'
-import DivisionGroupFilter from './DivisionGroupFilter'
 import StatBars from './StatBars'
 import { getStatCallouts } from '@/lib/statCallouts'
 import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS } from '@/lib/statUtils'
 import Link from 'next/link'
 import BackToTop from './BackToTop'
+import FilterSidebar from './FilterSidebar'
 
 type ViewMode = 'grid' | 'table'
-type FilterMode = 'tags' | 'race'
 
 // ─── CSV export ───────────────────────────────────────────────────────────────
 // Pure logic lives in src/lib/exportCsv.ts — only the browser trigger is here.
@@ -497,9 +495,6 @@ export default function GarageShowcase({ initialCars }: Props) {
     (searchParams.get('view') as ViewMode) ?? 'table'
   )
   const [sort, setSort] = useState<SortState>({ key: 'addedAt', dir: 'desc' })
-  const [filterMode, setFilterMode] = useState<FilterMode>(
-    (searchParams.get('mode') as FilterMode) ?? 'race'
-  )
   const [selectedTags, setSelectedTags] = useState<Set<string>>(
     () => new Set((searchParams.get('tags')?.split(',') ?? []).filter((t) => ALL_TAGS.has(t)))
   )
@@ -512,6 +507,14 @@ export default function GarageShowcase({ initialCars }: Props) {
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
   const [expandedCarId, setExpandedCarId] = useState<number | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  // Close sidebar on mobile by default
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      setSidebarOpen(false)
+    }
+  }, [])
 
   // Press / to focus search (skips when cursor is already in a form field)
   useEffect(() => {
@@ -544,7 +547,6 @@ export default function GarageShowcase({ initialCars }: Props) {
     if (filters.pinned) params.set('fav', '1')
     if (selectedTags.size > 0) params.set('tags', [...selectedTags].sort().join(','))
     if (selectedRace) params.set('race', selectedRace)
-    if (filterMode !== 'race') params.set('mode', filterMode)
     if (view !== 'table') params.set('view', view)
     const qs = params.toString()
     const timer = setTimeout(() => {
@@ -554,29 +556,41 @@ export default function GarageShowcase({ initialCars }: Props) {
   }, [
     filters.search, filters.piClass, filters.division, filters.make,
     filters.drivetrain, filters.country, filters.source, filters.pinned,
-    selectedGroupId, selectedTags, selectedRace, filterMode, view,
+    selectedGroupId, selectedTags, selectedRace, view,
   ])
 
   const options = useMemo(() => buildOptions(cars), [cars])
 
-  // Register search + view controls with the navbar
+  // Compute activeFilterCount early so it can be registered with Nav
+  const activeFilterCount = [
+    filters.piClass !== '',
+    filters.division !== '' || selectedGroupId !== null,
+    filters.make !== '',
+    filters.drivetrain !== '',
+    filters.country !== '',
+    filters.source !== '',
+    filters.pinned,
+    selectedTags.size > 0,
+    selectedRace !== null,
+  ].filter(Boolean).length
+
+  // Register search + view + sidebar controls with the navbar
   const { register, unregister } = useNavControls()
   useLayoutEffect(() => {
     register({
-      search: filters.search,
-      setSearch: (v) => setFilters((f) => ({ ...f, search: v })),
+      search:           filters.search,
+      setSearch:        (v) => setFilters((f) => ({ ...f, search: v })),
       view,
       setView,
+      sidebarOpen,
+      setSidebarOpen,
+      activeFilterCount,
     })
     return () => unregister()
-  }, [filters.search, view, register, unregister])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search, view, sidebarOpen, activeFilterCount, register, unregister])
 
   const activeRace = useMemo(() => RACE_TYPES.find((r) => r.id === selectedRace) ?? null, [selectedRace])
-
-  const classCounts = useMemo(
-    () => Object.fromEntries(PI_CLASS_ORDER.map((cls) => [cls, cars.filter((c) => c.piClass === cls).length])),
-    [cars]
-  )
 
   const filteredCars = useMemo(
     () => filterCars(cars, { filters, selectedGroupId, selectedTags, activeRace }),
@@ -613,12 +627,6 @@ export default function GarageShowcase({ initialCars }: Props) {
     setFilters((f) => ({ ...f, division }))
   }, [])
 
-  const switchMode = useCallback((mode: FilterMode) => {
-    setFilterMode(mode)
-    if (mode === 'tags') setSelectedRace(null)
-    if (mode === 'race') setSelectedTags(new Set())
-  }, [])
-
   const toggleRace = useCallback((id: string) => {
     setSelectedRace((prev) => (prev === id ? null : id))
   }, [])
@@ -652,20 +660,7 @@ export default function GarageShowcase({ initialCars }: Props) {
     setSelectedGroupId(null)
     setSelectedTags(new Set())
     setSelectedRace(null)
-    setFilterMode('tags')
   }, [])
-
-  const activeFilterCount = [
-    filters.piClass !== '',
-    filters.division !== '' || selectedGroupId !== null,
-    filters.make !== '',
-    filters.drivetrain !== '',
-    filters.country !== '',
-    filters.source !== '',
-    filters.pinned,
-    selectedTags.size > 0,
-    selectedRace !== null,
-  ].filter(Boolean).length
 
   const toggleExpanded = useCallback((carId: number) => {
     setExpandedCarId((prev) => (prev === carId ? null : carId))
@@ -736,7 +731,31 @@ export default function GarageShowcase({ initialCars }: Props) {
 
   return (
     <>
-    <div className="flex flex-col gap-6">
+    <div className="flex items-start min-h-screen">
+
+      {/* ── Filter sidebar ────────────────────────────────────────────────── */}
+      <FilterSidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isGarage={true}
+        filters={filters}
+        setFilters={setFilters}
+        options={options}
+        selectedGroupId={selectedGroupId}
+        selectedTags={selectedTags}
+        selectedRace={selectedRace}
+        activeFilterCount={activeFilterCount}
+        activeRace={activeRace}
+        clearAllFilters={clearAllFilters}
+        handleGroupChange={handleGroupChange}
+        handleDivisionChange={handleDivisionChange}
+        toggleTag={toggleTag}
+        toggleRace={toggleRace}
+        pinnedCount={pinnedCount}
+      />
+
+      {/* ── Main content ──────────────────────────────────────────────────── */}
+      <div className="flex-1 min-w-0 flex flex-col gap-6 px-6 pt-6 pb-20">
       {/* Page header */}
       <header className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-6">
@@ -837,213 +856,6 @@ export default function GarageShowcase({ initialCars }: Props) {
         </div>
       )}
 
-      {/* Class stat chips */}
-      <div className="flex flex-wrap gap-2">
-        {PI_CLASS_ORDER.filter((cls) => classCounts[cls] > 0)
-          .reverse()
-          .map((cls) => (
-            <button
-              key={cls}
-              onClick={() => setFilters((f) => ({ ...f, piClass: f.piClass === cls ? '' : cls }))}
-              className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${
-                filters.piClass === cls
-                  ? 'bg-fh-red-pale border-fh-red'
-                  : 'bg-fh-panel border-fh-border hover:border-fh-border'
-              }`}
-            >
-              <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${PI_CLASS_COLORS[cls]}`}>
-                {cls}
-              </span>
-              <span className="text-sm font-semibold">{classCounts[cls]}</span>
-              <span className="text-xs text-fh-muted">{classCounts[cls] === 1 ? 'car' : 'cars'}</span>
-            </button>
-          ))}
-      </div>
-
-      {/* Division group filter */}
-      <DivisionGroupFilter
-        selectedGroupId={selectedGroupId}
-        selectedDivision={filters.division}
-        availableDivisions={options.divisions}
-        onGroupChange={handleGroupChange}
-        onDivisionChange={handleDivisionChange}
-      />
-
-      {/* Filter bar — division handled by group chips above */}
-      <FilterBar
-        filters={filters}
-        options={options}
-        onChange={setFilters}
-        totalCount={cars.length}
-        filteredCount={filteredCars.length}
-        hideOwned
-        hideDivision
-      />
-
-      {/* Source chips + Favourites toggle */}
-      <div className="flex flex-wrap gap-2">
-        {SOURCE_CHIPS.map(({ label, match }) => (
-          <button
-            key={match}
-            onClick={() => setFilters((f) => ({ ...f, source: f.source === match ? '' : match }))}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-              filters.source === match
-                ? 'bg-fh-red-pale text-fh-red border-fh-red'
-                : 'bg-fh-panel text-fh-muted border-fh-border hover:border-fh-border hover:text-fh-dark-2'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-        {/* Favourites — only shown when at least one car is pinned */}
-        {pinnedCount > 0 && (
-          <button
-            onClick={() => setFilters((f) => ({ ...f, pinned: !f.pinned }))}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-              filters.pinned
-                ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                : 'bg-fh-panel text-fh-muted border-fh-border hover:border-fh-border hover:text-amber-400'
-            }`}
-          >
-            ★ Favourites
-          </button>
-        )}
-      </div>
-
-      {/* Filter mode toggle + chip row */}
-      <div>
-        <div className="flex items-center gap-1 mb-3">
-          <span className="text-xs text-fh-muted uppercase tracking-wide mr-2">Filter by</span>
-          <button
-            onClick={() => switchMode('tags')}
-            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-              filterMode === 'tags'
-                ? 'bg-fh-red-pale text-fh-red'
-                : 'text-fh-muted hover:text-fh-dark-2'
-            }`}
-          >
-            Tags
-          </button>
-          <button
-            onClick={() => switchMode('race')}
-            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-              filterMode === 'race'
-                ? 'bg-amber-500/20 text-amber-400'
-                : 'text-fh-muted hover:text-fh-dark-2'
-            }`}
-          >
-            Race type
-          </button>
-          {/* Inline clear — only appears when something is active, no layout shift */}
-          {activeFilterCount > 0 && (
-            <button
-              onClick={clearAllFilters}
-              className="ml-auto text-xs text-fh-muted hover:text-fh-dark-2 transition-colors"
-            >
-              Clear all
-            </button>
-          )}
-        </div>
-
-        {filterMode === 'tags' ? (
-          <div className="flex flex-wrap gap-2">
-            {CAR_TAGS.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => toggleTag(tag)}
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  selectedTags.has(tag)
-                    ? 'bg-fh-red-pale text-fh-red border-fh-red'
-                    : 'bg-fh-panel text-fh-muted border-fh-border hover:border-fh-border hover:text-fh-dark-2'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-            {selectedTags.size > 0 && (
-              <button
-                onClick={() => setSelectedTags(new Set())}
-                className="px-3 py-1 rounded-full text-xs font-medium border border-fh-border text-fh-muted hover:text-fh-dark-2 hover:border-fh-border transition-colors"
-              >
-                ✕ clear
-              </button>
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Pills + inline description in one stable row — no layout shift */}
-            {/* Relative wrapper so the floating panel anchors above the pills row */}
-            <div className="relative">
-              <div className="flex flex-wrap gap-2">
-                {RACE_TYPES.map((race) => (
-                  <button
-                    key={race.id}
-                    onClick={() => toggleRace(race.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                      selectedRace === race.id
-                        ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                        : 'bg-fh-panel text-fh-muted border-fh-border hover:border-fh-border hover:text-fh-dark-2'
-                    }`}
-                  >
-                    <RaceIcon id={race.id} emoji={race.icon} />
-                    {race.name}
-                    {selectedRace === race.id && (
-                      <span
-                        aria-label={`Clear ${race.name} filter`}
-                        className="ml-0.5 opacity-60 hover:opacity-100"
-                      >
-                        ×
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {/*
-                Desktop floating description — absolutely positioned above the pills row.
-                Out of document flow so the car list never moves.
-                Grows upward from bottom: 100% of the pills wrapper.
-              */}
-              {activeRace && (
-                <div className="hidden md:block absolute right-0 bottom-full mb-2 w-72 z-10
-                                rounded-xl border border-amber-500/30 bg-fh-panel shadow-lg">
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 flex-wrap mb-3">
-                      <span className="text-sm font-semibold text-amber-300">
-                        {activeRace.icon} {activeRace.name}
-                      </span>
-                      {/* Surface badge — theme-aware for light/dark contrast */}
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded
-                                       bg-amber-100 text-amber-900
-                                       dark:bg-amber-900/40 dark:text-amber-400">
-                        {activeRace.surface}
-                      </span>
-                    </div>
-                    <ul className="space-y-1.5">
-                      {activeRace.demands.map((d) => (
-                        <li key={d} className="flex items-start gap-1.5 text-xs text-fh-dark-2 leading-snug">
-                          <span className="text-amber-500 mt-0.5 shrink-0">▸</span>
-                          <span>{d}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Mobile: compact single-line description below the pills */}
-            {activeRace && (
-              <div className="md:hidden flex items-center gap-1.5 mt-2 text-xs">
-                <span>{activeRace.icon}</span>
-                <span className="font-medium text-amber-300">{activeRace.name}</span>
-                <span className="text-amber-500/30 select-none">·</span>
-                <span className="text-fh-muted">{activeRace.surface}</span>
-              </div>
-            )}
-          </>
-        )}
-      </div>
 
       {/* Sort pills (grid mode — table mode uses column headers) */}
       {view === 'grid' && sortedCars.length > 0 && (
@@ -1148,6 +960,7 @@ export default function GarageShowcase({ initialCars }: Props) {
           )}
         </>
       )}
+      </div>{/* end main content column */}
     </div>
 
     {/* Mobile bottom sheet — shown when a list-view row is expanded on small screens */}

@@ -40,6 +40,21 @@ export default function Nav() {
   return (
     <nav className="border-b border-fh-border bg-fh-panel backdrop-blur-sm sticky top-0 z-10">
       <div className="max-w-screen-2xl mx-auto px-4 flex items-center gap-1 h-12">
+        {showControls && (
+          <button
+            onClick={() => controls!.setSidebarOpen(!controls!.sidebarOpen)}
+            title="Toggle filters"
+            aria-label="Toggle filters"
+            className="relative p-1.5 rounded-md text-fh-muted hover:text-fh-dark-2 hover:bg-fh-panel-2 transition-colors mr-1 shrink-0"
+          >
+            <PanelLeftIcon />
+            {!controls!.sidebarOpen && controls!.activeFilterCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-fh-red text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                {controls!.activeFilterCount}
+              </span>
+            )}
+          </button>
+        )}
         <Link href="/" className="text-sm font-bold tracking-tight mr-4 text-fh-dark">
           Forza<span className="text-fh-red">Garage</span>
         </Link>
@@ -175,6 +190,15 @@ function BuildsIcon() {
     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
       <path d="M2 3h5v2H2zM2 7h9v2H2zM2 11h7v2H2z" />
       <circle cx="13" cy="4" r="2" />
+    </svg>
+  )
+}
+
+function PanelLeftIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" />
+      <path d="M6 2.5v11" />
     </svg>
   )
 }

@@ -9,6 +9,9 @@ export interface NavControls {
   setSearch: (v: string) => void
   view: ViewMode
   setView: (v: ViewMode) => void
+  sidebarOpen: boolean
+  setSidebarOpen: (v: boolean) => void
+  activeFilterCount: number
 }
 
 interface NavControlsCtx {

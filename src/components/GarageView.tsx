@@ -2,24 +2,21 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef, useLayoutEffect } from 'react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
-import { RaceIcon } from '@/components/RaceIcons'
 import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
-import { Car, FilterState, SOURCE_CHIPS } from '@/types/car'
-import { CAR_TAGS, AUTO_TAGS } from '@/lib/tags'
+import { Car, FilterState } from '@/types/car'
+import { CAR_TAGS } from '@/lib/tags'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
 import { RACE_TYPES } from '@/lib/races'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
-import FilterBar from './FilterBar'
-import DivisionGroupFilter from './DivisionGroupFilter'
 import GarageDrawer from './GarageDrawer'
 import { SortTh, GridIcon, TableIcon } from './table-ui'
 import { filterCars, DEFAULT_FILTERS } from '@/lib/filterCars'
 import BackToTop from './BackToTop'
+import FilterSidebar from './FilterSidebar'
 
 type ViewMode = 'grid' | 'table'
-type FilterMode = 'tags' | 'race'
 
 // Matches the responsive CSS grid: 2 / sm:3 / lg:4 / xl:5
 function calcColumns(): number {
@@ -86,13 +83,11 @@ export default function GarageView({ initialCars }: Props) {
   const [selectedTags, setSelectedTags]     = useState<Set<string>>(
     () => new Set((searchParams.get('tags')?.split(',') ?? []).filter((t) => ALL_TAGS.has(t)))
   )
-  const [filterMode, setFilterMode]         = useState<FilterMode>(
-    (searchParams.get('mode') as FilterMode) ?? 'race'
-  )
   const [selectedRace, setSelectedRace]     = useState<string | null>(
     searchParams.get('race') ?? null
   )
   const [columnCount, setColumnCount]       = useState(calcColumns)
+  const [sidebarOpen, setSidebarOpen]       = useState(true)
 
   const activeRace = useMemo(
     () => RACE_TYPES.find((r) => r.id === selectedRace) ?? null,
@@ -107,17 +102,41 @@ export default function GarageView({ initialCars }: Props) {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  // ── Register search + view controls with the navbar ─────────────────────────
+  // ── Close sidebar on mobile by default ──────────────────────────────────────
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      setSidebarOpen(false)
+    }
+  }, [])
+
+  // ── Derived counts (needed by both Nav registration and render) ─────────────
+  const activeFilterCount = [
+    filters.piClass !== '',
+    filters.division !== '' || selectedGroupId !== null,
+    filters.make !== '',
+    filters.drivetrain !== '',
+    filters.country !== '',
+    filters.source !== '',
+    filters.owned !== 'all',
+    selectedTags.size > 0,
+    selectedRace !== null,
+  ].filter(Boolean).length
+
+  // ── Register search + view + sidebar controls with the navbar ───────────────
   const { register, unregister } = useNavControls()
   useLayoutEffect(() => {
     register({
-      search:    filters.search,
-      setSearch: (v) => setFilters((f) => ({ ...f, search: v })),
+      search:           filters.search,
+      setSearch:        (v) => setFilters((f) => ({ ...f, search: v })),
       view,
       setView,
+      sidebarOpen,
+      setSidebarOpen,
+      activeFilterCount,
     })
     return () => unregister()
-  }, [filters.search, view, register, unregister])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search, view, sidebarOpen, activeFilterCount, register, unregister])
 
   // ── Press / to focus search ─────────────────────────────────────────────────
   useEffect(() => {
@@ -149,8 +168,7 @@ export default function GarageView({ initialCars }: Props) {
     if (filters.source)       params.set('src',     filters.source)
     if (filters.owned !== 'all') params.set('owned', filters.owned)
     if (selectedTags.size > 0)   params.set('tags',  [...selectedTags].sort().join(','))
-    if (selectedRace)         params.set('race',    selectedRace)
-    if (filterMode !== 'race')   params.set('mode',  filterMode)
+    if (selectedRace)            params.set('race',  selectedRace)
     if (view !== 'grid')         params.set('view',  view)
     const qs    = params.toString()
     const timer = setTimeout(() => {
@@ -160,7 +178,7 @@ export default function GarageView({ initialCars }: Props) {
   }, [
     filters.search, filters.piClass, filters.division, filters.make,
     filters.drivetrain, filters.country, filters.source, filters.owned,
-    selectedGroupId, selectedTags, selectedRace, filterMode, view,
+    selectedGroupId, selectedTags, selectedRace, view,
   ])
 
   // ── Filtered + sorted list ──────────────────────────────────────────────────
@@ -223,30 +241,11 @@ export default function GarageView({ initialCars }: Props) {
     setSelectedGroupId(null)
     setSelectedTags(new Set())
     setSelectedRace(null)
-    setFilterMode('tags')
-  }, [])
-
-  const switchMode = useCallback((mode: FilterMode) => {
-    setFilterMode(mode)
-    if (mode === 'tags')  setSelectedRace(null)
-    if (mode === 'race')  setSelectedTags(new Set())
   }, [])
 
   const toggleRace = useCallback((id: string) => {
     setSelectedRace((prev) => (prev === id ? null : id))
   }, [])
-
-  const activeFilterCount = [
-    filters.piClass !== '',
-    filters.division !== '' || selectedGroupId !== null,
-    filters.make !== '',
-    filters.drivetrain !== '',
-    filters.country !== '',
-    filters.source !== '',
-    filters.owned !== 'all',
-    selectedTags.size > 0,
-    selectedRace !== null,
-  ].filter(Boolean).length
 
   const toggleOwned = useCallback(async (id: number, owned: boolean) => {
     setPendingIds((s) => new Set(s).add(id))
@@ -293,7 +292,30 @@ export default function GarageView({ initialCars }: Props) {
 
   return (
     <>
-    <div className="flex flex-col gap-6">
+    <div className="flex items-start min-h-screen">
+
+      {/* ── Filter sidebar ────────────────────────────────────────────────── */}
+      <FilterSidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isGarage={false}
+        filters={filters}
+        setFilters={setFilters}
+        options={options}
+        selectedGroupId={selectedGroupId}
+        selectedTags={selectedTags}
+        selectedRace={selectedRace}
+        activeFilterCount={activeFilterCount}
+        activeRace={activeRace}
+        clearAllFilters={clearAllFilters}
+        handleGroupChange={handleGroupChange}
+        handleDivisionChange={handleDivisionChange}
+        toggleTag={toggleTag}
+        toggleRace={toggleRace}
+      />
+
+      {/* ── Main content ──────────────────────────────────────────────────── */}
+      <div className="flex-1 min-w-0 flex flex-col gap-6 px-6 pt-6 pb-20">
 
       {/* Page header */}
       <header>
@@ -317,166 +339,7 @@ export default function GarageView({ initialCars }: Props) {
         </div>
       </div>
 
-      {/* ── Sticky filter bank ─────────────────────────────────────────────── */}
-      {/* top-12 = navbar height (h-12 / 48px). z-10 keeps it above card content. */}
-      <div className="sticky top-12 z-10 bg-fh-bg pt-2 pb-3 -mx-4 px-4 flex flex-col gap-4 border-b border-fh-border">
-
-        <DivisionGroupFilter
-          selectedGroupId={selectedGroupId}
-          selectedDivision={filters.division}
-          availableDivisions={options.divisions}
-          onGroupChange={handleGroupChange}
-          onDivisionChange={handleDivisionChange}
-        />
-
-        <FilterBar
-          filters={filters}
-          options={options}
-          onChange={setFilters}
-          totalCount={cars.length}
-          filteredCount={filteredCars.length}
-          hideDivision
-        />
-
-        {/* Source chips */}
-        <div className="flex flex-wrap gap-2">
-          {SOURCE_CHIPS.map(({ label, match }) => (
-            <button
-              key={match}
-              onClick={() => setFilters((f) => ({ ...f, source: f.source === match ? '' : match }))}
-              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                filters.source === match
-                  ? 'bg-fh-red-pale text-fh-red border-fh-red'
-                  : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Filter mode toggle + tag / race chips */}
-        <div>
-          <div className="flex items-center gap-1 mb-3">
-            <span className="text-xs text-fh-muted uppercase tracking-wide mr-2">Filter by</span>
-            <button
-              onClick={() => switchMode('tags')}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                filterMode === 'tags'
-                  ? 'bg-fh-red-pale text-fh-red'
-                  : 'text-fh-muted hover:text-fh-dark-2'
-              }`}
-            >
-              Tags
-            </button>
-            <button
-              onClick={() => switchMode('race')}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                filterMode === 'race'
-                  ? 'bg-amber-500/20 text-amber-400'
-                  : 'text-fh-muted hover:text-fh-dark-2'
-              }`}
-            >
-              Race type
-            </button>
-            {activeFilterCount > 0 && (
-              <button
-                onClick={clearAllFilters}
-                className="ml-auto text-xs text-fh-muted hover:text-fh-dark-2 transition-colors"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-
-          {filterMode === 'tags' ? (
-            <div className="flex flex-wrap gap-2">
-              {AUTO_TAGS.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                    selectedTags.has(tag)
-                      ? 'bg-fh-red-pale text-fh-red border-fh-red'
-                      : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-              {selectedTags.size > 0 && (
-                <button
-                  onClick={() => setSelectedTags(new Set())}
-                  className="px-3 py-1 rounded-full text-xs font-medium border border-fh-border text-fh-muted hover:text-fh-dark hover:border-fh-red transition-colors"
-                >
-                  ✕ clear
-                </button>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="relative">
-                <div className="flex flex-wrap gap-2">
-                  {RACE_TYPES.map((race) => (
-                    <button
-                      key={race.id}
-                      onClick={() => toggleRace(race.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                        selectedRace === race.id
-                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                          : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark-2'
-                      }`}
-                    >
-                      <RaceIcon id={race.id} emoji={race.icon} />
-                      {race.name}
-                      {selectedRace === race.id && (
-                        <span aria-label={`Clear ${race.name} filter`} className="ml-0.5 opacity-60 hover:opacity-100">×</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                {activeRace && (
-                  <div className="hidden md:block absolute right-0 bottom-full mb-2 w-72 z-10
-                                  rounded-xl border border-amber-500/30 bg-fh-panel shadow-lg">
-                    <div className="p-4">
-                      <div className="flex items-center gap-2 flex-wrap mb-3">
-                        <span className="text-sm font-semibold text-amber-300">
-                          {activeRace.icon} {activeRace.name}
-                        </span>
-                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded
-                                         bg-amber-100 text-amber-900
-                                         dark:bg-amber-900/40 dark:text-amber-400">
-                          {activeRace.surface}
-                        </span>
-                      </div>
-                      <ul className="space-y-1.5">
-                        {activeRace.demands.map((d) => (
-                          <li key={d} className="flex items-start gap-1.5 text-xs text-fh-dark-2 leading-snug">
-                            <span className="text-amber-500 mt-0.5 shrink-0">▸</span>
-                            <span>{d}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {activeRace && (
-                <div className="md:hidden flex items-center gap-1.5 mt-2 text-xs">
-                  <span>{activeRace.icon}</span>
-                  <span className="font-medium text-amber-300">{activeRace.name}</span>
-                  <span className="text-amber-500/30 select-none">·</span>
-                  <span className="text-fh-muted">{activeRace.surface}</span>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-      </div>
-      {/* ── End sticky filter bank ──────────────────────────────────────────── */}
+      {/* ── end sticky filter bank — replaced by sidebar ───────────────────── */}
 
       {/* ── Results ─────────────────────────────────────────────────────────── */}
       {sortedCars.length === 0 ? (
@@ -581,6 +444,7 @@ export default function GarageView({ initialCars }: Props) {
           </div>
         </>
       )}
+      </div>{/* end main content column */}
     </div>
 
     <GarageDrawer
