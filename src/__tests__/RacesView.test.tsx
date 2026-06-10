@@ -36,10 +36,10 @@ describe('RacesView — card grid', () => {
     }
   })
 
-  it('each card shows the race icon', () => {
+  it('each card shows the race name (SVG icons replace emoji — check name instead)', () => {
     render(<RacesView />)
     for (const race of RACE_TYPES) {
-      expect(screen.getAllByText(race.icon).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(race.name).length).toBeGreaterThan(0)
     }
   })
 })
@@ -68,9 +68,9 @@ describe('RacesView — drawer content', () => {
     const user = userEvent.setup()
     render(<RacesView />)
     await openDrawer(user, ROAD.name)
-    // Both icon and name appear (at least twice — card + drawer)
+    // Name appears at least twice — once in the card, once in the open drawer
+    // Icon is now an SVG (aria-hidden), not a text node — not queryable by text
     expect(screen.getAllByText(ROAD.name).length).toBeGreaterThanOrEqual(2)
-    expect(screen.getAllByText(ROAD.icon).length).toBeGreaterThanOrEqual(2)
   })
 
   it('shows all demands as list items', async () => {

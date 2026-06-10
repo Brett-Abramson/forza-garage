@@ -624,6 +624,66 @@ describe('filterCars — empty input array', () => {
   })
 })
 
+// ─── Pinned / favourite filter ────────────────────────────────────────────────
+
+describe('filterCars — pinned filter', () => {
+  // Extend two fixture cars with explicit pinned state
+  const PINNED_PORSCHE: Car = { ...PORSCHE, pinned: true }
+  const PINNED_FORD_GT: Car = { ...FORD_GT, pinned: true }
+  const UNPINNED_WRX: Car = { ...SUBARU_WRX, pinned: false }
+  const UNPINNED_BUGATTI: Car = { ...BUGATTI, pinned: undefined }  // no pinned field
+  const PINNED_CARS = [PINNED_PORSCHE, PINNED_FORD_GT, UNPINNED_WRX, UNPINNED_BUGATTI]
+
+  it('filters.pinned: true returns only cars where car.pinned === true', () => {
+    const result = filterCars(PINNED_CARS, { filters: f({ pinned: true }) })
+    expect(ids(result)).toEqual(ids([PINNED_PORSCHE, PINNED_FORD_GT]))
+    result.forEach((c) => expect(c.pinned).toBe(true))
+  })
+
+  it('filters.pinned: false is a no-op — returns all cars regardless of pin state', () => {
+    const result = filterCars(PINNED_CARS, { filters: f({ pinned: false }) })
+    expect(result).toHaveLength(PINNED_CARS.length)
+  })
+
+  it('car with pinned: undefined does not pass the pinned filter', () => {
+    const result = filterCars([UNPINNED_BUGATTI], { filters: f({ pinned: true }) })
+    expect(result).toHaveLength(0)
+  })
+
+  it('car with pinned: false does not pass the pinned filter', () => {
+    const result = filterCars([UNPINNED_WRX], { filters: f({ pinned: true }) })
+    expect(result).toHaveLength(0)
+  })
+
+  it('pinned filter combines with piClass — returns only pinned cars of that class', () => {
+    // PINNED_PORSCHE is S1, PINNED_FORD_GT is S2 — only S1 + pinned → Porsche
+    const result = filterCars(PINNED_CARS, { filters: f({ pinned: true, piClass: 'S1' }) })
+    expect(ids(result)).toEqual([PINNED_PORSCHE.id])
+  })
+
+  it('pinned filter combines with race type — intersection of pinned AND matching race tags', () => {
+    // Road racing recommends ['asphalt', 'grip', 'long straights', 'technical']
+    // PINNED_PORSCHE has asphalt+grip+technical (matches), PINNED_FORD_GT has asphalt+grip+long straights+drift (matches)
+    // UNPINNED_WRX has dirt+mixed (no road match) — already excluded by pinned filter
+    const roadRace = { recommendedTags: ['asphalt', 'grip'] as string[] }
+    const result = filterCars(PINNED_CARS, {
+      filters: f({ pinned: true }),
+      activeRace: roadRace,
+    })
+    expect(ids(result)).toEqual(ids([PINNED_PORSCHE, PINNED_FORD_GT]))
+    result.forEach((c) => expect(c.pinned).toBe(true))
+  })
+
+  it('pinned + race type with no overlap returns empty', () => {
+    const snowRace = { recommendedTags: ['snow'] as string[] }
+    const result = filterCars(PINNED_CARS, {
+      filters: f({ pinned: true }),
+      activeRace: snowRace,
+    })
+    expect(result).toHaveLength(0)
+  })
+})
+
 // ─── Does not mutate input ────────────────────────────────────────────────────
 
 describe('filterCars — purity', () => {

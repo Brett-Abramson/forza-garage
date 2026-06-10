@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Forza Garage — Filter Sidebar Explorations</title>
+<link rel="stylesheet" href="forza-styles.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="forza-data.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="forza-shared.jsx"></script>
+<script type="text/babel" src="forza-sidebars.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const F = window.FORZA;
+const { TopBar, ContentHeader, Results, applyFilters, activeCount, SidebarC, SvgGrid, SvgTable } = window.FZ;
+
+const RESET = { piClass: '', groupId: null, division: '', make: '', drivetrain: '', country: '', source: '', owned: 'all', tags: new Set(), race: null };
+window.FZ_RESET = RESET;
+
+const CLASS_ORDER = {}; F.PI_CLASSES.forEach((c, i) => { CLASS_ORDER[c.id] = i; });
+
+function compareRows(a, b, key, dir) {
+  let av = a[key], bv = b[key];
+  if (key === 'piClass') { av = CLASS_ORDER[av] ?? 99; bv = CLASS_ORDER[bv] ?? 99; }
+  let r;
+  if (typeof av === 'string') r = av.localeCompare(bv);
+  else r = (av ?? 0) - (bv ?? 0);
+  return dir === 'asc' ? r : -r;
+}
+
+function App() {
+  const [page, setPageRaw] = useState('cars');     // 'cars' | 'garage'
+  const [theme, setTheme] = useState('light');
+  const [view, setView] = useState('grid');
+  const [sidebarOpen, setSidebarOpen] = useState(true);   // desktop: shown ; also drives mobile drawer
+  const [sort, setSort] = useState({ key: null, dir: 'asc' });
+
+  const [search, setSearch] = useState('');
+  const [st, setSt] = useState({ ...RESET });
+  const set = (patch) => {
+    if (patch === RESET) { setSt({ ...RESET, tags: new Set() }); setSearch(''); return; }
+    setSt((p) => ({ ...p, ...patch }));
+  };
+  // switching into Garage: owned/not-owned is meaningless there — reset it
+  const setPage = (p) => { if (p === 'garage') setSt((s) => ({ ...s, owned: 'all' })); setPageRaw(p); };
+
+  const onSort = (key) => setSort((prev) => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' }));
+
+  useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
+  const baseCars = page === 'garage' ? F.CARS.filter((c) => c.owned) : F.CARS;
+  const fullState = { ...st, search };
+  let filtered = applyFilters(baseCars, fullState);
+  if (sort.key) filtered = [...filtered].sort((a, b) => compareRows(a, b, sort.key, sort.dir));
+
+  const nActive = activeCount(fullState) + (search ? 1 : 0);
+
+  // close drawer on escape (mobile)
+  useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') setSidebarOpen(false); };
+    window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h);
+  }, []);
+
+  const sideStateProps = { st: fullState, set: (p) => { if (p === RESET) { set(RESET); } else if ('search' in p) { setSearch(p.search); } else { set(p); } }, cars: baseCars };
+
+  return (
+    <div className="app-wrap">
+      {/* ── prototype chrome (tooling, not the product) ── */}
+      <div className="chrome">
+        <span className="ch-brand">Forza<span className="r">Garage</span></span>
+        <span className="ch-lbl hide-sm">filters → sidebar · variant C</span>
+        <div className="ch-sep hide-sm"></div>
+        <span className="ch-lbl">Page</span>
+        <div className="seg subtle">
+          <button className={page === 'cars' ? 'on' : ''} onClick={() => setPage('cars')}>Database</button>
+          <button className={page === 'garage' ? 'on' : ''} onClick={() => setPage('garage')}>Garage</button>
+        </div>
+        <div className="ch-sep hide-sm"></div>
+        <span className="ch-lbl hide-sm">Theme</span>
+        <div className="seg subtle">
+          <button className={theme === 'light' ? 'on' : ''} onClick={() => setTheme('light')}>Light</button>
+          <button className={theme === 'dark' ? 'on' : ''} onClick={() => setTheme('dark')}>Dark</button>
+        </div>
+        <div className="ch-spacer"></div>
+        <span className="ch-note">Compact rail · top filters visible, advanced behind a drawer</span>
+      </div>
+
+      {/* ── slim top bar (retained header — search lives here) ── */}
+      <TopBar
+        page={page} search={search} setSearch={setSearch}
+        view={view} setView={setView}
+        onToggleSidebar={() => setSidebarOpen((v) => !v)} sidebarOpen={sidebarOpen}
+        showInlineSearch={true} filterCount={nActive}
+      />
+
+      {/* ── body ── */}
+      <div className={`app-body ${sidebarOpen ? 'open' : 'collapsed'}`}>
+        <div className="scrim" onClick={() => setSidebarOpen(false)}></div>
+        <aside className="side-col">
+          <SidebarC {...sideStateProps} page={page} />
+        </aside>
+        <main className="main-col">
+          <ContentHeader page={page} cars={baseCars} filtered={filtered} />
+          <div className="results-bar">
+            <span className="results-count"><b>{filtered.length}</b>{filtered.length !== baseCars.length ? ` of ${baseCars.length}` : ''} cars</span>
+            {view === 'table' && <span className="sort-hint">Click a column header to sort</span>}
+          </div>
+          <Results cars={filtered} view={view} sort={sort} onSort={onSort} />
+        </main>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

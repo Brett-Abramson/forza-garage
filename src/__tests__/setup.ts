@@ -26,6 +26,22 @@ vi.mock('@clerk/nextjs/server', () => ({
   createRouteMatcher: vi.fn(() => () => false),
 }))
 
+// matchMedia is not implemented in jsdom — mock it so components that call
+// window.matchMedia() (e.g. sidebar mobile-detection) don't throw.
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,           // default: treat every env as desktop
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),     // deprecated but still called by some libs
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})
+
 // window.history.replaceState may not be writable in some jsdom versions
 if (!window.history.replaceState) {
   Object.defineProperty(window.history, 'replaceState', {

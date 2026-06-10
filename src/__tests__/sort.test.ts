@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { compareRows, defaultSort, formatAddedAt, PI_CLASS_INDEX } from '@/lib/sort'
+import { compareRows, defaultSort, formatAddedAt, PI_CLASS_INDEX, PIN_FLOAT_KEYS } from '@/lib/sort'
 import type { Car } from '@/types/car'
 import type { SortKey } from '@/lib/sort'
 
@@ -183,6 +183,72 @@ describe('compareRows — addedAt', () => {
 
   it('both null returns 0', () => {
     expect(compareRows(makeCar({ addedAt: null }), makeCar({ addedAt: null }), 'addedAt', 'asc')).toBe(0)
+  })
+})
+
+// ─── PIN_FLOAT_KEYS membership ───────────────────────────────────────────────
+
+describe('PIN_FLOAT_KEYS', () => {
+  it('contains addedAt, make, model, year', () => {
+    expect(PIN_FLOAT_KEYS.has('addedAt')).toBe(true)
+    expect(PIN_FLOAT_KEYS.has('make')).toBe(true)
+    expect(PIN_FLOAT_KEYS.has('model')).toBe(true)
+    expect(PIN_FLOAT_KEYS.has('year')).toBe(true)
+  })
+
+  it('does not contain piRating or value (numeric sorts — no pin float)', () => {
+    expect(PIN_FLOAT_KEYS.has('piRating')).toBe(false)
+    expect(PIN_FLOAT_KEYS.has('value')).toBe(false)
+  })
+})
+
+// ─── Pin float — pinned cars rise above unpinned on label sorts ───────────────
+
+describe('compareRows — pin float on label sorts', () => {
+  const pinned   = makeCar({ pinned: true })
+  const unpinned = makeCar({ pinned: false })
+
+  const floatKeys: SortKey[] = ['make', 'model', 'year', 'addedAt']
+
+  it.each(floatKeys)('%s asc: pinned car sorts before unpinned car', (key) => {
+    expect(compareRows(pinned, unpinned, key, 'asc')).toBeLessThan(0)
+  })
+
+  it.each(floatKeys)('%s desc: pinned car still sorts before unpinned car', (key) => {
+    expect(compareRows(pinned, unpinned, key, 'desc')).toBeLessThan(0)
+  })
+
+  it.each(floatKeys)('%s: two pinned cars are not reordered by pin alone (returns 0)', (key) => {
+    const a = makeCar({ pinned: true, make: 'Same', model: 'Same', year: 2020, addedAt: '2026-01-01T00:00:00.000Z' })
+    const b = makeCar({ pinned: true, make: 'Same', model: 'Same', year: 2020, addedAt: '2026-01-01T00:00:00.000Z' })
+    expect(compareRows(a, b, key, 'asc')).toBe(0)
+  })
+
+  it.each(floatKeys)('%s: two unpinned cars are not reordered by pin alone (returns 0)', (key) => {
+    const a = makeCar({ pinned: false, make: 'Same', model: 'Same', year: 2020, addedAt: '2026-01-01T00:00:00.000Z' })
+    const b = makeCar({ pinned: false, make: 'Same', model: 'Same', year: 2020, addedAt: '2026-01-01T00:00:00.000Z' })
+    expect(compareRows(a, b, key, 'asc')).toBe(0)
+  })
+})
+
+describe('compareRows — NO pin float on numeric sorts', () => {
+  const pinnedLow  = makeCar({ pinned: true,  piRating: 100, value: 10_000 })
+  const unpinnedHi = makeCar({ pinned: false, piRating: 999, value: 999_999 })
+
+  it('piRating asc: lower rating still sorts first even when that car is unpinned', () => {
+    expect(compareRows(pinnedLow, unpinnedHi, 'piRating', 'asc')).toBeLessThan(0)
+  })
+
+  it('piRating desc: higher rating sorts first — pinned low-rating car does NOT jump ahead', () => {
+    expect(compareRows(unpinnedHi, pinnedLow, 'piRating', 'desc')).toBeLessThan(0)
+  })
+
+  it('value asc: lower value sorts first regardless of pin state', () => {
+    expect(compareRows(pinnedLow, unpinnedHi, 'value', 'asc')).toBeLessThan(0)
+  })
+
+  it('value desc: higher value sorts first — pinned low-value car does NOT jump ahead', () => {
+    expect(compareRows(unpinnedHi, pinnedLow, 'value', 'desc')).toBeLessThan(0)
   })
 })
 

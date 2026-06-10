@@ -9,7 +9,7 @@ export const PI_CLASS_INDEX: Record<string, number> = Object.fromEntries(
 
 // Sort keys where pinned cars float to the top within their sort group.
 // Numeric sorts (PI, Value) are intentionally excluded — don't break those.
-const PIN_FLOAT_KEYS: Set<SortKey> = new Set(['addedAt', 'make', 'model', 'year'])
+export const PIN_FLOAT_KEYS: Set<SortKey> = new Set(['addedAt', 'make', 'model', 'year'])
 
 export function compareRows(a: Car, b: Car, key: SortKey, dir: SortDir): number {
   // Pinned cars float to the top for non-numeric sort keys.
