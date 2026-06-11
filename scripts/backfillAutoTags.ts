@@ -11,7 +11,9 @@ async function main() {
   let totalInserted = 0
 
   for (const entry of entries) {
-    const autoTags = getAutoTags(entry.car.division)
+    // Pass drivetrain so RWD→drift, AWD→dirt/offroad, FWD→tight/street racing
+    // tags are included alongside the division-based tags.
+    const autoTags = getAutoTags(entry.car.division, entry.car.drivetrain ?? undefined)
     const existingAuto = new Set(
       entry.tags.filter((t) => t.source === 'auto').map((t) => t.tag)
     )
