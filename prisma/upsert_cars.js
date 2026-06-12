@@ -391,7 +391,7 @@ async function main() {
       divChangedIds, invalidatedCount,
       statFieldsNewlyPopulated, statFieldsAlreadyPresent,
     }
-  })
+  }, { timeout: 300_000 })
 
   // ── Output ────────────────────────────────────────────────────────────────
   const {
