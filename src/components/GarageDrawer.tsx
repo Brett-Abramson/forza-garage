@@ -72,6 +72,29 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
     }
   }, [displayCar])
 
+  // Fetch full car specs when the drawer opens — the list projection omits spec fields
+  useEffect(() => {
+    if (!car) return
+    let cancelled = false
+    fetch(`/api/cars/${car.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((full) => {
+        if (cancelled || !full) return
+        setDisplayCar((prev) => (prev ? { ...prev, ...full } : prev))
+        setStats((prev) => ({
+          ...prev,
+          powerHp:      full.powerHp      != null ? String(full.powerHp)      : prev.powerHp,
+          torqueFtLb:   full.torqueFtLb   != null ? String(full.torqueFtLb)   : prev.torqueFtLb,
+          weightLb:     full.weightLb     != null ? String(full.weightLb)     : prev.weightLb,
+          frontWeight:  full.frontWeight  != null ? String(full.frontWeight)  : prev.frontWeight,
+          displacementL: full.displacementL != null ? String(full.displacementL) : prev.displacementL,
+          rarity: full.rarity ?? prev.rarity,
+        }))
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [car?.id])
+
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }

@@ -12,33 +12,56 @@ interface PageProps {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
+// Only the fields needed for list/table display — spec fields load on drawer open
+const LIST_SELECT = {
+  id: true, make: true, model: true, year: true,
+  piClass: true, piRating: true, division: true, drivetrain: true,
+  country: true, source: true, sourceInfo: true, value: true, rarity: true,
+  statSpeed: true, statHandling: true, statAcceleration: true,
+  statLaunch: true, statBraking: true, statOffroad: true,
+} as const
+
+// Placeholder nulls for spec fields excluded from the list projection
+const SPEC_DEFAULTS = {
+  powerHp: null, torqueFtLb: null, weightLb: null,
+  frontWeight: null, displacementL: null,
+  engineType: null, engineCC: null, cylinders: null, bodyStyle: null,
+} as const
+
 export default async function CarsPage({ searchParams }: PageProps) {
-  const { userId } = await auth()
-  const params = await searchParams
+  // auth(), searchParams, and the car list query are all independent — run in parallel
+  const [{ userId }, params, rawCars] = await Promise.all([
+    auth(),
+    searchParams ?? Promise.resolve({} as Record<string, string | string[] | undefined>),
+    prisma.car.findMany({
+      select: LIST_SELECT,
+      orderBy: [{ make: 'asc' }, { model: 'asc' }],
+    }),
+  ])
 
-  const rawCars = await prisma.car.findMany({
-    include: {
-      garage: userId
-        ? { where: { userId }, select: { id: true, tags: true } }
-        : { select: { id: true, tags: true }, take: 0 },
-    },
-    orderBy: [{ make: 'asc' }, { model: 'asc' }],
-  })
+  // Garage lookup requires userId — fetch after auth resolves
+  const garageEntries = userId
+    ? await prisma.userGarage.findMany({
+        where: { userId },
+        select: { carId: true, tags: { select: { tag: true, source: true } } },
+      })
+    : []
+  const garageMap = new Map(garageEntries.map((e) => [e.carId, e]))
 
-  const cars: Car[] = rawCars.map(({ garage, ...car }) => {
-    const entry = garage[0] ?? null
+  const cars: Car[] = rawCars.map((car) => {
+    const entry = garageMap.get(car.id) ?? null
     const autoTags = getAutoTags(car.division, car.drivetrain ?? undefined)
     if (entry) {
       const storedTags = entry.tags.map((t: { tag: string; source: string }) => t.tag)
       const tagDetails = entry.tags.map((t: { tag: string; source: string }) => ({ tag: t.tag, source: t.source }))
-      return { ...car, owned: true, tags: storedTags, tagDetails }
+      return { ...SPEC_DEFAULTS, ...car, owned: true, tags: storedTags, tagDetails } as Car
     }
     return {
-      ...car,
+      ...SPEC_DEFAULTS, ...car,
       owned: false,
       tags: autoTags,
       tagDetails: autoTags.map((tag) => ({ tag, source: 'auto' })),
-    }
+    } as Car
   })
 
   // Respect the user's last-used view preference from the URL so the skeleton

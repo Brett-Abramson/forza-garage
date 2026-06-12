@@ -4,6 +4,19 @@ import { prisma } from '@/lib/prisma'
 import { getAutoTags } from '@/lib/autotags'
 import { checkRateLimit } from '@/lib/rateLimit'
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const carId = parseInt(id)
+  if (isNaN(carId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
+
+  const car = await prisma.car.findUnique({ where: { id: carId } })
+  if (!car) return NextResponse.json({ error: 'Car not found' }, { status: 404 })
+  return NextResponse.json(car)
+}
+
 // Fields on the Car model that can be updated directly (not per-user garage data)
 const CAR_STAT_FIELDS = [
   'statSpeed', 'statHandling', 'statAcceleration', 'statLaunch', 'statBraking', 'statOffroad',

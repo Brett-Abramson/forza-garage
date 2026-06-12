@@ -5,7 +5,8 @@ import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { PI_CLASS_COLORS } from '@/types/car'
 import { FujiSvg, BlossomSvg, ToriiSvg } from '@/components/JapanDecor'
-import { MetaCarousel, type MetaCarEntry } from '@/components/MetaCarousel'
+import type { MetaCarEntry } from '@/components/MetaCarousel'
+import { MetaCarouselLazy as MetaCarousel } from '@/components/MetaCarouselLazy'
 
 export const dynamic = 'force-dynamic'
 
