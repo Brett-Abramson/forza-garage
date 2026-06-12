@@ -29,7 +29,8 @@ function calcColumns(): number {
 }
 
 // Estimated item heights (px) — measureElement refines these live
-const GRID_ESTIMATED_HEIGHT = 220
+// 255px card min-h + 12px wrapper padding (padding: 6px on all sides)
+const GRID_ESTIMATED_HEIGHT = 267
 const TABLE_ROW_HEIGHT      = 56
 
 interface SortState {

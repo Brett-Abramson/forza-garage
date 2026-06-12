@@ -80,7 +80,7 @@ export default function CarCard({ car, onToggleOwned, onCardClick, onTogglePin, 
     <div
       onClick={() => onCardClick?.(car)}
       className={`
-        relative flex flex-col rounded-xl border overflow-hidden transition-all duration-200 bg-fh-panel
+        relative flex flex-col min-h-[255px] rounded-xl border overflow-hidden transition-all duration-200 bg-fh-panel
         ${onCardClick ? 'cursor-pointer' : ''}
         ${car.owned
           ? 'border-fh-red shadow-[0_0_12px_rgba(204,0,0,0.1)]'
@@ -133,7 +133,7 @@ export default function CarCard({ car, onToggleOwned, onCardClick, onTogglePin, 
         </div>
 
         {car.engineType && (
-          <div className="text-xs mt-1 text-fh-muted truncate">{car.engineType}</div>
+          <div className="text-xs mt-1 text-fh-muted">{car.engineType}</div>
         )}
 
         <div className="flex items-center gap-1.5 mt-0.5">
