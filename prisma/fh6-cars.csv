@@ -126,8 +126,8 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 1969,Chevrolet,Nova Super Sport 396,C 431,Classic Muscle,USA,"40,000",Common,"Autoshow, Wheelspin",
 2020,Chevrolet,Silverado LT Trail Boss,C 449,Pickups & 4x4s,USA,"43,000",Rare,"Autoshow, Wheelspin",
 1970,Datsun,510,D 143,Classic Sports Cars,Japan,"86,000",Common,"Autoshow, Wheelspin",
-1972,Datsun,#269 Attacking the Clock Racing 240Z 'All Carbon Hill Climb Beast',R 951,Extreme Track Toys,Japan,,,Autoshow DLC,Car Pass 6/4/26
-1969,Datsun,2000 Roadster,D 323,Classic Sports Cars,Japan,,,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
+1972,Datsun,#269 Attacking the Clock Racing 240Z 'All Carbon Hill Climb Beast',R 951,Extreme Track Toys,Japan,"185,000",Epic,Autoshow DLC,Car Pass 6/4/26
+1969,Datsun,2000 Roadster,D 323,Classic Sports Cars,Japan,"250,000",Common,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 2018,DeBerti,Chevrolet Silverado 1500 Drift Truck,S1 707,Drift Cars,USA,"250,000",Epic,"Autoshow, Wheelspin",
 2019,DeBerti,Ford Super Duty F-250 Lariat 'Transformer',B 548,Unlimited Offroad,USA,"275,000",Epic,"Autoshow, Wheelspin",
 2013,DeBerti,Jeep Wrangler Unlimited,A 645,Unlimited Offroad,USA,"150,000",Epic,"Autoshow, Wheelspin",
@@ -183,7 +183,7 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 2013,Ferrari,LaFerrari,S2 857,Hypercars,Italy,"3,000,000",Legendary,"Autoshow, Wheelspin",
 2019,Ferrari,Monza SP2,S1 773,Super GT,Italy,"2,500,000",Legendary,"Autoshow, Wheelspin",
 2018,Ferrari,Portofino,S1 714,Super GT,Italy,"200,000",Epic,"Autoshow, Wheelspin",
-2020,Ferrari,Roma,S1 735,Super GT,Italy,,,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
+2020,Ferrari,Roma,S1 735,Super GT,Italy,"250,000",Epic,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 2020,Ferrari,SF90 Stradale,S2 851,Hypercars,Italy,"575,000",Legendary,"Autoshow, Wheelspin",
 2014,Ford,#11 Rockstar F-150 Trophy Truck,A 613,Unlimited Offroad,USA,"450,000",Epic,"Autoshow, Wheelspin",
 2017,Ford,#14 Rahal Letterman Lanigan Racing Fiesta,S1 772,Rally Monsters,USA,"150,000",Epic,"Autoshow, Collection Journal",
@@ -247,7 +247,7 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 2020,Formula Drift,#91 BMW M2,S1 748,Drift Cars,USA,"150,000",Epic,"Autoshow, Wheelspin",
 1989,Formula Drift,#98 BMW 325i,S1 726,Drift Cars,USA,"150,000",Epic,"Autoshow, Wheelspin",
 2009,Formula Drift,#99 Mazda RX-8,S1 737,Drift Cars,USA,"150,000",Epic,"Autoshow, Collection Journal",
-2018,Funco Motorsports,F9,S1 752,Unlimited Buggies,USA,,,"Collection Journal, Seasonal",Not in Autoshow
+2018,Funco Motorsports,F9,S1 752,Unlimited Buggies,USA,"300,000",Epic,"Collection Journal, Seasonal",Not in Autoshow
 2022,GMC,HUMMER EV Pickup,A 610,Pickups & 4x4s,USA,"95,000",Epic,"Autoshow, Wheelspin",
 1970,GMC,Jimmy,C 416,Pickups & 4x4s,USA,"60,000",Common,Autoshow,
 1991,GMC,Syclone,C 446,Pickups & 4x4s,USA,"46,000",Epic,"Autoshow, Wheelspin",
@@ -312,17 +312,17 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 2015,Koenigsegg,One:1,S2 890,Hypercars,Sweden,,,"Wheelspin, Seasonal",Not in Autoshow
 2016,Koenigsegg,Regera,S2 886,Hypercars,Sweden,"2,550,000",Legendary,Autoshow,
 2018,KTM,X-Bow GT4,S1 749,Extreme Track Toys,Austria,"90,000",Epic,"Autoshow, Wheelspin",
-2022,Lamborghini,Aventador LP 780-4 Ultimae,S1 794,Hypercars,Italy,,,Seasonal,Not in Autoshow
+2022,Lamborghini,Aventador LP 780-4 Ultimae,S1 794,Hypercars,Italy,"800,000",Legendary,Seasonal,"Not in Autoshow, from Horizon Legend Wristband Event"
 2012,Lamborghini,Aventador LP700-4,S1 753,Hypercars,Italy,,,"Wheelspin, Seasonal",Not in Autoshow
 2018,Lamborghini,Aventador SVJ,S1 794,Hypercars,Italy,"1,200,000",Legendary,"Autoshow, Wheelspin",
 2016,Lamborghini,Centenario LP 770-4,S1 792,Hypercars,Italy,"150,000",Legendary,"Autoshow, Wheelspin, Loyalty",
-1988,Lamborghini,Countach LP5000 QV,A 622,Retro Supercars,Italy,,,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
+1988,Lamborghini,Countach LP5000 QV,A 622,Retro Supercars,Italy,"600,000",Epic,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 2021,Lamborghini,Countach LPI 800-4,S1 773,Hypercars,Italy,"2,100,000",Legendary,"Autoshow, Wheelspin",
 1999,Lamborghini,Diablo GTR,S2 823,Extreme Track Toys,Italy,,,"Wheelspin, Seasonal",Not in Autoshow
-1997,Lamborghini,Diablo SV,A 649,Retro Supercars,Italy,,,Collection Journal,Not in Autoshow
+1997,Lamborghini,Diablo SV,A 649,Retro Supercars,Italy,"375,000",Barn Find,Collection Journal,"Not in Autoshow, is discoverable Bard Find in Ito"
 2020,Lamborghini,Essenza SCV12,R 911,Extreme Track Toys,Italy,"1,500,000",Legendary,"Autoshow, Wheelspin",
 2012,Lamborghini,Gallardo LP570-4 Spyder Performante,A 685,Modern Supercars,Italy,"210,000",Epic,"Autoshow, Wheelspin",
-2020,Lamborghini,Huracán EVO,S1 761,Modern Supercars,Italy,,,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
+2020,Lamborghini,Huracán EVO,S1 761,Modern Supercars,Italy,"250,000",Epic,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 2014,Lamborghini,Huracán LP 610-4,S1 738,Modern Supercars,Italy,"200,000",Epic,"Autoshow, Wheelspin, Loyalty",
 2022,Lamborghini,Huracán Sterrato,S1 738,Rally Monsters,Italy,,,"Collection Journal, Seasonal",Not in Autoshow
 2020,Lamborghini,Huracán STO,S1 783,Track Toys,Italy,"325,000",Legendary,"Autoshow, Wheelspin",
@@ -346,10 +346,10 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 1962,Lincoln,Continental,D 267,Rods and Customs,USA,"65,000",,Collection Journal,"Not in Autoshow, is discoverable Barn Find in Hokubu"
 1997,Lotus,Elise GT1,S1 709,Retro Supercars,UK,"1,500,000",Legendary,"Autoshow, Wheelspin",
 1999,Lotus,Elise Series 1 Sport 190,B 589,Retro Sports Cars,UK,"47,000",Common,"Autoshow, Wheelspin",
-2023,Lotus,Emira,A 656,Modern Sports Cars,UK,,,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
+2023,Lotus,Emira,A 656,Modern Sports Cars,UK,"250,000",Rare,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 2020,Lotus,Evija,R 937,Hypercars,UK,"2,450,000",Legendary,"Autoshow, Wheelspin",
 2020,Lotus,Evija Forza Edition,S2 900,Drift Cars,UK,"500,000",Forza Edition,Autoshow DLC,VIP
-2018,Lotus,Exige Cup 430,S1 732,Track Toys,UK,,,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
+2018,Lotus,Exige Cup 430,S1 732,Track Toys,UK,"250,000",Epic,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 2018,Lotus,Scura Motorsports Exige WTAC,R 998,Extreme Track Toys,UK,,,"Collection Journal, Seasonal",Not in Autoshow
 2024,Lucid,Air Sapphire,S2 820,Modern Super Saloons,USA,"240,000",Rare,"Autoshow, Wheelspin",
 1997,Maserati,Ghibli Cup,B 591,Retro Sports Cars,Italy,"102,000",Rare,"Autoshow, Collection Journal",
@@ -428,15 +428,15 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 2004,Mitsubishi,Lancer Evolution VIII MR,B 555,Modern Rally,Japan,"30,000",Rare,"Autoshow, Wheelspin",
 2004,Mitsubishi,Lancer Evolution VIII MR Welcome Pack,A 700,Modern Rally,Japan,"100,000",Legendary,Autoshow DLC,Welcome Pack
 2008,Mitsubishi,Lancer Evolution X GSR,B 534,Modern Rally,Japan,"25,000",Rare,"Autoshow, Wheelspin",
-1997,Mitsubishi,Montero Evolution,D 346,Pickups & 4x4s,Japan,,,Collection Journal,Not in Autoshow
+1997,Mitsubishi,Montero Evolution,D 346,Pickups & 4x4s,Japan,"50,000",Barn Find,Collection Journal,Not in Autoshow
 1995,Mitsubishi,Montero Exceed 2800 TD,D 190,Pickups & 4x4s,Japan,"25,000",Rare,"Autoshow, Wheelspin",
 1983,Nissan,#11 Tomica Skyline Turbo Super Silhouette,S2 847,Retro Racers,Japan,,,Collection Journal,Not in Autoshow
 1990,Nissan,#12 Skyline GT-R (BNR32 Gr.A) JTC,S2 858,Retro Racers,Japan,"1,500,000",Legendary,Autoshow DLC,Car Pass 5/19/26
-1998,Nissan,#23 Pennzoil NISMO Skyline GT-R,S2 848,Retro Racers,Japan,,,Collection Journal,Not in Autoshow
+1998,Nissan,#23 Pennzoil NISMO Skyline GT-R,S2 848,Retro Racers,Japan,"600,000",Barn Find,Collection Journal,Not in Autoshow
 1993,Nissan,#32 Skyline WTAC 'Xtreme GTR',R 923,Extreme Track Toys,Japan,"570,000",Epic,Autoshow DLC,Time Attack Car Pack
 2000,Nissan,#36 Dream Project S15 Silvia WTAC,R 996,Extreme Track Toys,Japan,"400,000",Epic,Autoshow DLC,Time Attack Car Pack
 1993,Nissan,240SX,D 339,Retro Sports Cars,Japan,,,"Wheelspin, Seasonal",Not in Autoshow
-2010,Nissan,370Z,B 568,Modern Sports Cars,Japan,,,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
+2010,Nissan,370Z,B 568,Modern Sports Cars,Japan,"250,000",Common,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 2019,Nissan,370Z Nismo,A 603,Modern Sports Cars,Japan,"46,000",Rare,"Autoshow, Wheelspin",
 1987,Nissan,Be-1,D 175,Eclectic Domestics,Japan,"23,000",Epic,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 2003,Nissan,Fairlady Z,B 534,Retro Sports Cars,Japan,"18,000",Common,"Autoshow, Wheelspin",
@@ -476,7 +476,7 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 2010,Pagani,Zonda Cinque Roadster,S2 812,Hypercars,Italy,"4,000,000",Legendary,Autoshow,
 2009,Pagani,Zonda R,R 918,Extreme Track Toys,Italy,"4,750,000",Legendary,"Autoshow, Wheelspin",
 1962,Peel,P50,D 100,Cult Cars,UK,"21,000",Legendary,"Autoshow, Wheelspin",
-1962,Peel,P50 Trolli Edition,D 100,Cult Cars,UK,,,Autoshow DLC,Partnership DLC
+1962,Peel,P50 Trolli Edition,D 100,Cult Cars,UK,"21,000",Legendary,Autoshow DLC,Partnership DLC
 2011,Penhall,The Cholla,B 541,Unlimited Buggies,USA,"85,000",Rare,"Autoshow, Wheelspin",
 1991,Peugeot,205 Rallye,D 350,Retro Hot Hatch,France,"22,000",Rare,"Autoshow, Wheelspin",
 1984,Peugeot,205 Turbo 16,C 500,Retro Rally,France,"275,000",Barn Find,Collection Journal,"Not in Autoshow, is discoverable Barn Find in Shimanoyama"
@@ -506,7 +506,7 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 2023,Porsche,911 GT3 RS,S1 758,Track Toys,Germany,"424,000",Epic,"Autoshow, Wheelspin",
 2012,Porsche,911 GT3 RS 4.0,S1 726,Track Toys,Germany,"930,000",Epic,"Autoshow, Collection Journal",
 2023,Porsche,911 Rallye,A 700,Rally Monsters,Germany,,,Seasonal,"Not in Autoshow, from Flight Club Wristband Event"
-1982,Porsche,911 Turbo 3.3,B 550,Retro Supercars,Germany,,,Collection Journal,Not in Autoshow
+1982,Porsche,911 Turbo 3.3,B 550,Retro Supercars,Germany,"240,000",Barn Find,Collection Journal,Not in Autoshow
 2023,Porsche,911 Turbo S,S1 774,Modern Supercars,Germany,"275,000",Rare,"Autoshow, Wheelspin",
 1993,Porsche,911 Turbo S Leichtbau,A 652,Retro Sports Cars,Germany,,,Seasonal,Not in Autoshow
 2014,Porsche,918 Spyder,S2 858,Hypercars,Germany,"2,300,000",Legendary,"Autoshow, Collection Journal",
@@ -523,7 +523,7 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 2024,Ram,1500 TRX,B 514,Pickups & 4x4s,USA,"100,000",Common,Autoshow,
 1972,Reliant,Supervan III,D 100,Utility Heroes,UK,"39,000",Common,"Autoshow, Wheelspin",
 1980,Renault,5 Turbo,C 417,Retro Rally,France,"143,000",Rare,"Autoshow, Wheelspin",
-1967,Renault,8 Gordini,D 322,Classic Rally,France,,,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
+1967,Renault,8 Gordini,D 322,Classic Rally,France,"250,000",Common,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 1993,Renault,Clio Williams,D 400,Retro Hot Hatch,France,"30,000",Common,"Autoshow, Wheelspin",
 2018,Renault,Megane R.S.,B 547,Super Hot Hatch,France,"32,000",Rare,"Autoshow, Wheelspin",
 2008,Renault,Mégane R26.R,B 561,Hot Hatch,France,"58,000",Rare,"Autoshow, Wheelspin",
@@ -550,7 +550,7 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 2008,Subaru,Impreza WRX STI,B 539,Modern Rally,Japan,"27,000",Rare,"Autoshow, Wheelspin",
 2005,Subaru,Legacy B4 2.0 GT,B 549,Retro Super Saloons,Japan,"10,000",Common,"Autoshow, Wheelspin",
 1990,Subaru,Legacy RS,C 406,Retro Rally,Japan,"15,000",Common,"Autoshow, Wheelspin",
-2019,Subaru,STI S209,B 574,Modern Rally,Japan,,,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
+2019,Subaru,STI S209,B 574,Modern Rally,Japan,"250,000",Common,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 1996,Subaru,SVX,C 466,Retro Sports Cars,Japan,"13,000",Common,"Autoshow, Wheelspin",
 1994,Subaru,Vivio RX-R,D 281,Eclectic Domestics,Japan,"10,000",Epic,"Autoshow, Wheelspin",
 1994,Subaru,Vivio RX-R Forza Edition,S2 900,Extreme Track Toys,Japan,,,"Collection Journal, Seasonal",Not in Autoshow
@@ -580,7 +580,7 @@ Year,Make,Model,Class,Type,Country,Value (Cr),Rarity,Source,Source Info
 1995,Toyota,J&J Motorsport Supra WTAC,S2 828,Extreme Track Toys,Japan,"420,000",Epic,Autoshow DLC,Time Attack Car Pack
 2017,Toyota,JPN Taxi,D 248,Eclectic Domestics,Japan,"25,000",Common,"Autoshow, Wheelspin",
 2025,Toyota,Land Cruiser,C 456,Sports Utility Heroes,Japan,"70,000",Rare,"Autoshow, Wheelspin",
-2016,Toyota,Land Cruiser Arctic Trucks AT37,D 332,Pickups & 4x4s,Japan,,,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
+2016,Toyota,Land Cruiser Arctic Trucks AT37,D 332,Pickups & 4x4s,Japan,"250,000",Rare,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 1995,Toyota,MR2 GT,B 522,Retro Sports Cars,Japan,"28,000",Rare,"Autoshow, Wheelspin",
 1989,Toyota,MR2 SC,D 397,Retro Sports Cars,Japan,"250,000",Epic,Seasonal,"Not in Autoshow, in Welcome to Japan Playlist"
 1991,Toyota,Sera,D 344,Eclectic Domestics,Japan,"11,000",Rare,"Autoshow, Wheelspin",
