@@ -8,7 +8,7 @@ export interface StatCallout {
 
 // ── Lookup data ───────────────────────────────────────────────────────────────
 
-interface StatAvg {
+export interface StatAvg {
   speed?:    number
   handling?: number
   accel?:    number
@@ -18,7 +18,7 @@ interface StatAvg {
 }
 
 // Nested: division → piClass → per-stat averages derived from production data (618 cars).
-const DIVISION_CLASS_AVERAGES: Record<string, Partial<Record<string, StatAvg>>> = {
+export const DIVISION_CLASS_AVERAGES: Record<string, Partial<Record<string, StatAvg>>> = {
   'Buggies': {
     D: { speed: 3.30, handling: 4.10, accel: 2.70, launch: 5.00, braking: 2.85, offroad: 7.10 },
   },
@@ -221,6 +221,18 @@ const OFFROAD_RELEVANT_DIVISIONS = new Set([
 // R class is omitted — suppressed entirely (those cars are purpose-built race machines).
 const HP_THRESHOLD: Record<string, number> = {
   D: 200, C: 250, B: 350, A: 450, S1: 650, S2: 900,
+}
+
+// ── Color helper ─────────────────────────────────────────────────────────────
+
+export function getStatColor(stat: number, avg: number | null): string {
+  if (avg === null) return 'bg-gray-400'
+  const delta = Math.round((stat - avg) * 100) / 100
+  if (delta >= 1.0)  return 'bg-green-500'
+  if (delta >= 0.3)  return 'bg-green-400'
+  if (delta >= -0.3) return 'bg-amber-400'
+  if (delta >= -1.0) return 'bg-orange-500'
+  return 'bg-red-500'
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────

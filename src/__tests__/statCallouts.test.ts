@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getStatCallouts } from '@/lib/statCallouts'
+import { getStatCallouts, getStatColor } from '@/lib/statCallouts'
 import type { Car } from '@/types/car'
 
 // Minimal car — all stat fields null, unknown division+class by default.
@@ -508,5 +508,41 @@ describe('getStatCallouts — multiple rules', () => {
     const ids = callouts.map((c) => c.id)
     expect(ids).toContain('weak-braking')
     expect(ids).toContain('launch-braking-mismatch')
+  })
+})
+
+// ─── getStatColor ─────────────────────────────────────────────────────────────
+
+describe('getStatColor', () => {
+  it('returns neutral gray when avg is null', () => {
+    expect(getStatColor(7.0, null)).toBe('bg-gray-400')
+    expect(getStatColor(0.0, null)).toBe('bg-gray-400')
+  })
+
+  it('returns strong green when stat >= avg + 1.0', () => {
+    expect(getStatColor(8.0, 7.0)).toBe('bg-green-500')   // delta = +1.0 exactly
+    expect(getStatColor(9.5, 7.0)).toBe('bg-green-500')   // delta = +2.5
+  })
+
+  it('returns light green when stat >= avg + 0.3 and < avg + 1.0', () => {
+    expect(getStatColor(7.3, 7.0)).toBe('bg-green-400')   // delta = +0.3 exactly
+    expect(getStatColor(7.9, 7.0)).toBe('bg-green-400')   // delta = +0.9
+  })
+
+  it('returns amber when stat is within ±0.3 of avg', () => {
+    expect(getStatColor(7.0, 7.0)).toBe('bg-amber-400')   // delta = 0 (exactly avg)
+    expect(getStatColor(7.29, 7.0)).toBe('bg-amber-400')  // delta = +0.29
+    expect(getStatColor(6.71, 7.0)).toBe('bg-amber-400')  // delta = -0.29
+    expect(getStatColor(6.7, 7.0)).toBe('bg-amber-400')   // delta = -0.3 exactly
+  })
+
+  it('returns orange when stat >= avg - 1.0 and < avg - 0.3', () => {
+    expect(getStatColor(6.5, 7.0)).toBe('bg-orange-500')  // delta = -0.5
+    expect(getStatColor(6.0, 7.0)).toBe('bg-orange-500')  // delta = -1.0 exactly
+  })
+
+  it('returns red when stat < avg - 1.0', () => {
+    expect(getStatColor(5.9, 7.0)).toBe('bg-red-500')     // delta = -1.1
+    expect(getStatColor(4.0, 7.0)).toBe('bg-red-500')     // delta = -3.0
   })
 })
