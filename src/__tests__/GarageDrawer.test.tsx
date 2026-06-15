@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GarageDrawer from '@/components/GarageDrawer'
 import type { Car } from '@/types/car'
@@ -320,6 +320,8 @@ describe('GarageDrawer — notes', () => {
   it('does not call fetch on blur when notes have not changed', async () => {
     const user = userEvent.setup()
     renderDrawer({ ...baseCar, notes: 'unchanged' })
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/cars/42'))
+    vi.clearAllMocks()
     const textarea = screen.getByRole('textbox')
     await user.click(textarea)
     await user.tab()
@@ -386,6 +388,8 @@ describe('GarageDrawer — stat entry', () => {
   it('does not call /api/cars when no stat has been edited', async () => {
     const user = userEvent.setup()
     renderDrawer()
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/cars/42'))
+    vi.clearAllMocks()
     // Click and immediately blur without changing the value
     await user.click(screen.getByRole('spinbutton', { name: 'Speed' }))
     await user.tab()
