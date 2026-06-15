@@ -80,6 +80,9 @@ export async function PATCH(
   if (Object.keys(statUpdates).length > 0) {
     const { userId } = await auth()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!checkRateLimit(userId)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
 
     const updated = await prisma.car.update({
       where: { id: carId },
