@@ -402,6 +402,41 @@ describe('GarageDrawer — stat entry', () => {
 
 // ─── Non-owned car ────────────────────────────────────────────────────────────
 
+// ─── Tag editing context gate ─────────────────────────────────────────────────
+
+describe('GarageDrawer — tag editing context gate', () => {
+  it('shows Tags and Add tags when onTagDetailsChange is provided (My Garage context)', () => {
+    // renderDrawer always provides onTagDetailsChange — simulates My Garage
+    renderDrawer()
+    expect(screen.getByText('Tags')).toBeInTheDocument()
+    expect(screen.getByText('Add tags')).toBeInTheDocument()
+  })
+
+  it('hides Tags, Add tags, and Reset when onTagDetailsChange is absent (Car Database context)', () => {
+    render(<GarageDrawer car={baseCar} onClose={vi.fn()} />)
+    expect(screen.queryByText('Tags')).not.toBeInTheDocument()
+    expect(screen.queryByText('Add tags')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Reset tags to defaults/i)).not.toBeInTheDocument()
+  })
+
+  it('hides tag editing for an owned car opened from Car Database', () => {
+    // Even though the car is owned, no onTagDetailsChange → no tag UI
+    const ownedCar: Car = { ...baseCar, owned: true }
+    render(<GarageDrawer car={ownedCar} onClose={vi.fn()} />)
+    expect(screen.queryByText('Tags')).not.toBeInTheDocument()
+    expect(screen.queryByText('Add tags')).not.toBeInTheDocument()
+  })
+
+  it('still shows read-only content (race types, tuning guide) in Car Database context', () => {
+    render(<GarageDrawer car={baseCar} onClose={vi.fn()} />)
+    expect(screen.getByText('Race types')).toBeInTheDocument()
+    expect(screen.getByText('Tuning guide')).toBeInTheDocument()
+    expect(screen.getByText('911 GT3')).toBeInTheDocument()
+  })
+})
+
+// ─── Non-owned car ────────────────────────────────────────────────────────────
+
 describe('GarageDrawer — non-owned car', () => {
   const unownedCar: Car = { ...baseCar, owned: false }
 

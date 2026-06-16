@@ -33,7 +33,7 @@ interface Props {
   onToggleOwned?: (id: number, owned: boolean) => Promise<void> | void
 }
 
-export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => {}, onStatsChange, onToggleOwned }: Props) {
+export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStatsChange, onToggleOwned }: Props) {
   // Keep a stale copy so the drawer content doesn't vanish during slide-out
   const [displayCar, setDisplayCar] = useState<Car | null>(car)
   useEffect(() => {
@@ -127,7 +127,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
       ...nextAuto.map((t) => ({ tag: t, source: 'auto' })),
       ...nextUser.map((t) => ({ tag: t, source: 'user' })),
     ]
-    onTagDetailsChange(displayCar!.id, nextDetails)
+    onTagDetailsChange?.(displayCar!.id, nextDetails)
     await patchGarage({ tags: { auto: nextAuto, user: nextUser } })
   }
 
@@ -308,8 +308,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                 <StatBars car={displayCar} />
               </div>
 
-              {/* Current tags — only for owned cars */}
-              {displayCar.owned && (
+              {/* Current tags — only for owned cars in My Garage context */}
+              {displayCar.owned && onTagDetailsChange && (
                 <div className="p-5 border-b border-fh-border">
                   <div className="text-xs text-fh-muted uppercase tracking-wide mb-3">Tags</div>
                   {autoTags.length === 0 && userTags.length === 0 ? (
@@ -380,8 +380,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange = () => 
                 </div>
               )}
 
-              {/* Add tags — only for owned cars */}
-              {displayCar.owned && availableTags.length > 0 && (
+              {/* Add tags — only for owned cars in My Garage context */}
+              {displayCar.owned && onTagDetailsChange && availableTags.length > 0 && (
                 <div className="p-5 border-b border-fh-border">
                   <div className="text-xs text-fh-muted uppercase tracking-wide mb-3">Add tags</div>
                   <div className="flex flex-wrap gap-2">
