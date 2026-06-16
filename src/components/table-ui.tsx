@@ -14,6 +14,16 @@ export const STICKY_COL = {
   model: 120,
 } as const
 
+// Tighter widths used only in Stats mode to maximise visible stat columns.
+export const STICKY_COL_STATS = {
+  star:  40,
+  class: 40,   // dot only, no class text
+  pi:    44,
+  year:  52,
+  make:  80,
+  model: 120,
+} as const
+
 export type TableMode = 'standard' | 'stats'
 
 interface SortState {

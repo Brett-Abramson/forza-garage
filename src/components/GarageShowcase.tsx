@@ -9,7 +9,7 @@ import { SortKey, SortDir, compareRows, defaultSort, formatAddedAt } from '@/lib
 import { buildCsvString, csvFilename } from '@/lib/exportCsv'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
-import { SortTh, GridIcon, TableIcon, TableModeToggle, STICKY_COL, type TableMode } from './table-ui'
+import { SortTh, GridIcon, TableIcon, TableModeToggle, STICKY_COL, STICKY_COL_STATS, type TableMode } from './table-ui'
 
 // Cumulative left offsets for stats-mode sticky header cells (Showcase has a star col)
 const SC = STICKY_COL
@@ -20,6 +20,15 @@ const SHL = {
   year:  SC.star + SC.class + SC.pi,
   make:  SC.star + SC.class + SC.pi + SC.year,
   model: SC.star + SC.class + SC.pi + SC.year + SC.make,
+}
+const SS = STICKY_COL_STATS
+const SHL_S = {
+  star:  0,
+  class: SS.star,
+  pi:    SS.star + SS.class,
+  year:  SS.star + SS.class + SS.pi,
+  make:  SS.star + SS.class + SS.pi + SS.year,
+  model: SS.star + SS.class + SS.pi + SS.year + SS.make,
 }
 import { CAR_TAGS } from '@/lib/tags'
 const ALL_TAGS = new Set<string>(CAR_TAGS)
@@ -961,13 +970,13 @@ export default function GarageShowcase({ initialCars }: Props) {
                       ) : (
                         <>
                           {/* Star — sticky */}
-                          <th className="py-2.5 pl-3 pr-1 sticky bg-fh-panel z-[2]" style={{ left: SHL.star, minWidth: SC.star }} aria-label="Favourite" />
-                          {/* Identity — sticky */}
-                          <SortTh label="Class" sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL.class, minWidth: SC.class }} />
-                          <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL.pi,    minWidth: SC.pi    }} />
-                          <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL.year,  minWidth: SC.year  }} />
-                          <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL.make,  minWidth: SC.make  }} />
-                          <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL.model, minWidth: SC.model }} />
+                          <th className="py-2.5 pl-3 pr-1 sticky bg-fh-panel z-[2]" style={{ left: SHL_S.star, minWidth: SS.star }} aria-label="Favourite" />
+                          {/* Identity — sticky, compact widths */}
+                          <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.class, minWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.pi,    minWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.year,  minWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.make,  minWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.model, minWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
                           {/* Stat columns — not sticky */}
                           <SortTh label="Speed"    sortKey="statSpeed"        sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
                           <SortTh label="Handling" sortKey="statHandling"     sort={sort} onSort={handleSort} style={{ minWidth: 80 }} />

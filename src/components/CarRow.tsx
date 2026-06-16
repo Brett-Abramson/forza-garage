@@ -5,7 +5,7 @@ import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { getBestRaceType } from '@/lib/raceMatch'
 import { RaceIcon } from '@/components/RaceIcons'
 import { formatAddedAt } from '@/lib/sort'
-import { STICKY_COL } from './table-ui'
+import { STICKY_COL_STATS } from './table-ui'
 
 interface Props {
   car: Car
@@ -31,14 +31,14 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
   const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined)
   const [confirmRemove, setConfirmRemove] = useState(false)
 
-  // Sticky left offsets for stats mode — depends on whether the star column is present
-  const S = STICKY_COL
+  // Sticky left offsets for stats mode — uses tighter STICKY_COL_STATS widths
+  const SS = STICKY_COL_STATS
   const hasPin = !!onTogglePin
-  const classLeft = hasPin ? S.star : 0
-  const piLeft    = classLeft + S.class
-  const yearLeft  = piLeft   + S.pi
-  const makeLeft  = yearLeft + S.year
-  const modelLeft = makeLeft + S.make
+  const classLeft = hasPin ? SS.star : 0
+  const piLeft    = classLeft + SS.class
+  const yearLeft  = piLeft   + SS.pi
+  const makeLeft  = yearLeft + SS.year
+  const modelLeft = makeLeft + SS.make
 
   const trCls = `
     border-b border-fh-border transition-colors text-sm
@@ -55,7 +55,7 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
     return (
       <tr onClick={() => onCardClick?.(car)} className={trCls}>
         {onTogglePin && (
-          <td className="py-2.5 pl-3 pr-1 bg-fh-bg sticky z-[1]" style={{ left: 0, minWidth: S.star }}>
+          <td className="py-2.5 pl-3 pr-1 bg-fh-bg sticky z-[1]" style={{ left: 0, minWidth: SS.star }}>
             <button
               onClick={(e) => { e.stopPropagation(); onTogglePin(car.id, !car.pinned) }}
               aria-label={car.pinned ? 'Unpin car' : 'Pin car'}
@@ -65,19 +65,19 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
             </button>
           </td>
         )}
-        <td className="py-2.5 px-3 bg-fh-bg sticky z-[1] overflow-hidden" style={{ left: classLeft, minWidth: S.class }}>
-          <span className={`text-xs font-bold px-2 py-0.5 rounded ${classBadge}`}>{car.piClass}</span>
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] text-center" style={{ left: classLeft, minWidth: SS.class }}>
+          <span className={`inline-block w-3 h-3 rounded-sm ${classBadge}`} />
         </td>
-        <td className="py-2.5 px-3 bg-fh-bg sticky z-[1] tabular-nums text-fh-dark-2 overflow-hidden" style={{ left: piLeft, minWidth: S.pi }}>
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] tabular-nums text-fh-dark-2 overflow-hidden" style={{ left: piLeft, minWidth: SS.pi }}>
           {car.piRating}
         </td>
-        <td className="py-2.5 px-3 bg-fh-bg sticky z-[1] text-fh-dark-2 overflow-hidden" style={{ left: yearLeft, minWidth: S.year }}>
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] text-fh-dark-2 overflow-hidden" style={{ left: yearLeft, minWidth: SS.year }}>
           {car.year}
         </td>
-        <td className="py-2.5 px-3 bg-fh-bg sticky z-[1] font-medium overflow-hidden" style={{ left: makeLeft, minWidth: S.make }}>
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] font-medium overflow-hidden whitespace-nowrap text-ellipsis" style={{ left: makeLeft, minWidth: SS.make }}>
           {car.make}
         </td>
-        <td className="py-2.5 px-3 bg-fh-bg sticky z-[1] overflow-hidden" style={{ left: modelLeft, minWidth: S.model }}>
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] overflow-hidden whitespace-nowrap text-ellipsis" style={{ left: modelLeft, minWidth: SS.model }}>
           {car.model}
         </td>
         <StatTd>{car.statSpeed        ?? '—'}</StatTd>

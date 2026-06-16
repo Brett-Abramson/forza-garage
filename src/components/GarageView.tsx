@@ -11,7 +11,7 @@ import { RACE_TYPES } from '@/lib/races'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
 import GarageDrawer from './GarageDrawer'
-import { SortTh, GridIcon, TableIcon, TableModeToggle, STICKY_COL, type TableMode } from './table-ui'
+import { SortTh, GridIcon, TableIcon, TableModeToggle, STICKY_COL, STICKY_COL_STATS, type TableMode } from './table-ui'
 
 // Cumulative left offsets for stats-mode sticky header cells (View has no star col)
 const SC = STICKY_COL
@@ -21,6 +21,14 @@ const VHL = {
   year:  SC.class + SC.pi,
   make:  SC.class + SC.pi + SC.year,
   model: SC.class + SC.pi + SC.year + SC.make,
+}
+const SS = STICKY_COL_STATS
+const VHL_S = {
+  class: 0,
+  pi:    SS.class,
+  year:  SS.class + SS.pi,
+  make:  SS.class + SS.pi + SS.year,
+  model: SS.class + SS.pi + SS.year + SS.make,
 }
 import { filterCars, DEFAULT_FILTERS } from '@/lib/filterCars'
 import BackToTop from './BackToTop'
@@ -443,12 +451,12 @@ export default function GarageView({ initialCars }: Props) {
                     </>
                   ) : (
                     <>
-                      {/* Identity — sticky */}
-                      <SortTh label="Class" sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL.class, minWidth: SC.class }} />
-                      <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL.pi,    minWidth: SC.pi    }} />
-                      <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL.year,  minWidth: SC.year  }} />
-                      <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL.make,  minWidth: SC.make  }} />
-                      <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL.model, minWidth: SC.model }} />
+                      {/* Identity — sticky, compact widths */}
+                      <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.class, minWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.pi,    minWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.year,  minWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.make,  minWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.model, minWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
                       {/* Stat columns — not sticky */}
                       <SortTh label="Speed"    sortKey="statSpeed"        sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
                       <SortTh label="Handling" sortKey="statHandling"     sort={sort} onSort={handleSort} style={{ minWidth: 80 }} />
