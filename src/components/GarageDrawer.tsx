@@ -11,7 +11,7 @@ import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { getGroupForDivision } from '@/lib/divisionGroups'
 import StatBars from './StatBars'
 import { getStatCallouts } from '@/lib/statCallouts'
-import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS } from '@/lib/statUtils'
+import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS, resolveEffectiveStats, STAT_OVERRIDE_MAP, hasOverrides } from '@/lib/statUtils'
 
 type TagDetail = { tag: string; source: string }
 
@@ -55,6 +55,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
   const [stats, setStats] = useState<StatFields>(() => carToStats(displayCar))
   const [statsDirty, setStatsDirty] = useState(false)
   const [savingStats, setSavingStats] = useState(false)
+  const [showStatEntry, setShowStatEntry] = useState(false)
 
   const prevId = useRef<number | undefined>(undefined)
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
       setNotesDirty(false)
       setStats(carToStats(displayCar))
       setStatsDirty(false)
+      setShowStatEntry(false)
       setConfirmRemove(false)
       setConfirmResetTags(false)
       prevId.current = displayCar.id
@@ -80,15 +82,24 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
       .then((r) => (r.ok ? r.json() : null))
       .then((full) => {
         if (cancelled || !full) return
-        setDisplayCar((prev) => (prev ? { ...prev, ...full } : prev))
+        // Merge raw API data under overrides — override fields from displayCar take priority
+        // because the raw /api/cars/:id response has no per-user data.
+        setDisplayCar((prev) => {
+          if (!prev) return prev
+          // prev's override fields survive because full (raw Car) never has them
+          const merged: Car = { ...prev, ...full }
+          return { ...merged, ...resolveEffectiveStats(merged) }
+        })
+        // Effective spec values: prefer the user's override, then the fetched raw value
+        const eff = resolveEffectiveStats({ ...displayCar!, ...full })
         setStats((prev) => ({
           ...prev,
-          powerHp:      full.powerHp      != null ? String(full.powerHp)      : prev.powerHp,
-          torqueFtLb:   full.torqueFtLb   != null ? String(full.torqueFtLb)   : prev.torqueFtLb,
-          weightLb:     full.weightLb     != null ? String(full.weightLb)     : prev.weightLb,
-          frontWeight:  full.frontWeight  != null ? String(full.frontWeight)  : prev.frontWeight,
-          displacementL: full.displacementL != null ? String(full.displacementL) : prev.displacementL,
-          rarity: full.rarity ?? prev.rarity,
+          powerHp:       eff.powerHp       != null ? String(eff.powerHp)       : prev.powerHp,
+          torqueFtLb:    eff.torqueFtLb    != null ? String(eff.torqueFtLb)    : prev.torqueFtLb,
+          weightLb:      eff.weightLb      != null ? String(eff.weightLb)      : prev.weightLb,
+          frontWeight:   eff.frontWeight   != null ? String(eff.frontWeight)   : prev.frontWeight,
+          displacementL: eff.displacementL != null ? String(eff.displacementL) : prev.displacementL,
+          rarity:        eff.rarity        ?? prev.rarity,
         }))
       })
       .catch(() => {})
@@ -163,9 +174,31 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
     setSavingStats(true)
     const payload = statsToPayload(stats)
     await patchCar(payload)
-    onStatsChange?.(displayCar.id, payload as Partial<Car>)
+    const overrideUpdates = Object.fromEntries(
+      Object.entries(STAT_OVERRIDE_MAP).map(([field, overrideField]) => [overrideField, payload[field] ?? null])
+    ) as Partial<Car>
+    setDisplayCar((prev) => prev ? { ...prev, ...overrideUpdates, ...payload as Partial<Car> } : prev)
+    onStatsChange?.(displayCar.id, { ...payload as Partial<Car>, ...overrideUpdates })
     setSavingStats(false)
     setStatsDirty(false)
+  }
+
+  async function resetStats() {
+    if (!displayCar) return
+    const nullPayload = Object.fromEntries(Object.keys(STAT_OVERRIDE_MAP).map((k) => [k, null]))
+    await patchCar(nullPayload)
+    const res = await fetch(`/api/cars/${displayCar.id}`)
+    const base = await res.json()
+    const overrideClears = Object.fromEntries(
+      Object.values(STAT_OVERRIDE_MAP).map((k) => [k, null])
+    ) as Partial<Car>
+    const baseValues = Object.fromEntries(
+      Object.keys(STAT_OVERRIDE_MAP).map((k) => [k, base[k] ?? null])
+    ) as Partial<Car>
+    setDisplayCar((prev) => prev ? { ...prev, ...overrideClears, ...baseValues } : prev)
+    setStats(carToStats({ ...displayCar, ...baseValues } as Car))
+    setStatsDirty(false)
+    onStatsChange?.(displayCar.id, { ...baseValues, ...overrideClears })
   }
 
   function updateStat(key: keyof StatFields, value: string) {
@@ -302,8 +335,77 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
 
               {/* Stat bars */}
               <div className="p-5 border-b border-fh-border">
-                <div className="text-xs text-fh-muted uppercase tracking-wide mb-3">Performance</div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="text-xs text-fh-muted uppercase tracking-wide">Performance</div>
+                    {onTagDetailsChange && hasOverrides(displayCar) && (
+                      <span className="text-[10px] text-fh-red font-medium bg-fh-red-pale border border-fh-red/30 px-1.5 py-0.5 rounded">edited</span>
+                    )}
+                  </div>
+                  {displayCar.owned && onTagDetailsChange && (
+                    <div className="flex items-center gap-3">
+                      {hasOverrides(displayCar) && !showStatEntry && (
+                        <button onClick={resetStats} className="text-[11px] text-fh-muted-2 hover:text-fh-red transition-colors">
+                          Reset to stock
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setShowStatEntry((v) => !v)}
+                        className="text-[11px] text-fh-muted hover:text-fh-dark-2 transition-colors"
+                      >
+                        {showStatEntry ? 'Hide' : 'Edit manually'}
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <StatBars car={displayCar} />
+
+                {/* Stat editor — owned cars in My Garage context only */}
+                {displayCar.owned && onTagDetailsChange && showStatEntry && (
+                  <div className="mt-4 flex flex-col gap-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      {PERF_STATS.map(({ key, label }) => (
+                        <StatInput
+                          key={key}
+                          label={label}
+                          value={stats[key]}
+                          type="float"
+                          min={0}
+                          max={10}
+                          step={0.1}
+                          onChange={(v) => updateStat(key, v)}
+                          onBlur={saveStats}
+                        />
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <StatInput label="HP"          value={stats.powerHp}       type="int"   min={0} max={5000}  onChange={(v) => updateStat('powerHp', v)}       onBlur={saveStats} />
+                      <StatInput label="Torque ft-lb" value={stats.torqueFtLb}   type="int"   min={0} max={5000}  onChange={(v) => updateStat('torqueFtLb', v)}    onBlur={saveStats} />
+                      <StatInput label="Weight lb"   value={stats.weightLb}      type="int"   min={0} max={10000} onChange={(v) => updateStat('weightLb', v)}      onBlur={saveStats} />
+                      <StatInput label="F. Weight %"  value={stats.frontWeight}  type="int"   min={0} max={100}   onChange={(v) => updateStat('frontWeight', v)}   onBlur={saveStats} />
+                      <StatInput label="Displ. L"    value={stats.displacementL} type="float" min={0} max={20}    onChange={(v) => updateStat('displacementL', v)} onBlur={saveStats} />
+                      <div className="min-w-0">
+                        <div className="text-[10px] text-fh-muted mb-1">Rarity</div>
+                        <select
+                          value={stats.rarity}
+                          onChange={(e) => { updateStat('rarity', e.target.value); setTimeout(saveStats, 0) }}
+                          className="w-full bg-fh-bg border border-fh-border rounded px-2 py-1 text-xs text-fh-dark focus:outline-none focus:border-fh-red"
+                        >
+                          <option value="">—</option>
+                          {RARITY_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      {savingStats && <span className="text-xs text-fh-muted-2">Saving…</span>}
+                      {hasOverrides(displayCar) && (
+                        <button onClick={resetStats} className="text-[11px] text-fh-muted-2 hover:text-fh-red transition-colors ml-auto">
+                          Reset to stock
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Current tags — only for owned cars in My Garage context */}

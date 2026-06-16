@@ -33,6 +33,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     userGarage: {
       findFirst:   vi.fn(),
+      findUnique:  vi.fn(),
       update:      vi.fn(),
       create:      vi.fn(),
       deleteMany:  vi.fn(),
@@ -96,6 +97,7 @@ beforeEach(async () => {
   vi.mocked(auth).mockResolvedValue({ userId: null } as never)
   const prisma = await getPrisma()
   vi.mocked(prisma.userGarage.findFirst).mockResolvedValue(null)
+  vi.mocked(prisma.userGarage.findUnique).mockResolvedValue(null)
   vi.mocked(prisma.userGarage.update).mockResolvedValue({} as never)
   vi.mocked(prisma.userGarage.create).mockResolvedValue({ id: 1, carId: 42, userId: 'user-alice' } as never)
   vi.mocked(prisma.userGarage.deleteMany).mockResolvedValue({ count: 1 })
@@ -337,9 +339,9 @@ describe('PATCH /api/cars/[id] { owned: false } — remove from garage', () => {
   })
 })
 
-// ─── PATCH /api/cars/[id] stat updates — auth required (security fix) ─────────
+// ─── PATCH /api/cars/[id] stat updates — auth + ownership ────────────────────
 
-describe('PATCH /api/cars/[id] stat updates — auth required after security fix', () => {
+describe('PATCH /api/cars/[id] stat updates — auth required', () => {
   it('returns 401 with no auth when updating a stat field', async () => {
     vi.mocked(auth).mockResolvedValue({ userId: null } as never)
     const res = await carsPatch(req({ statSpeed: 8.5 }), {
@@ -356,26 +358,125 @@ describe('PATCH /api/cars/[id] stat updates — auth required after security fix
     expect(res.status).toBe(401)
   })
 
-  it('does not call prisma.car.update when unauthenticated', async () => {
+  it('does not touch the database when unauthenticated', async () => {
     vi.mocked(auth).mockResolvedValue({ userId: null } as never)
     const prisma = await getPrisma()
     await carsPatch(req({ statHandling: 7.2 }), {
       params: Promise.resolve({ id: '42' }),
     })
     expect(prisma.car.update).not.toHaveBeenCalled()
+    expect(prisma.userGarage.update).not.toHaveBeenCalled()
   })
+})
 
-  it('allows stat update when authenticated', async () => {
+// ─── PATCH /api/cars/[id] stat updates — writes to UserGarage, not Car ────────
+
+describe('PATCH /api/cars/[id] stat updates — writes overrides to UserGarage', () => {
+  beforeEach(async () => {
     vi.mocked(auth).mockResolvedValue({ userId: 'user-alice' } as never)
     const prisma = await getPrisma()
-    vi.mocked(prisma.car.update).mockResolvedValue({ id: 42, statSpeed: 8.5 } as never)
+    // findUnique succeeds → user owns this car
+    vi.mocked(prisma.userGarage.findUnique).mockResolvedValue({ id: 7 } as never)
+  })
+
+  it('returns 200 when the user owns the car', async () => {
     const res = await carsPatch(req({ statSpeed: 8.5 }), {
       params: Promise.resolve({ id: '42' }),
     })
     expect(res.status).toBe(200)
-    expect(prisma.car.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ statSpeed: 8.5 }) })
+  })
+
+  it('never calls prisma.car.update — stats are stored as per-user overrides', async () => {
+    const prisma = await getPrisma()
+    await carsPatch(req({ statSpeed: 8.5 }), {
+      params: Promise.resolve({ id: '42' }),
+    })
+    expect(prisma.car.update).not.toHaveBeenCalled()
+  })
+
+  it('calls prisma.userGarage.update with the override field name, not the base field name', async () => {
+    const prisma = await getPrisma()
+    await carsPatch(req({ statSpeed: 8.5 }), {
+      params: Promise.resolve({ id: '42' }),
+    })
+    expect(prisma.userGarage.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ statSpeedOverride: 8.5 }),
+      })
     )
+  })
+
+  it('maps powerHp → powerHpOverride on UserGarage', async () => {
+    const prisma = await getPrisma()
+    await carsPatch(req({ powerHp: 500, torqueFtLb: 400 }), {
+      params: Promise.resolve({ id: '42' }),
+    })
+    expect(prisma.userGarage.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ powerHpOverride: 500, torqueFtLbOverride: 400 }),
+      })
+    )
+  })
+
+  it('a null value clears the override (reverts to canonical)', async () => {
+    const prisma = await getPrisma()
+    await carsPatch(req({ statSpeed: null }), {
+      params: Promise.resolve({ id: '42' }),
+    })
+    expect(prisma.userGarage.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ statSpeedOverride: null }),
+      })
+    )
+  })
+
+  it('scopes the garage lookup to the authenticated userId + carId', async () => {
+    const prisma = await getPrisma()
+    await carsPatch(req({ statSpeed: 8.5 }), {
+      params: Promise.resolve({ id: '42' }),
+    })
+    expect(prisma.userGarage.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId_carId: { userId: 'user-alice', carId: 42 } },
+      })
+    )
+  })
+})
+
+// ─── PATCH /api/cars/[id] stat updates — unowned car ─────────────────────────
+
+describe('PATCH /api/cars/[id] stat updates — unowned car rejected', () => {
+  it('returns 403 when the authenticated user does not own the car', async () => {
+    vi.mocked(auth).mockResolvedValue({ userId: 'user-bob' } as never)
+    const prisma = await getPrisma()
+    // findUnique returns null → no garage entry for user-bob + car 42
+    vi.mocked(prisma.userGarage.findUnique).mockResolvedValue(null)
+    const res = await carsPatch(req({ statSpeed: 8.5 }), {
+      params: Promise.resolve({ id: '42' }),
+    })
+    expect(res.status).toBe(403)
+  })
+
+  it('does not call userGarage.update when the car is unowned', async () => {
+    vi.mocked(auth).mockResolvedValue({ userId: 'user-bob' } as never)
+    const prisma = await getPrisma()
+    vi.mocked(prisma.userGarage.findUnique).mockResolvedValue(null)
+    await carsPatch(req({ statSpeed: 8.5 }), {
+      params: Promise.resolve({ id: '42' }),
+    })
+    expect(prisma.userGarage.update).not.toHaveBeenCalled()
+    expect(prisma.car.update).not.toHaveBeenCalled()
+  })
+
+  it('user-bob cannot edit stats for a car only owned by user-alice', async () => {
+    vi.mocked(auth).mockResolvedValue({ userId: 'user-bob' } as never)
+    const prisma = await getPrisma()
+    vi.mocked(prisma.userGarage.findUnique).mockResolvedValue(null)
+    const res = await carsPatch(req({ powerHp: 999 }), {
+      params: Promise.resolve({ id: '42' }),
+    })
+    expect(res.status).toBe(403)
+    expect(prisma.userGarage.update).not.toHaveBeenCalled()
   })
 })
 

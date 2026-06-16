@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { getBestRaceType } from '@/lib/raceMatch'
+import { hasOverrides } from '@/lib/statUtils'
 import { RaceIcon } from '@/components/RaceIcons'
 import { formatAddedAt } from '@/lib/sort'
 import { STICKY_COL_STATS } from './table-ui'
@@ -78,8 +79,11 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
           {car.make}
         </td>
         <td className="py-2.5 px-2 bg-fh-bg sticky z-[1]" style={{ left: modelLeft, minWidth: SS.model }}>
-          <div className="overflow-hidden whitespace-nowrap text-ellipsis" style={{ maxWidth: SS.model - 16 }}>
-            {car.model}
+          <div className="flex items-center gap-1 overflow-hidden" style={{ maxWidth: SS.model - 16 }}>
+            <span className="overflow-hidden whitespace-nowrap text-ellipsis">{car.model}</span>
+            {hasOverrides(car) && (
+              <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-fh-red" title="Stats edited" />
+            )}
           </div>
         </td>
         <StatTd>{car.statSpeed        ?? '—'}</StatTd>

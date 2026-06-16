@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getAutoTags } from '@/lib/autotags'
+import { resolveEffectiveStats } from '@/lib/statUtils'
 import GarageShowcaseClient from '@/components/GarageShowcaseClient'
 import GarageSkeleton from '@/components/GarageSkeleton'
 import type { Car } from '@/types/car'
@@ -87,15 +88,29 @@ export default async function GaragePage({ searchParams }: PageProps) {
   // One-time backfill: write auto-tags for any entry with zero stored tags.
   await backfillMissingTags(entries)
 
-  const cars: Car[] = entries.map(({ car, tags, notes, addedAt, pinned }) => ({
-    ...car,
-    owned: true,
-    pinned,
-    addedAt: addedAt?.toISOString() ?? null,
-    tags: [...new Set(tags.map((t) => t.tag))],
-    tagDetails: tags.map((t) => ({ tag: t.tag, source: t.source })),
-    notes,
-  }))
+  const cars: Car[] = entries.map(({
+    car, tags, notes, addedAt, pinned,
+    statSpeedOverride, statHandlingOverride, statAccelerationOverride, statLaunchOverride,
+    statBrakingOverride, statOffroadOverride, powerHpOverride, torqueFtLbOverride,
+    weightLbOverride, frontWeightOverride, displacementLOverride, rarityOverride,
+  }) => {
+    const overrides = {
+      statSpeedOverride, statHandlingOverride, statAccelerationOverride, statLaunchOverride,
+      statBrakingOverride, statOffroadOverride, powerHpOverride, torqueFtLbOverride,
+      weightLbOverride, frontWeightOverride, displacementLOverride, rarityOverride,
+    }
+    const base: Car = {
+      ...car,
+      ...overrides,
+      owned: true,
+      pinned,
+      addedAt: addedAt?.toISOString() ?? null,
+      tags: [...new Set(tags.map((t) => t.tag))],
+      tagDetails: tags.map((t) => ({ tag: t.tag, source: t.source })),
+      notes,
+    }
+    return { ...base, ...resolveEffectiveStats(base) }
+  })
 
   const viewParam = params?.view
   const view = viewParam === 'grid' ? 'grid' : 'table'

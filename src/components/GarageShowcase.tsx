@@ -41,7 +41,7 @@ import { getDivisionsForGroup } from '@/lib/divisionGroups'
 import GarageDrawer from './GarageDrawer'
 import StatBars from './StatBars'
 import { getStatCallouts } from '@/lib/statCallouts'
-import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS } from '@/lib/statUtils'
+import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS, STAT_OVERRIDE_MAP, hasOverrides, resolveEffectiveStats } from '@/lib/statUtils'
 import Link from 'next/link'
 import BackToTop from './BackToTop'
 import FilterSidebar from './FilterSidebar'
@@ -155,9 +155,32 @@ function ExpandedContent({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
-    onStatsChange(car.id, payload as Partial<Car>)
+    const overrideUpdates = Object.fromEntries(
+      Object.entries(STAT_OVERRIDE_MAP).map(([field, overrideField]) => [overrideField, payload[field] ?? null])
+    ) as Partial<Car>
+    onStatsChange(car.id, { ...payload as Partial<Car>, ...overrideUpdates })
     setSavingStats(false)
     setStatsDirty(false)
+  }
+
+  async function resetStats() {
+    const nullPayload = Object.fromEntries(Object.keys(STAT_OVERRIDE_MAP).map((k) => [k, null]))
+    await fetch(`/api/cars/${car.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nullPayload),
+    })
+    const res = await fetch(`/api/cars/${car.id}`)
+    const base = await res.json()
+    const overrideClears = Object.fromEntries(
+      Object.values(STAT_OVERRIDE_MAP).map((k) => [k, null])
+    ) as Partial<Car>
+    const baseValues = Object.fromEntries(
+      Object.keys(STAT_OVERRIDE_MAP).map((k) => [k, base[k] ?? null])
+    ) as Partial<Car>
+    setStats(carToStats({ ...car, ...baseValues } as Car))
+    setStatsDirty(false)
+    onStatsChange(car.id, { ...baseValues, ...overrideClears })
   }
 
   function updateStat(key: keyof StatFields, value: string) {
@@ -224,10 +247,69 @@ function ExpandedContent({
             rows={2}
             className="w-full bg-fh-panel border border-fh-border rounded-lg px-3 py-2 text-xs text-fh-dark-2 placeholder:text-fh-muted focus:outline-none focus:border-fh-red resize-none"
           />
-          {/* Stat bars — compact version */}
-          <div className="border-t border-fh-border pt-3">
-            <StatBars car={car} />
-          </div>
+          {/* Stat bars + inline editor — owned cars only */}
+          {car.owned && (
+            <div className="border-t border-fh-border pt-3 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <StatBars car={car} />
+                </div>
+                <div className="flex items-center gap-3 shrink-0 ml-3">
+                  {hasOverrides(car) && (
+                    <span className="text-[10px] text-fh-red font-medium bg-fh-red-pale border border-fh-red/30 px-1.5 py-0.5 rounded">edited</span>
+                  )}
+                  {hasOverrides(car) && !showStatEntry && (
+                    <button onClick={resetStats} className="text-[10px] text-fh-muted-2 hover:text-fh-red transition-colors">
+                      Reset to stock
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowStatEntry((v) => !v)}
+                    className="text-[10px] text-fh-muted hover:text-fh-dark-2 transition-colors"
+                  >
+                    {showStatEntry ? 'Hide' : 'Edit stats'}
+                  </button>
+                </div>
+              </div>
+
+              {showStatEntry && (
+                <div className="flex flex-col gap-2 pt-1">
+                  <div className="grid grid-cols-6 gap-1.5">
+                    <RowStatInput label="Speed"    value={stats.statSpeed}        step={0.1} min={0} max={10}   onChange={(v) => updateStat('statSpeed', v)}        onBlur={saveStats} />
+                    <RowStatInput label="Handling" value={stats.statHandling}     step={0.1} min={0} max={10}   onChange={(v) => updateStat('statHandling', v)}     onBlur={saveStats} />
+                    <RowStatInput label="Accel"    value={stats.statAcceleration} step={0.1} min={0} max={10}   onChange={(v) => updateStat('statAcceleration', v)} onBlur={saveStats} />
+                    <RowStatInput label="Launch"   value={stats.statLaunch}       step={0.1} min={0} max={10}   onChange={(v) => updateStat('statLaunch', v)}       onBlur={saveStats} />
+                    <RowStatInput label="Braking"  value={stats.statBraking}      step={0.1} min={0} max={10}   onChange={(v) => updateStat('statBraking', v)}      onBlur={saveStats} />
+                    <RowStatInput label="Offroad"  value={stats.statOffroad}      step={0.1} min={0} max={10}   onChange={(v) => updateStat('statOffroad', v)}      onBlur={saveStats} />
+                  </div>
+                  <div className="grid grid-cols-6 gap-1.5">
+                    <RowStatInput label="HP"       value={stats.powerHp}      min={0} max={5000}  onChange={(v) => updateStat('powerHp', v)}      onBlur={saveStats} />
+                    <RowStatInput label="Torque"   value={stats.torqueFtLb}   min={0} max={5000}  onChange={(v) => updateStat('torqueFtLb', v)}   onBlur={saveStats} />
+                    <RowStatInput label="Weight"   value={stats.weightLb}     min={0} max={10000} onChange={(v) => updateStat('weightLb', v)}     onBlur={saveStats} />
+                    <RowStatInput label="F.Wt %"   value={stats.frontWeight}  min={0} max={100}   onChange={(v) => updateStat('frontWeight', v)}  onBlur={saveStats} />
+                    <RowStatInput label="Disp (L)" value={stats.displacementL} step={0.1} min={0} max={20} onChange={(v) => updateStat('displacementL', v)} onBlur={saveStats} />
+                    <div className="min-w-0">
+                      <div className="text-[10px] text-fh-muted mb-0.5">Rarity</div>
+                      <select
+                        value={stats.rarity}
+                        onChange={(e) => { updateStat('rarity', e.target.value); setTimeout(saveStats, 0) }}
+                        className="w-full bg-fh-panel border border-fh-border rounded px-1 py-0.5 text-[10px] text-fh-dark-2 focus:outline-none focus:border-fh-red"
+                      >
+                        <option value="">—</option>
+                        {RARITY_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  {hasOverrides(car) && (
+                    <button onClick={resetStats} className="self-start text-[10px] text-fh-muted-2 hover:text-fh-red transition-colors">
+                      Reset to stock
+                    </button>
+                  )}
+                  {savingStats && <span className="text-[10px] text-fh-muted-2">Saving…</span>}
+                </div>
+              )}
+            </div>
+          )}
 
           {rankedRaces.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap text-xs text-fh-muted mt-1">
@@ -630,7 +712,13 @@ export default function GarageShowcase({ initialCars }: Props) {
   }, [])
 
   const handleStatsChange = useCallback((carId: number, partial: Partial<Car>) => {
-    setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, ...partial } : c)))
+    setCars((prev) => prev.map((c) => {
+      if (c.id !== carId) return c
+      const next: Car = { ...c, ...partial }
+      // Re-resolve effective stat values whenever override fields are part of the update
+      const hasOverrideKeys = Object.keys(partial).some((k) => k.endsWith('Override'))
+      return hasOverrideKeys ? { ...next, ...resolveEffectiveStats(next) } : next
+    }))
   }, [])
 
   const clearAllFilters = useCallback(() => {

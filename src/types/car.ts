@@ -44,6 +44,20 @@ export interface Car {
   tags?: string[]
   tagDetails?: { tag: string; source: string }[]
   notes?: string | null
+
+  // Per-user stat overrides (garage only — null means "use the shared Car value")
+  statSpeedOverride?: number | null
+  statHandlingOverride?: number | null
+  statAccelerationOverride?: number | null
+  statLaunchOverride?: number | null
+  statBrakingOverride?: number | null
+  statOffroadOverride?: number | null
+  powerHpOverride?: number | null
+  torqueFtLbOverride?: number | null
+  weightLbOverride?: number | null
+  frontWeightOverride?: number | null
+  displacementLOverride?: number | null
+  rarityOverride?: string | null
 }
 
 export interface FilterState {

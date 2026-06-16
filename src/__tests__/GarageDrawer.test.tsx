@@ -329,9 +329,165 @@ describe('GarageDrawer — notes', () => {
   })
 })
 
-// ─── Stat entry ───────────────────────────────────────────────────────────────
+// ─── Stat overrides ───────────────────────────────────────────────────────────
 
-// stat entry tests removed — feature hidden pending per-user storage fix
+describe('GarageDrawer — stat overrides', () => {
+  // Car where the user has set a speed override (as garage/page.tsx would resolve it:
+  // statSpeed already reflects the effective value, override field records the source).
+  const carWithOverride: Car = {
+    ...baseCar,
+    statSpeed: 9.5,
+    statSpeedOverride: 9.5,
+  }
+
+  // Simulates what /api/cars/:id returns — raw Car row with canonical value, no overrides.
+  const canonicalCar = { ...baseCar, statSpeed: 7.5 }
+
+  function fetchImpl(url: string, opts?: RequestInit) {
+    if (opts?.method === 'PATCH') {
+      return Promise.resolve({ ok: true, json: async () => ({ ok: true }) })
+    }
+    // GET /api/cars/:id — return canonical (no override) car data
+    return Promise.resolve({ ok: true, json: async () => canonicalCar })
+  }
+
+  // ── Context gate ──────────────────────────────────────────────────────────
+
+  it('shows "Edit manually" button for an owned car in My Garage context', () => {
+    renderDrawer(baseCar)
+    expect(screen.getByRole('button', { name: /Edit manually/i })).toBeInTheDocument()
+  })
+
+  it('does not show "Edit manually" in Car Database context (no onTagDetailsChange)', () => {
+    render(<GarageDrawer car={baseCar} onClose={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: /Edit manually/i })).not.toBeInTheDocument()
+  })
+
+  it('does not show "Edit manually" for a non-owned car even in My Garage context', () => {
+    renderDrawer({ ...baseCar, owned: false })
+    expect(screen.queryByRole('button', { name: /Edit manually/i })).not.toBeInTheDocument()
+  })
+
+  // ── "edited" badge ────────────────────────────────────────────────────────
+
+  it('shows "edited" badge when a stat override is active', () => {
+    renderDrawer(carWithOverride)
+    expect(screen.getByText('edited')).toBeInTheDocument()
+  })
+
+  it('does not show "edited" badge when no overrides are set', () => {
+    renderDrawer(baseCar)
+    expect(screen.queryByText('edited')).not.toBeInTheDocument()
+  })
+
+  it('"edited" badge is absent in Car Database context even when overrides exist', () => {
+    render(<GarageDrawer car={carWithOverride} onClose={vi.fn()} />)
+    // The stat editor section (which contains the badge) is gated on onTagDetailsChange
+    expect(screen.queryByText('edited')).not.toBeInTheDocument()
+  })
+
+  // ── "Reset to stock" visibility ───────────────────────────────────────────
+
+  it('shows "Reset to stock" button when overrides are active (editor collapsed)', () => {
+    renderDrawer(carWithOverride)
+    expect(screen.getByRole('button', { name: /Reset to stock/i })).toBeInTheDocument()
+  })
+
+  it('does not show "Reset to stock" when no overrides are active', () => {
+    renderDrawer(baseCar)
+    expect(screen.queryByRole('button', { name: /Reset to stock/i })).not.toBeInTheDocument()
+  })
+
+  // ── Stat editor expansion ─────────────────────────────────────────────────
+
+  it('stat inputs are hidden until "Edit manually" is clicked', () => {
+    renderDrawer(baseCar)
+    expect(screen.queryByRole('spinbutton', { name: /Speed/i })).not.toBeInTheDocument()
+  })
+
+  it('clicking "Edit manually" reveals stat inputs', async () => {
+    const user = userEvent.setup()
+    renderDrawer(baseCar)
+    await user.click(screen.getByRole('button', { name: /Edit manually/i }))
+    expect(screen.getByRole('spinbutton', { name: /Speed/i })).toBeInTheDocument()
+  })
+
+  it('stat inputs are pre-filled with effective values (override takes priority)', async () => {
+    const user = userEvent.setup()
+    renderDrawer(carWithOverride)
+    await user.click(screen.getByRole('button', { name: /Edit manually/i }))
+    const speedInput = screen.getByRole('spinbutton', { name: /Speed/i })
+    expect(speedInput).toHaveValue(9.5)
+  })
+
+  // ── Reset to stock ────────────────────────────────────────────────────────
+
+  it('clicking "Reset to stock" sends PATCH with all stat fields as null', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(fetchImpl))
+    const user = userEvent.setup()
+    renderDrawer(carWithOverride)
+
+    // Wait for the drawer's lazy-fetch to complete before interacting
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith(`/api/cars/${carWithOverride.id}`))
+    vi.mocked(fetch).mockClear()
+
+    await user.click(screen.getByRole('button', { name: /Reset to stock/i }))
+
+    await waitFor(() => {
+      const patchCall = vi.mocked(fetch).mock.calls.find(
+        ([, opts]) => (opts as RequestInit)?.method === 'PATCH'
+      )
+      expect(patchCall).toBeDefined()
+      const body = JSON.parse((patchCall![1] as RequestInit).body as string)
+      expect(body.statSpeed).toBeNull()
+      expect(body.statHandling).toBeNull()
+      expect(body.powerHp).toBeNull()
+      expect(body.rarity).toBeNull()
+    })
+  })
+
+  it('clicking "Reset to stock" re-fetches canonical Car values from the API', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(fetchImpl))
+    const user = userEvent.setup()
+    renderDrawer(carWithOverride)
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith(`/api/cars/${carWithOverride.id}`))
+    vi.mocked(fetch).mockClear()
+
+    await user.click(screen.getByRole('button', { name: /Reset to stock/i }))
+
+    await waitFor(() => {
+      const getCalls = vi.mocked(fetch).mock.calls.filter(
+        ([, opts]) => !opts || (opts as RequestInit).method !== 'PATCH'
+      )
+      expect(getCalls.length).toBeGreaterThanOrEqual(1)
+      expect(getCalls[0][0]).toBe(`/api/cars/${carWithOverride.id}`)
+    })
+  })
+
+  it('stat inputs revert to canonical values after reset', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(fetchImpl))
+    const user = userEvent.setup()
+    renderDrawer(carWithOverride)
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith(`/api/cars/${carWithOverride.id}`))
+
+    // Expand editor — speed should show the override value (9.5)
+    await user.click(screen.getByRole('button', { name: /Edit manually/i }))
+    expect(screen.getByRole('spinbutton', { name: /Speed/i })).toHaveValue(9.5)
+
+    vi.mocked(fetch).mockClear()
+
+    // Reset to stock — "Reset to stock" button is now at bottom of expanded editor
+    const resetBtn = screen.getAllByRole('button', { name: /Reset to stock/i })[0]
+    await user.click(resetBtn)
+
+    // After reset, speed input should reflect canonical value from the mocked GET (7.5)
+    await waitFor(() => {
+      expect(screen.getByRole('spinbutton', { name: /Speed/i })).toHaveValue(7.5)
+    })
+  })
+})
 
 // ─── Non-owned car ────────────────────────────────────────────────────────────
 

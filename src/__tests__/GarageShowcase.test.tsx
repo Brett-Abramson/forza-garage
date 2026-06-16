@@ -453,6 +453,65 @@ describe('GarageShowcase — expanded row tuning content', () => {
   })
 })
 
+// ─── Expanded row — stat editor ───────────────────────────────────────────────
+
+describe('GarageShowcase — expanded row stat editor', () => {
+  it('"Edit stats" button renders in an expanded owned-car row', async () => {
+    const user = userEvent.setup()
+    const { container } = renderShowcase(mockCars)
+    await user.click(screen.getByText('911 GT3').closest('tr')!)
+    const tbody = container.querySelector('tbody')!
+    expect(within(tbody).getByRole('button', { name: 'Edit stats' })).toBeInTheDocument()
+  })
+
+  it('clicking "Edit stats" reveals the stat input fields', async () => {
+    const user = userEvent.setup()
+    const { container } = renderShowcase(mockCars)
+    await user.click(screen.getByText('911 GT3').closest('tr')!)
+    const tbody = container.querySelector('tbody')!
+    // Inputs should not be present before toggling
+    expect(within(tbody).queryByRole('spinbutton', { name: /Speed/i })).not.toBeInTheDocument()
+    await user.click(within(tbody).getByRole('button', { name: 'Edit stats' }))
+    expect(within(tbody).getByRole('spinbutton', { name: /Speed/i })).toBeInTheDocument()
+  })
+
+  it('clicking "Hide" collapses the stat inputs', async () => {
+    const user = userEvent.setup()
+    const { container } = renderShowcase(mockCars)
+    await user.click(screen.getByText('911 GT3').closest('tr')!)
+    const tbody = container.querySelector('tbody')!
+    await user.click(within(tbody).getByRole('button', { name: 'Edit stats' }))
+    await user.click(within(tbody).getByRole('button', { name: 'Hide' }))
+    expect(within(tbody).queryByRole('spinbutton', { name: /Speed/i })).not.toBeInTheDocument()
+  })
+
+  it('"edited" badge is absent when car has no overrides', async () => {
+    const user = userEvent.setup()
+    const { container } = renderShowcase(mockCars)
+    await user.click(screen.getByText('911 GT3').closest('tr')!)
+    const tbody = container.querySelector('tbody')!
+    expect(within(tbody).queryByText('edited')).not.toBeInTheDocument()
+  })
+
+  it('"edited" badge appears when car has active overrides', async () => {
+    const carWithOverride: Car = { ...mockCars[0], statSpeedOverride: 9.5 }
+    const user = userEvent.setup()
+    const { container } = renderShowcase([carWithOverride, mockCars[1], mockCars[2]])
+    await user.click(screen.getByText('911 GT3').closest('tr')!)
+    const tbody = container.querySelector('tbody')!
+    expect(within(tbody).getByText('edited')).toBeInTheDocument()
+  })
+
+  it('"Reset to stock" button appears when car has active overrides', async () => {
+    const carWithOverride: Car = { ...mockCars[0], statSpeedOverride: 9.5 }
+    const user = userEvent.setup()
+    const { container } = renderShowcase([carWithOverride, mockCars[1], mockCars[2]])
+    await user.click(screen.getByText('911 GT3').closest('tr')!)
+    const tbody = container.querySelector('tbody')!
+    expect(within(tbody).getByRole('button', { name: 'Reset to stock' })).toBeInTheDocument()
+  })
+})
+
 // ─── URL param tag init ────────────────────────────────────────────────────────
 
 describe('GarageShowcase — URL param tag init', () => {

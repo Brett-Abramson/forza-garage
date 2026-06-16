@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getAutoTags } from '@/lib/autotags'
 import { checkRateLimit } from '@/lib/rateLimit'
+import { STAT_OVERRIDE_MAP } from '@/lib/statUtils'
 
 export async function GET(
   _request: NextRequest,
@@ -17,11 +18,6 @@ export async function GET(
   return NextResponse.json(car)
 }
 
-// Fields on the Car model that can be updated directly (not per-user garage data)
-const CAR_STAT_FIELDS = [
-  'statSpeed', 'statHandling', 'statAcceleration', 'statLaunch', 'statBraking', 'statOffroad',
-  'powerHp', 'torqueFtLb', 'weightLb', 'frontWeight', 'displacementL', 'rarity',
-] as const
 
 export async function PATCH(
   request: NextRequest,
@@ -66,29 +62,31 @@ export async function PATCH(
   }
 
   // ── Stat / spec updates ───────────────────────────────────────────────────
-  // SECURITY AUDIT (found during API auth test writing): stat updates previously
-  // had no auth check on the grounds that stats are shared/crowd-sourced data.
-  // That reasoning doesn't justify allowing anonymous writes — any unauthenticated
-  // request could corrupt car stats for all users. Auth is now required.
-  const statUpdates: Record<string, unknown> = {}
-  for (const field of CAR_STAT_FIELDS) {
+  const overrideUpdates: Record<string, unknown> = {}
+  for (const [field, overrideField] of Object.entries(STAT_OVERRIDE_MAP)) {
     if (field in body) {
-      statUpdates[field] = body[field] ?? null
+      overrideUpdates[overrideField] = body[field] ?? null
     }
   }
 
-  if (Object.keys(statUpdates).length > 0) {
+  if (Object.keys(overrideUpdates).length > 0) {
     const { userId } = await auth()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (!checkRateLimit(userId)) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
-    const updated = await prisma.car.update({
-      where: { id: carId },
-      data: statUpdates,
+    const garageEntry = await prisma.userGarage.findUnique({
+      where: { userId_carId: { userId, carId } },
+      select: { id: true },
     })
-    return NextResponse.json(updated)
+    if (!garageEntry) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    await prisma.userGarage.update({
+      where: { id: garageEntry.id },
+      data: overrideUpdates,
+    })
+    return NextResponse.json({ ok: true })
   }
 
   return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
