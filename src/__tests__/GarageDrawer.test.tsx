@@ -331,74 +331,7 @@ describe('GarageDrawer — notes', () => {
 
 // ─── Stat entry ───────────────────────────────────────────────────────────────
 
-describe('GarageDrawer — stat entry', () => {
-  it('renders the stat entry toggle button', () => {
-    renderDrawer()
-    expect(screen.getByText(/enter stats manually/i)).toBeInTheDocument()
-  })
-
-  it('renders performance sub-heading', () => {
-    renderDrawer()
-    expect(screen.getByText(/Performance · 0–10/i)).toBeInTheDocument()
-  })
-
-  it('renders Specs sub-heading', () => {
-    renderDrawer()
-    expect(screen.getByText('Specs')).toBeInTheDocument()
-  })
-
-  it('renders labelled inputs for all six performance stats', () => {
-    renderDrawer()
-    for (const label of ['Speed', 'Handling', 'Acceleration', 'Launch', 'Braking', 'Offroad']) {
-      expect(screen.getByRole('spinbutton', { name: label })).toBeInTheDocument()
-    }
-  })
-
-  it('renders labelled inputs for spec fields', () => {
-    renderDrawer()
-    for (const label of ['Power (hp)', 'Torque (ft-lb)', 'Weight (lb)', 'Front weight (%)']) {
-      expect(screen.getByRole('spinbutton', { name: label })).toBeInTheDocument()
-    }
-  })
-
-  it('pre-fills stat inputs from existing car data', () => {
-    renderDrawer({ ...baseCar, statSpeed: 7.5, powerHp: 450 })
-    expect(screen.getByRole('spinbutton', { name: 'Speed' })).toHaveValue(7.5)
-    expect(screen.getByRole('spinbutton', { name: 'Power (hp)' })).toHaveValue(450)
-  })
-
-  it('leaves inputs empty when car has no stats', () => {
-    renderDrawer()
-    // An empty number input has a null value in testing-library
-    expect(screen.getByRole('spinbutton', { name: 'Speed' })).toHaveValue(null)
-  })
-
-  it('saves stats via PATCH to /api/cars/:id on blur after editing', async () => {
-    const user = userEvent.setup()
-    renderDrawer()
-    const speedInput = screen.getByRole('spinbutton', { name: 'Speed' })
-    await user.type(speedInput, '8.5')
-    await user.tab()
-    expect(fetch).toHaveBeenCalledWith(
-      `/api/cars/${baseCar.id}`,
-      expect.objectContaining({ method: 'PATCH' })
-    )
-  })
-
-  it('does not call /api/cars when no stat has been edited', async () => {
-    const user = userEvent.setup()
-    renderDrawer()
-    await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/cars/42'))
-    vi.clearAllMocks()
-    // Click and immediately blur without changing the value
-    await user.click(screen.getByRole('spinbutton', { name: 'Speed' }))
-    await user.tab()
-    const carApiCalls = (fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
-      ([url]) => (url as string).includes('/api/cars/')
-    )
-    expect(carApiCalls).toHaveLength(0)
-  })
-})
+// stat entry tests removed — feature hidden pending per-user storage fix
 
 // ─── Non-owned car ────────────────────────────────────────────────────────────
 
@@ -453,11 +386,6 @@ describe('GarageDrawer — non-owned car', () => {
   it('does not render the Notes textarea for a non-owned car', () => {
     renderDrawer(unownedCar)
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-  })
-
-  it('still renders the stat entry toggle for a non-owned car', () => {
-    renderDrawer(unownedCar)
-    expect(screen.getByText(/enter stats manually/i)).toBeInTheDocument()
   })
 
   it('still renders car info for a non-owned car', () => {

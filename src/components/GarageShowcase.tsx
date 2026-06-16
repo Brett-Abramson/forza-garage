@@ -312,69 +312,6 @@ function ExpandedContent({
             </div>
           )}
 
-          {/* Stat entry — collapsed by default */}
-          <div className="border-t border-fh-border">
-            <button
-              onClick={() => setShowStatEntry((v) => !v)}
-              className="w-full flex items-center justify-between py-2 text-[10px] text-fh-muted hover:text-fh-dark-2 transition-colors"
-            >
-              <span>
-                {showStatEntry
-                  ? 'Hide stat entry'
-                  : hasAnyStats
-                  ? 'Edit stats manually'
-                  : '+ Enter stats manually'}
-              </span>
-              <svg
-                width="10" height="10" viewBox="0 0 16 16" fill="currentColor"
-                className={`transition-transform duration-200 ${showStatEntry ? 'rotate-180' : ''}`}
-              >
-                <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" />
-              </svg>
-            </button>
-
-            <div className={`grid transition-all duration-200 ease-in-out ${showStatEntry ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-              <div className="overflow-hidden">
-                <div className="pt-1 pb-2">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="text-[10px] text-fh-dark-2">Performance · 0–10</div>
-                    {savingStats && <span className="text-[10px] text-fh-muted">Saving…</span>}
-                    {!savingStats && !statsDirty && hasAnyStats && (
-                      <span className="text-[10px] text-fh-muted">Saved</span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-3 gap-x-3 gap-y-2 mb-3">
-                    {([
-                      ['statSpeed', 'Speed'], ['statHandling', 'Handling'], ['statAcceleration', 'Accel'],
-                      ['statLaunch', 'Launch'], ['statBraking', 'Braking'], ['statOffroad', 'Offroad'],
-                    ] as [keyof StatFields, string][]).map(([key, label]) => (
-                      <RowStatInput key={key} label={label} value={stats[key]} step={0.1} min={0} max={10} onChange={(v) => updateStat(key, v)} onBlur={saveStats} />
-                    ))}
-                  </div>
-                  <div className="text-[10px] text-fh-dark-2 mb-1.5">Specs</div>
-                  <div className="grid grid-cols-3 gap-x-3 gap-y-2">
-                    <RowStatInput label="HP" value={stats.powerHp} onChange={(v) => updateStat('powerHp', v)} onBlur={saveStats} />
-                    <RowStatInput label="Torque" value={stats.torqueFtLb} onChange={(v) => updateStat('torqueFtLb', v)} onBlur={saveStats} />
-                    <RowStatInput label="Weight" value={stats.weightLb} onChange={(v) => updateStat('weightLb', v)} onBlur={saveStats} />
-                    <RowStatInput label="F.Wt %" value={stats.frontWeight} min={0} max={100} onChange={(v) => updateStat('frontWeight', v)} onBlur={saveStats} />
-                    <RowStatInput label="Disp (L)" value={stats.displacementL} step={0.1} onChange={(v) => updateStat('displacementL', v)} onBlur={saveStats} />
-                    <div className="min-w-0">
-                      <div className="text-[10px] text-fh-muted mb-0.5">Rarity</div>
-                      <select
-                        value={stats.rarity}
-                        onChange={(e) => updateStat('rarity', e.target.value)}
-                        onBlur={saveStats}
-                        className="w-full bg-fh-panel border border-fh-border rounded px-1.5 py-0.5 text-[10px] text-fh-dark-2 focus:outline-none focus:border-fh-red"
-                      >
-                        <option value="">—</option>
-                        {RARITY_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
   )
 }

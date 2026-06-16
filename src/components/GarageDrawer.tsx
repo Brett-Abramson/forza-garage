@@ -198,9 +198,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
       : null
   const divisionFallback = displayCar && !tuningGuide ? getDivisionFallback(displayCar.division) : null
 
-  const hasAnyStats = Object.values(stats).some((v) => v !== '')
   const [toggling, setToggling] = useState(false)
-  const [showStatEntry, setShowStatEntry] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
 
   const statCallouts = displayCar ? getStatCallouts(displayCar, [...autoTags, ...userTags]) : []
@@ -517,80 +515,6 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                 />
               </div>}
 
-              {/* Stat entry — collapsed by default */}
-              <div className="border-t border-fh-border">
-                {/* Toggle button */}
-                <button
-                  onClick={() => setShowStatEntry((v) => !v)}
-                  className="w-full flex items-center justify-between px-5 py-3 text-xs text-fh-muted hover:text-fh-dark transition-colors group"
-                >
-                  <span>
-                    {showStatEntry
-                      ? 'Hide stat entry'
-                      : hasAnyStats
-                      ? 'Edit stats manually'
-                      : '+ Enter stats manually'}
-                  </span>
-                  <svg
-                    width="12" height="12" viewBox="0 0 16 16" fill="currentColor"
-                    className={`transition-transform duration-200 ${showStatEntry ? 'rotate-180' : ''}`}
-                  >
-                    <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" />
-                  </svg>
-                </button>
-
-                {/* Collapsible content */}
-                <div className={`grid transition-all duration-200 ease-in-out ${showStatEntry ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                  <div className="overflow-hidden">
-                    <div className="px-5 pb-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="text-[10px] text-fh-muted uppercase tracking-wide">Performance · 0–10</div>
-                        {savingStats && <span className="text-xs text-fh-muted-2">Saving…</span>}
-                        {!savingStats && !statsDirty && hasAnyStats && (
-                          <span className="text-xs text-fh-muted-2">Saved</span>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 mb-5">
-                        {PERF_STATS.map(({ key, label }) => (
-                          <StatInput
-                            key={key}
-                            label={label}
-                            value={stats[key]}
-                            type="float"
-                            min={0}
-                            max={10}
-                            step={0.1}
-                            onChange={(v) => updateStat(key, v)}
-                            onBlur={saveStats}
-                          />
-                        ))}
-                      </div>
-
-                      <div className="text-[10px] text-fh-muted uppercase tracking-wide mb-2.5">Specs</div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-                        <StatInput label="Power (hp)" value={stats.powerHp} type="int" onChange={(v) => updateStat('powerHp', v)} onBlur={saveStats} />
-                        <StatInput label="Torque (ft-lb)" value={stats.torqueFtLb} type="int" onChange={(v) => updateStat('torqueFtLb', v)} onBlur={saveStats} />
-                        <StatInput label="Weight (lb)" value={stats.weightLb} type="int" onChange={(v) => updateStat('weightLb', v)} onBlur={saveStats} />
-                        <StatInput label="Front weight (%)" value={stats.frontWeight} type="int" min={0} max={100} onChange={(v) => updateStat('frontWeight', v)} onBlur={saveStats} />
-                        <StatInput label="Displacement (L)" value={stats.displacementL} type="float" step={0.1} onChange={(v) => updateStat('displacementL', v)} onBlur={saveStats} />
-                        <div className="min-w-0">
-                          <div className="text-[10px] text-fh-muted mb-1">Rarity</div>
-                          <select
-                            value={stats.rarity}
-                            onChange={(e) => { updateStat('rarity', e.target.value) }}
-                            onBlur={saveStats}
-                            className="w-full bg-fh-bg border border-fh-border rounded px-2 py-1 text-xs text-fh-dark focus:outline-none focus:border-fh-red"
-                          >
-                            <option value="">—</option>
-                            {RARITY_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Remove from garage — destructive, secondary, two-step confirm */}
