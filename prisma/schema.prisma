@@ -66,6 +66,20 @@ model UserGarage {
   pinned    Boolean  @default(false)
   tags      CarTag[]
 
+  // Per-user stat overrides — null means "use the shared Car value"
+  statSpeedOverride        Float?
+  statHandlingOverride     Float?
+  statAccelerationOverride Float?
+  statLaunchOverride       Float?
+  statBrakingOverride      Float?
+  statOffroadOverride      Float?
+  powerHpOverride          Int?
+  torqueFtLbOverride       Int?
+  weightLbOverride         Int?
+  frontWeightOverride      Int?
+  displacementLOverride    Float?
+  rarityOverride           String?
+
   @@index([userId])
   @@unique([userId, carId])
 }
