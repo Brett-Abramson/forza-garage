@@ -12,19 +12,19 @@ interface PageProps {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-// Only the fields needed for list/table display — spec fields load on drawer open
+// Fields needed for list/table display and Stats mode sorting
 const LIST_SELECT = {
   id: true, make: true, model: true, year: true,
   piClass: true, piRating: true, division: true, drivetrain: true,
   country: true, source: true, sourceInfo: true, value: true, rarity: true,
   statSpeed: true, statHandling: true, statAcceleration: true,
   statLaunch: true, statBraking: true, statOffroad: true,
+  powerHp: true, torqueFtLb: true, weightLb: true,
+  frontWeight: true, displacementL: true,
 } as const
 
 // Placeholder nulls for spec fields excluded from the list projection
 const SPEC_DEFAULTS = {
-  powerHp: null, torqueFtLb: null, weightLb: null,
-  frontWeight: null, displacementL: null,
   engineType: null, engineCC: null, cylinders: null, bodyStyle: null,
 } as const
 
