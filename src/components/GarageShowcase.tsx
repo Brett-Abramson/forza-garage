@@ -506,7 +506,7 @@ export default function GarageShowcase({ initialCars }: Props) {
     search: searchParams.get('q') ?? '',
     piClass: (searchParams.get('class') ?? '').split(',').filter(Boolean),
     division: (searchParams.get('div') ?? '').split(',').filter(Boolean),
-    make: searchParams.get('make') ?? '',
+    make: (searchParams.get('make') ?? '').split(',').filter(Boolean),
     drivetrain: searchParams.get('drive') ?? '',
     country: searchParams.get('country') ?? '',
     source: searchParams.get('src') ?? '',
@@ -565,7 +565,7 @@ export default function GarageShowcase({ initialCars }: Props) {
     if (filters.piClass.length > 0) params.set('class', filters.piClass.join(','))
     if (selectedGroupIds.length > 0) params.set('group', selectedGroupIds.join(','))
     if (filters.division.length > 0) params.set('div', filters.division.join(','))
-    if (filters.make) params.set('make', filters.make)
+    if (filters.make.length > 0) params.set('make', filters.make.join(','))
     if (filters.drivetrain) params.set('drive', filters.drivetrain)
     if (filters.country) params.set('country', filters.country)
     if (filters.source) params.set('src', filters.source)
@@ -594,7 +594,7 @@ export default function GarageShowcase({ initialCars }: Props) {
   const activeFilterCount = [
     filters.piClass.length > 0,
     filters.division.length > 0 || selectedGroupIds.length > 0,
-    filters.make !== '',
+    filters.make.length > 0,
     filters.drivetrain !== '',
     filters.country !== '',
     filters.source !== '',

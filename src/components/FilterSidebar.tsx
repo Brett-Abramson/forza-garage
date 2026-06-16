@@ -176,15 +176,34 @@ export default function FilterSidebar({
         <div className="flex flex-col gap-2">
           <div className="text-[10px] font-semibold text-fh-muted uppercase tracking-wider">Make</div>
           <select
-            value={filters.make}
-            onChange={(e) => setFilters((f) => ({ ...f, make: e.target.value }))}
+            value=""
+            onChange={(e) => {
+              const m = e.target.value
+              if (m) setFilters((f) => ({ ...f, make: [...f.make, m] }))
+            }}
             className="bg-fh-panel border border-fh-border rounded-lg px-2.5 py-1.5 text-xs text-fh-dark focus:outline-none focus:border-fh-red cursor-pointer"
           >
             <option value="">All makes</option>
-            {options.makes.map((m) => (
+            {options.makes.filter((m) => !filters.make.includes(m)).map((m) => (
               <option key={m} value={m}>{m}</option>
             ))}
           </select>
+          {filters.make.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {filters.make.map((m) => (
+                <span key={m} className="flex items-center gap-1 pl-2 pr-1 py-[3px] rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red">
+                  {m}
+                  <button
+                    onClick={() => setFilters((f) => ({ ...f, make: f.make.filter((x) => x !== m) }))}
+                    className="hover:opacity-60 transition-opacity leading-none"
+                    aria-label={`Remove ${m}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Category */}

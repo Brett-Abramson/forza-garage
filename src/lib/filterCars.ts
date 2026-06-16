@@ -18,7 +18,7 @@ export const DEFAULT_FILTERS: FilterState = {
   search: '',
   piClass: [],
   division: [],
-  make: '',
+  make: [],
   drivetrain: '',
   country: '',
   source: '',
@@ -70,7 +70,8 @@ export function filterCars(
     }
 
     // ── Make ─────────────────────────────────────────────────────────────────
-    if (filters.make && car.make !== filters.make) return false
+    // OR logic: car passes if no make selected, or its make is in the selected set.
+    if (filters.make.length > 0 && !filters.make.includes(car.make)) return false
 
     // ── Drivetrain ───────────────────────────────────────────────────────────
     if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false

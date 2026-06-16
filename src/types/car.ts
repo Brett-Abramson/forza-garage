@@ -50,7 +50,7 @@ export interface FilterState {
   search: string
   piClass: string[]
   division: string[]
-  make: string
+  make: string[]
   drivetrain: string
   country: string
   source: string   // empty = all; non-empty = car.source.includes(value)

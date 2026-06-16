@@ -153,7 +153,7 @@ describe('filterCars — no active filters', () => {
   })
 
   it('empty car array returns empty array for any filter combination', () => {
-    expect(filterCars([], { filters: f({ piClass: ['S1'], make: 'Porsche', search: 'GT3' }) })).toEqual([])
+    expect(filterCars([], { filters: f({ piClass: ['S1'], make: ['Porsche'], search: 'GT3' }) })).toEqual([])
   })
 })
 
@@ -207,24 +207,34 @@ describe('filterCars — PI class', () => {
 
 describe('filterCars — make', () => {
   it('filters to only Porsche', () => {
-    expect(ids(filterCars(ALL_CARS, { filters: f({ make: 'Porsche' }) }))).toEqual([PORSCHE.id])
+    expect(ids(filterCars(ALL_CARS, { filters: f({ make: ['Porsche'] }) }))).toEqual([PORSCHE.id])
   })
 
   it('filters to only Ford (two cars)', () => {
-    const result = filterCars(ALL_CARS, { filters: f({ make: 'Ford' }) })
+    const result = filterCars(ALL_CARS, { filters: f({ make: ['Ford'] }) })
     expect(ids(result)).toEqual(ids([FORD_GT, FORD_FOCUS]))
   })
 
-  it('make filter is exact-match — "ford" (lowercase) returns nothing', () => {
-    expect(filterCars(ALL_CARS, { filters: f({ make: 'ford' }) })).toHaveLength(0)
+  it('make filter is exact-match — ["ford"] (lowercase) returns nothing', () => {
+    expect(filterCars(ALL_CARS, { filters: f({ make: ['ford'] }) })).toHaveLength(0)
   })
 
-  it('empty make string returns all cars', () => {
-    expect(filterCars(ALL_CARS, { filters: f({ make: '' }) })).toHaveLength(ALL_CARS.length)
+  it('empty make array returns all cars', () => {
+    expect(filterCars(ALL_CARS, { filters: f({ make: [] }) })).toHaveLength(ALL_CARS.length)
   })
 
   it('unknown make returns empty array', () => {
-    expect(filterCars(ALL_CARS, { filters: f({ make: 'Lamborghini' }) })).toHaveLength(0)
+    expect(filterCars(ALL_CARS, { filters: f({ make: ['Lamborghini'] }) })).toHaveLength(0)
+  })
+
+  it('multi-select: ["Toyota", "Nissan"] returns cars from either make', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ make: ['Toyota', 'Nissan'] }) })
+    expect(ids(result)).toEqual(ids([TOYOTA, NISSAN_SILVIA]))
+  })
+
+  it('multi-select: ["Ford"] returns same result as old single-select "Ford"', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ make: ['Ford'] }) })
+    expect(ids(result)).toEqual(ids([FORD_GT, FORD_FOCUS]))
   })
 })
 
@@ -573,13 +583,13 @@ describe('filterCars — selectedGroupIds (division group)', () => {
 describe('filterCars — multiple active filters (AND/intersection)', () => {
   it('piClass + make: returns only the intersection', () => {
     // A class + Ford → only Ford Focus (Ford GT is S2)
-    const result = filterCars(ALL_CARS, { filters: f({ piClass: ['A'], make: 'Ford' }) })
+    const result = filterCars(ALL_CARS, { filters: f({ piClass: ['A'], make: ['Ford'] }) })
     expect(ids(result)).toEqual([FORD_FOCUS.id])
   })
 
   it('make + country: Ford cars from USA only', () => {
     // Ford GT (USA) — Ford Focus is UK
-    const result = filterCars(ALL_CARS, { filters: f({ make: 'Ford', country: 'USA' }) })
+    const result = filterCars(ALL_CARS, { filters: f({ make: ['Ford'], country: 'USA' }) })
     expect(ids(result)).toEqual([FORD_GT.id])
   })
 
@@ -599,7 +609,7 @@ describe('filterCars — multiple active filters (AND/intersection)', () => {
 
   it('make + source + drivetrain: three active filters intersect correctly', () => {
     // Ford + AWD — there are no AWD Fords in the set
-    const result = filterCars(ALL_CARS, { filters: f({ make: 'Ford', drivetrain: 'AWD' }) })
+    const result = filterCars(ALL_CARS, { filters: f({ make: ['Ford'], drivetrain: 'AWD' }) })
     expect(result).toHaveLength(0)
   })
 
@@ -617,7 +627,7 @@ describe('filterCars — multiple active filters (AND/intersection)', () => {
     const result = filterCars(ALL_CARS, {
       filters: f({
         piClass: ['S1'],
-        make: 'Porsche',
+        make: ['Porsche'],
         drivetrain: 'RWD',
         country: 'Germany',
         source: 'Autoshow',
@@ -628,7 +638,7 @@ describe('filterCars — multiple active filters (AND/intersection)', () => {
 
   it('all scalar filters + tag chip: still returns intersection', () => {
     const result = filterCars(ALL_CARS, {
-      filters: f({ piClass: ['S1'], make: 'Porsche', country: 'Germany' }),
+      filters: f({ piClass: ['S1'], make: ['Porsche'], country: 'Germany' }),
       selectedTags: new Set(['grip']),
     })
     expect(ids(result)).toEqual([PORSCHE.id])
@@ -637,7 +647,7 @@ describe('filterCars — multiple active filters (AND/intersection)', () => {
   it('filter combination that matches nothing returns empty array, not a throw', () => {
     expect(() =>
       filterCars(ALL_CARS, {
-        filters: f({ piClass: ['D'], make: 'Bugatti', country: 'Japan' }),
+        filters: f({ piClass: ['D'], make: ['Bugatti'], country: 'Japan' }),
         selectedTags: new Set(['drift']),
         activeRaces: [{ recommendedTags: ['snow'] }],
       })
@@ -645,7 +655,7 @@ describe('filterCars — multiple active filters (AND/intersection)', () => {
 
     expect(
       filterCars(ALL_CARS, {
-        filters: f({ piClass: ['D'], make: 'Bugatti', country: 'Japan' }),
+        filters: f({ piClass: ['D'], make: ['Bugatti'], country: 'Japan' }),
         selectedTags: new Set(['drift']),
         activeRaces: [{ recommendedTags: ['snow'] }],
       })
