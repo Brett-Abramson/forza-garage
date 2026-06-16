@@ -1,6 +1,20 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import type { SortKey, SortDir } from '@/lib/sort'
+
+// Pixel widths for the identity columns in stats mode.
+// Shared between header (view files) and body (CarRow) so sticky left offsets align.
+export const STICKY_COL = {
+  star:  40,
+  class: 64,
+  pi:    52,
+  year:  56,
+  make:  100,
+  model: 120,
+} as const
+
+export type TableMode = 'standard' | 'stats'
 
 interface SortState {
   key: SortKey | null
@@ -14,6 +28,7 @@ export function SortTh({
   onSort,
   className = '',
   width,
+  style,
 }: {
   label: string
   sortKey: SortKey
@@ -21,6 +36,7 @@ export function SortTh({
   onSort: (key: SortKey) => void
   className?: string
   width?: string
+  style?: CSSProperties
 }) {
   const active = sort.key === sortKey
   return (
@@ -28,7 +44,7 @@ export function SortTh({
       className={`text-left py-2.5 px-3 cursor-pointer group ${className}`}
       onClick={() => onSort(sortKey)}
       aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
-      style={width ? { width } : undefined}
+      style={{ ...(width ? { width } : {}), ...style }}
     >
       <span
         className={`flex items-center gap-1 transition-colors ${
@@ -62,5 +78,24 @@ export function TableIcon() {
       <rect x="1" y="7" width="14" height="2" rx="1" />
       <rect x="1" y="12" width="14" height="2" rx="1" />
     </svg>
+  )
+}
+
+export function TableModeToggle({ mode, setMode }: { mode: TableMode; setMode: (m: TableMode) => void }) {
+  return (
+    <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0 text-xs font-medium">
+      <button
+        onClick={() => setMode('standard')}
+        className={`px-3 py-1.5 transition-colors ${mode === 'standard' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
+      >
+        Standard
+      </button>
+      <button
+        onClick={() => setMode('stats')}
+        className={`px-3 py-1.5 transition-colors ${mode === 'stats' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
+      >
+        Stats
+      </button>
+    </div>
   )
 }

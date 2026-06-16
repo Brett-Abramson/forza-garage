@@ -1,6 +1,9 @@
 import { Car, PI_CLASS_ORDER } from '@/types/car'
 
-export type SortKey = 'piClass' | 'piRating' | 'year' | 'make' | 'model' | 'division' | 'drivetrain' | 'country' | 'source' | 'value' | 'addedAt'
+export type SortKey =
+  | 'piClass' | 'piRating' | 'year' | 'make' | 'model' | 'division' | 'drivetrain' | 'country' | 'source' | 'value' | 'addedAt'
+  | 'statSpeed' | 'statHandling' | 'statAcceleration' | 'statLaunch' | 'statBraking' | 'statOffroad'
+  | 'powerHp' | 'torqueFtLb' | 'weightLb' | 'frontWeight' | 'displacementL'
 export type SortDir = 'asc' | 'desc'
 
 export const PI_CLASS_INDEX: Record<string, number> = Object.fromEntries(
@@ -34,6 +37,18 @@ export function compareRows(a: Car, b: Car, key: SortKey, dir: SortDir): number 
     else if (at === null) return 1   // a sinks regardless
     else if (bt === null) return -1  // b sinks regardless
     else result = at - bt
+  } else if (
+    key === 'statSpeed' || key === 'statHandling' || key === 'statAcceleration' ||
+    key === 'statLaunch' || key === 'statBraking' || key === 'statOffroad' ||
+    key === 'powerHp' || key === 'torqueFtLb' || key === 'weightLb' ||
+    key === 'frontWeight' || key === 'displacementL'
+  ) {
+    const aVal = a[key]
+    const bVal = b[key]
+    if (aVal === null && bVal === null) result = 0
+    else if (aVal === null) return 1   // nulls sink regardless of direction
+    else if (bVal === null) return -1
+    else result = aVal - bVal
   } else {
     result = String(a[key]).localeCompare(String(b[key]))
   }

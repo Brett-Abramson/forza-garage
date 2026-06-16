@@ -9,7 +9,18 @@ import { SortKey, SortDir, compareRows, defaultSort, formatAddedAt } from '@/lib
 import { buildCsvString, csvFilename } from '@/lib/exportCsv'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
-import { SortTh, GridIcon, TableIcon } from './table-ui'
+import { SortTh, GridIcon, TableIcon, TableModeToggle, STICKY_COL, type TableMode } from './table-ui'
+
+// Cumulative left offsets for stats-mode sticky header cells (Showcase has a star col)
+const SC = STICKY_COL
+const SHL = {
+  star:  0,
+  class: SC.star,
+  pi:    SC.star + SC.class,
+  year:  SC.star + SC.class + SC.pi,
+  make:  SC.star + SC.class + SC.pi + SC.year,
+  model: SC.star + SC.class + SC.pi + SC.year + SC.make,
+}
 import { CAR_TAGS } from '@/lib/tags'
 const ALL_TAGS = new Set<string>(CAR_TAGS)
 import { splitTagsBySource } from '@/lib/autotags'
@@ -365,10 +376,11 @@ function ExpandedRow(props: {
   onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
   onNotesChange: (carId: number, notes: string) => void
   onStatsChange: (carId: number, partial: Partial<Car>) => void
+  colSpan?: number
 }) {
   return (
     <tr className="hidden sm:table-row border-b border-fh-border bg-fh-panel">
-      <td colSpan={11} className="px-5 py-3">
+      <td colSpan={props.colSpan ?? 99} className="px-5 py-3">
         <div className="max-w-2xl">
           <ExpandedContent {...props} />
         </div>
@@ -494,6 +506,9 @@ export default function GarageShowcase({ initialCars }: Props) {
   const [view, setView] = useState<ViewMode>(
     (searchParams.get('view') as ViewMode) ?? 'table'
   )
+  const [tableMode, setTableMode] = useState<TableMode>(
+    () => (localStorage.getItem('fh-tableMode') as TableMode) ?? 'standard'
+  )
   const [sort, setSort] = useState<SortState>({ key: 'addedAt', dir: 'desc' })
   const [selectedTags, setSelectedTags] = useState<Set<string>>(
     () => new Set((searchParams.get('tags')?.split(',') ?? []).filter((t) => ALL_TAGS.has(t)))
@@ -558,6 +573,10 @@ export default function GarageShowcase({ initialCars }: Props) {
     filters.drivetrain, filters.country, filters.source, filters.pinned,
     selectedGroupId, selectedTags, selectedRace, view,
   ])
+
+  // Persist table mode preference; reset to standard when switching to grid
+  useEffect(() => { localStorage.setItem('fh-tableMode', tableMode) }, [tableMode])
+  useEffect(() => { if (view === 'grid') setTableMode('standard') }, [view])
 
   const options = useMemo(() => buildOptions(cars), [cars])
 
@@ -911,52 +930,89 @@ export default function GarageShowcase({ initialCars }: Props) {
               ))}
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-fh-border">
-              <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
-                <thead>
-                  <tr className="bg-fh-panel border-b border-fh-border text-xs uppercase tracking-wide select-none">
-                    {/* Star column header — no sort, just spacing */}
-                    <th className="py-2.5 pl-3 pr-1" style={{ width: '3%' }} aria-label="Favourite" />
-                    <SortTh label="Class"    sortKey="piClass"    sort={sort} onSort={handleSort} width="5%" />
-                    <SortTh label="PI"       sortKey="piRating"   sort={sort} onSort={handleSort} width="6%" />
-                    <SortTh label="Year"     sortKey="year"       sort={sort} onSort={handleSort} width="5%" />
-                    <SortTh label="Make"     sortKey="make"       sort={sort} onSort={handleSort} width="10%" />
-                    <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} width="12%" />
-                    <SortTh label="Division" sortKey="division"   sort={sort} onSort={handleSort} className="hidden md:table-cell" width="17%" />
-                    <SortTh label="Drive"    sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="5%" />
-                    <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="8%" />
-                    <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="11%" />
-                    <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="9%" />
-                    <SortTh label="Added"    sortKey="addedAt"    sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="9%" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedCars.map((car) => (
-                    <Fragment key={car.id}>
-                      <CarRow
-                        car={car}
-                        onToggleOwned={handleToggle}
-                        onTogglePin={handleTogglePin}
-                        isPending={pendingIds.has(car.id)}
-                        isExpanded={expandedCarId === car.id}
-                        onCardClick={(c) => toggleExpanded(c.id)}
-                        showAddedAt={sort.key === 'addedAt'}
-                        showAddedAtColumn
-                        hideGarage
-                      />
-                      {expandedCarId === car.id && (
-                        <ExpandedRow
-                          car={car}
-                          onTagDetailsChange={handleTagDetailsChange}
-                          onNotesChange={handleNotesChange}
-                          onStatsChange={handleStatsChange}
-                        />
+            <>
+              {/* Toolbar: Standard / Stats toggle */}
+              <div className="flex items-center justify-end mb-2">
+                <TableModeToggle mode={tableMode} setMode={setTableMode} />
+              </div>
+
+              <div className="overflow-x-auto rounded-xl border border-fh-border">
+                <table
+                  className="w-full text-sm"
+                  style={tableMode === 'standard' ? { tableLayout: 'fixed' } : undefined}
+                >
+                  <thead>
+                    <tr className="bg-fh-panel border-b border-fh-border text-xs uppercase tracking-wide select-none">
+                      {tableMode === 'standard' ? (
+                        <>
+                          <th className="py-2.5 pl-3 pr-1" style={{ width: '3%' }} aria-label="Favourite" />
+                          <SortTh label="Class"    sortKey="piClass"    sort={sort} onSort={handleSort} width="5%" />
+                          <SortTh label="PI"       sortKey="piRating"   sort={sort} onSort={handleSort} width="6%" />
+                          <SortTh label="Year"     sortKey="year"       sort={sort} onSort={handleSort} width="5%" />
+                          <SortTh label="Make"     sortKey="make"       sort={sort} onSort={handleSort} width="10%" />
+                          <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} width="12%" />
+                          <SortTh label="Division" sortKey="division"   sort={sort} onSort={handleSort} className="hidden md:table-cell" width="17%" />
+                          <SortTh label="Drive"    sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="5%" />
+                          <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="8%" />
+                          <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="11%" />
+                          <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="9%" />
+                          <SortTh label="Added"    sortKey="addedAt"    sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="9%" />
+                        </>
+                      ) : (
+                        <>
+                          {/* Star — sticky */}
+                          <th className="py-2.5 pl-3 pr-1 sticky bg-fh-panel z-[2]" style={{ left: SHL.star, minWidth: SC.star }} aria-label="Favourite" />
+                          {/* Identity — sticky */}
+                          <SortTh label="Class" sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL.class, minWidth: SC.class }} />
+                          <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL.pi,    minWidth: SC.pi    }} />
+                          <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL.year,  minWidth: SC.year  }} />
+                          <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL.make,  minWidth: SC.make  }} />
+                          <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL.model, minWidth: SC.model }} />
+                          {/* Stat columns — not sticky */}
+                          <SortTh label="Speed"    sortKey="statSpeed"        sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                          <SortTh label="Handling" sortKey="statHandling"     sort={sort} onSort={handleSort} style={{ minWidth: 80 }} />
+                          <SortTh label="Accel"    sortKey="statAcceleration" sort={sort} onSort={handleSort} style={{ minWidth: 68 }} />
+                          <SortTh label="Launch"   sortKey="statLaunch"       sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                          <SortTh label="Braking"  sortKey="statBraking"      sort={sort} onSort={handleSort} style={{ minWidth: 76 }} />
+                          <SortTh label="Offroad"  sortKey="statOffroad"      sort={sort} onSort={handleSort} style={{ minWidth: 76 }} />
+                          <SortTh label="HP"       sortKey="powerHp"          sort={sort} onSort={handleSort} style={{ minWidth: 60 }} />
+                          <SortTh label="Torque"   sortKey="torqueFtLb"       sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                          <SortTh label="Weight"   sortKey="weightLb"         sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                          <SortTh label="F.WT"     sortKey="frontWeight"      sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
+                          <SortTh label="Disp"     sortKey="displacementL"    sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
+                        </>
                       )}
-                    </Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedCars.map((car) => (
+                      <Fragment key={car.id}>
+                        <CarRow
+                          car={car}
+                          onToggleOwned={handleToggle}
+                          onTogglePin={handleTogglePin}
+                          isPending={pendingIds.has(car.id)}
+                          isExpanded={expandedCarId === car.id}
+                          onCardClick={(c) => toggleExpanded(c.id)}
+                          showAddedAt={sort.key === 'addedAt'}
+                          showAddedAtColumn
+                          hideGarage
+                          statsMode={tableMode === 'stats'}
+                        />
+                        {expandedCarId === car.id && (
+                          <ExpandedRow
+                            car={car}
+                            onTagDetailsChange={handleTagDetailsChange}
+                            onNotesChange={handleNotesChange}
+                            onStatsChange={handleStatsChange}
+                          />
+                        )}
+                      </Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </>
       )}

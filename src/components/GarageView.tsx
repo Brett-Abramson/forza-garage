@@ -11,7 +11,17 @@ import { RACE_TYPES } from '@/lib/races'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
 import GarageDrawer from './GarageDrawer'
-import { SortTh, GridIcon, TableIcon } from './table-ui'
+import { SortTh, GridIcon, TableIcon, TableModeToggle, STICKY_COL, type TableMode } from './table-ui'
+
+// Cumulative left offsets for stats-mode sticky header cells (View has no star col)
+const SC = STICKY_COL
+const VHL = {
+  class: 0,
+  pi:    SC.class,
+  year:  SC.class + SC.pi,
+  make:  SC.class + SC.pi + SC.year,
+  model: SC.class + SC.pi + SC.year + SC.make,
+}
 import { filterCars, DEFAULT_FILTERS } from '@/lib/filterCars'
 import BackToTop from './BackToTop'
 import FilterSidebar from './FilterSidebar'
@@ -71,6 +81,9 @@ export default function GarageView({ initialCars }: Props) {
   const [view, setView]                     = useState<ViewMode>(
     (searchParams.get('view') as ViewMode) ?? 'grid'
   )
+  const [tableMode, setTableMode]           = useState<TableMode>(
+    () => (localStorage.getItem('fh-tableMode') as TableMode) ?? 'standard'
+  )
   const [sort, setSort]                     = useState<SortState>({ key: null, dir: 'desc' })
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(
     searchParams.get('group') ?? null
@@ -95,6 +108,10 @@ export default function GarageView({ initialCars }: Props) {
     [selectedRace]
   )
   const options = useMemo(() => buildOptions(cars), [cars])
+
+  // Persist table mode preference; reset to standard when switching to grid
+  useEffect(() => { localStorage.setItem('fh-tableMode', tableMode) }, [tableMode])
+  useEffect(() => { if (view === 'grid') setTableMode('standard') }, [view])
 
   // ── Recalculate column count on resize ─────────────────────────────────────
   useEffect(() => {
@@ -397,30 +414,61 @@ export default function GarageView({ initialCars }: Props) {
 
         /* ── Table view (virtual, spacer rows) ───────────────────────────── */
         <>
-          <div className="text-xs text-fh-muted tabular-nums mb-1">
-            Showing {sortedCars.length} of {cars.length} cars
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-xs text-fh-muted tabular-nums">
+              Showing {sortedCars.length} of {cars.length} cars
+            </div>
+            <TableModeToggle mode={tableMode} setMode={setTableMode} />
           </div>
           <div className="overflow-x-auto rounded-xl border border-fh-border">
-            <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+            <table
+              className="w-full text-sm"
+              style={tableMode === 'standard' ? { tableLayout: 'fixed' } : undefined}
+            >
               <thead className="sticky top-12 z-10">
                 <tr className="bg-fh-panel-2 border-b border-fh-border text-xs uppercase tracking-wide select-none">
-                  <SortTh label="Class"    sortKey="piClass"    sort={sort} onSort={handleSort} width="5%" />
-                  <SortTh label="PI"       sortKey="piRating"   sort={sort} onSort={handleSort} width="6%" />
-                  <SortTh label="Year"     sortKey="year"       sort={sort} onSort={handleSort} width="5%" />
-                  <SortTh label="Make"     sortKey="make"       sort={sort} onSort={handleSort} width="10%" />
-                  <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} width="12%" />
-                  <SortTh label="Division" sortKey="division"   sort={sort} onSort={handleSort} className="hidden md:table-cell" width="17%" />
-                  <SortTh label="Drive"    sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="5%" />
-                  <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="8%" />
-                  <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="12%" />
-                  <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="10%" />
-                  <th className="text-left py-2.5 px-3 text-fh-muted" style={{ width: '10%' }}>Garage</th>
+                  {tableMode === 'standard' ? (
+                    <>
+                      <SortTh label="Class"    sortKey="piClass"    sort={sort} onSort={handleSort} width="5%" />
+                      <SortTh label="PI"       sortKey="piRating"   sort={sort} onSort={handleSort} width="6%" />
+                      <SortTh label="Year"     sortKey="year"       sort={sort} onSort={handleSort} width="5%" />
+                      <SortTh label="Make"     sortKey="make"       sort={sort} onSort={handleSort} width="10%" />
+                      <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} width="12%" />
+                      <SortTh label="Division" sortKey="division"   sort={sort} onSort={handleSort} className="hidden md:table-cell" width="17%" />
+                      <SortTh label="Drive"    sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="5%" />
+                      <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="8%" />
+                      <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="12%" />
+                      <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="10%" />
+                      <th className="text-left py-2.5 px-3 text-fh-muted" style={{ width: '10%' }}>Garage</th>
+                    </>
+                  ) : (
+                    <>
+                      {/* Identity — sticky */}
+                      <SortTh label="Class" sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL.class, minWidth: SC.class }} />
+                      <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL.pi,    minWidth: SC.pi    }} />
+                      <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL.year,  minWidth: SC.year  }} />
+                      <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL.make,  minWidth: SC.make  }} />
+                      <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL.model, minWidth: SC.model }} />
+                      {/* Stat columns — not sticky */}
+                      <SortTh label="Speed"    sortKey="statSpeed"        sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                      <SortTh label="Handling" sortKey="statHandling"     sort={sort} onSort={handleSort} style={{ minWidth: 80 }} />
+                      <SortTh label="Accel"    sortKey="statAcceleration" sort={sort} onSort={handleSort} style={{ minWidth: 68 }} />
+                      <SortTh label="Launch"   sortKey="statLaunch"       sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                      <SortTh label="Braking"  sortKey="statBraking"      sort={sort} onSort={handleSort} style={{ minWidth: 76 }} />
+                      <SortTh label="Offroad"  sortKey="statOffroad"      sort={sort} onSort={handleSort} style={{ minWidth: 76 }} />
+                      <SortTh label="HP"       sortKey="powerHp"          sort={sort} onSort={handleSort} style={{ minWidth: 60 }} />
+                      <SortTh label="Torque"   sortKey="torqueFtLb"       sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                      <SortTh label="Weight"   sortKey="weightLb"         sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                      <SortTh label="F.WT"     sortKey="frontWeight"      sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
+                      <SortTh label="Disp"     sortKey="displacementL"    sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {/* Top spacer */}
                 {tablePadTop > 0 && (
-                  <tr><td colSpan={11} style={{ height: tablePadTop, padding: 0 }} /></tr>
+                  <tr><td colSpan={tableMode === 'stats' ? 16 : 11} style={{ height: tablePadTop, padding: 0 }} /></tr>
                 )}
 
                 {tableItems.map((vItem) => {
@@ -432,13 +480,14 @@ export default function GarageView({ initialCars }: Props) {
                       onToggleOwned={toggleOwned}
                       isPending={pendingIds.has(car.id)}
                       onCardClick={setDrawerCar}
+                      statsMode={tableMode === 'stats'}
                     />
                   )
                 })}
 
                 {/* Bottom spacer */}
                 {tablePadBot > 0 && (
-                  <tr><td colSpan={11} style={{ height: tablePadBot, padding: 0 }} /></tr>
+                  <tr><td colSpan={tableMode === 'stats' ? 16 : 11} style={{ height: tablePadBot, padding: 0 }} /></tr>
                 )}
               </tbody>
             </table>

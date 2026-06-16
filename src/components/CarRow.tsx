@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { getBestRaceType } from '@/lib/raceMatch'
 import { RaceIcon } from '@/components/RaceIcons'
 import { formatAddedAt } from '@/lib/sort'
+import { STICKY_COL } from './table-ui'
 
 interface Props {
   car: Car
@@ -20,28 +21,82 @@ interface Props {
   hideGarage?: boolean
   /** Garage only — callback to toggle pinned/favourite state */
   onTogglePin?: (id: number, pinned: boolean) => void
+  /** Swap standard right-side columns for the 11 stat/spec columns with sticky identity cols */
+  statsMode?: boolean
 }
 
-export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin }: Props) {
+export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined)
   const [confirmRemove, setConfirmRemove] = useState(false)
 
+  // Sticky left offsets for stats mode — depends on whether the star column is present
+  const S = STICKY_COL
+  const hasPin = !!onTogglePin
+  const classLeft = hasPin ? S.star : 0
+  const piLeft    = classLeft + S.class
+  const yearLeft  = piLeft   + S.pi
+  const makeLeft  = yearLeft + S.year
+  const modelLeft = makeLeft + S.make
+
+  const trCls = `
+    border-b border-fh-border transition-colors text-sm
+    ${onCardClick ? 'cursor-pointer' : ''}
+    ${isExpanded
+      ? 'bg-fh-panel-2'
+      : car.owned
+      ? 'bg-fh-red-pale hover:bg-fh-panel-2'
+      : 'hover:bg-fh-panel-2'}
+    ${isPending ? 'opacity-60 pointer-events-none' : ''}
+  `
+
+  if (statsMode) {
+    return (
+      <tr onClick={() => onCardClick?.(car)} className={trCls}>
+        {onTogglePin && (
+          <td className="py-2.5 pl-3 pr-1 bg-fh-bg sticky z-[1]" style={{ left: 0, minWidth: S.star }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onTogglePin(car.id, !car.pinned) }}
+              aria-label={car.pinned ? 'Unpin car' : 'Pin car'}
+              className={`text-base leading-none transition-colors ${car.pinned ? 'text-amber-400 hover:text-amber-300' : 'text-fh-border hover:text-amber-400'}`}
+            >
+              {car.pinned ? '★' : '☆'}
+            </button>
+          </td>
+        )}
+        <td className="py-2.5 px-3 bg-fh-bg sticky z-[1] overflow-hidden" style={{ left: classLeft, minWidth: S.class }}>
+          <span className={`text-xs font-bold px-2 py-0.5 rounded ${classBadge}`}>{car.piClass}</span>
+        </td>
+        <td className="py-2.5 px-3 bg-fh-bg sticky z-[1] tabular-nums text-fh-dark-2 overflow-hidden" style={{ left: piLeft, minWidth: S.pi }}>
+          {car.piRating}
+        </td>
+        <td className="py-2.5 px-3 bg-fh-bg sticky z-[1] text-fh-dark-2 overflow-hidden" style={{ left: yearLeft, minWidth: S.year }}>
+          {car.year}
+        </td>
+        <td className="py-2.5 px-3 bg-fh-bg sticky z-[1] font-medium overflow-hidden" style={{ left: makeLeft, minWidth: S.make }}>
+          {car.make}
+        </td>
+        <td className="py-2.5 px-3 bg-fh-bg sticky z-[1] overflow-hidden" style={{ left: modelLeft, minWidth: S.model }}>
+          {car.model}
+        </td>
+        <StatTd>{car.statSpeed        ?? '—'}</StatTd>
+        <StatTd>{car.statHandling     ?? '—'}</StatTd>
+        <StatTd>{car.statAcceleration ?? '—'}</StatTd>
+        <StatTd>{car.statLaunch       ?? '—'}</StatTd>
+        <StatTd>{car.statBraking      ?? '—'}</StatTd>
+        <StatTd>{car.statOffroad      ?? '—'}</StatTd>
+        <StatTd>{car.powerHp          ?? '—'}</StatTd>
+        <StatTd>{car.torqueFtLb       ?? '—'}</StatTd>
+        <StatTd>{car.weightLb         ?? '—'}</StatTd>
+        <StatTd>{car.frontWeight   != null ? `${car.frontWeight}%`            : '—'}</StatTd>
+        <StatTd>{car.displacementL != null ? car.displacementL.toFixed(1)     : '—'}</StatTd>
+      </tr>
+    )
+  }
+
   return (
-    <tr
-      onClick={() => onCardClick?.(car)}
-      className={`
-        border-b border-fh-border transition-colors text-sm
-        ${onCardClick ? 'cursor-pointer' : ''}
-        ${isExpanded
-          ? 'bg-fh-panel-2'
-          : car.owned
-          ? 'bg-fh-red-pale hover:bg-fh-panel-2'
-          : 'hover:bg-fh-panel-2'}
-        ${isPending ? 'opacity-60 pointer-events-none' : ''}
-      `}
-    >
+    <tr onClick={() => onCardClick?.(car)} className={trCls}>
       {/* Star — only rendered in garage (when onTogglePin is provided) */}
       {onTogglePin && (
         <td className="py-2.5 pl-3 pr-1 overflow-hidden">
@@ -148,5 +203,13 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
         )}
       </td>}
     </tr>
+  )
+}
+
+function StatTd({ children }: { children: ReactNode }) {
+  return (
+    <td className="py-2.5 px-3 tabular-nums text-fh-dark-2 text-right whitespace-nowrap" style={{ minWidth: 72 }}>
+      {children}
+    </td>
   )
 }
