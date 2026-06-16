@@ -153,7 +153,7 @@ describe('filterCars — no active filters', () => {
   })
 
   it('empty car array returns empty array for any filter combination', () => {
-    expect(filterCars([], { filters: f({ piClass: 'S1', make: 'Porsche', search: 'GT3' }) })).toEqual([])
+    expect(filterCars([], { filters: f({ piClass: ['S1'], make: 'Porsche', search: 'GT3' }) })).toEqual([])
   })
 })
 
@@ -161,30 +161,45 @@ describe('filterCars — no active filters', () => {
 
 describe('filterCars — PI class', () => {
   it('filters to only S1 cars', () => {
-    const result = filterCars(ALL_CARS, { filters: f({ piClass: 'S1' }) })
+    const result = filterCars(ALL_CARS, { filters: f({ piClass: ['S1'] }) })
     expect(ids(result)).toEqual([PORSCHE.id])
   })
 
   it('filters to only A class (two cars)', () => {
-    const result = filterCars(ALL_CARS, { filters: f({ piClass: 'A' }) })
+    const result = filterCars(ALL_CARS, { filters: f({ piClass: ['A'] }) })
     expect(ids(result)).toEqual(ids([SUBARU_WRX, FORD_FOCUS]))
   })
 
   it('filters to only R class', () => {
-    const result = filterCars(ALL_CARS, { filters: f({ piClass: 'R' }) })
+    const result = filterCars(ALL_CARS, { filters: f({ piClass: ['R'] }) })
     expect(ids(result)).toEqual([BUGATTI.id])
   })
 
   it('returns empty array when no car has that class', () => {
-    expect(filterCars(ALL_CARS, { filters: f({ piClass: 'X' }) })).toHaveLength(0)
+    expect(filterCars(ALL_CARS, { filters: f({ piClass: ['X'] }) })).toHaveLength(0)
   })
 
-  it('empty piClass string is a no-op (returns all cars)', () => {
-    expect(filterCars(ALL_CARS, { filters: f({ piClass: '' }) })).toHaveLength(ALL_CARS.length)
+  it('empty piClass array is a no-op (returns all cars)', () => {
+    expect(filterCars(ALL_CARS, { filters: f({ piClass: [] }) })).toHaveLength(ALL_CARS.length)
   })
 
-  it('PI class filter is exact-match (piClass "S" does not match "S1" or "S2")', () => {
-    expect(filterCars(ALL_CARS, { filters: f({ piClass: 'S' }) })).toHaveLength(0)
+  it('PI class filter is exact-match (["S"] does not match "S1" or "S2")', () => {
+    expect(filterCars(ALL_CARS, { filters: f({ piClass: ['S'] }) })).toHaveLength(0)
+  })
+
+  it('multi-select: ["A", "B"] returns only A and B class cars', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ piClass: ['A', 'B'] }) })
+    expect(ids(result)).toEqual(ids([SUBARU_WRX, TOYOTA, FORD_FOCUS]))
+  })
+
+  it('multi-select: ["S1", "R"] returns Porsche and Bugatti', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ piClass: ['S1', 'R'] }) })
+    expect(ids(result)).toEqual(ids([PORSCHE, BUGATTI]))
+  })
+
+  it('multi-select with all classes selected returns all cars', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ piClass: ['D', 'C', 'B', 'A', 'S1', 'S2', 'R'] }) })
+    expect(ids(result)).toHaveLength(ALL_CARS.length)
   })
 })
 
@@ -440,11 +455,11 @@ describe('filterCars — selectedTags (AND logic)', () => {
 
 // ─── Race-type filter (OR logic) ──────────────────────────────────────────────
 
-describe('filterCars — activeRace (OR logic)', () => {
+describe('filterCars — activeRaces (OR logic)', () => {
   it('race filter: car matches if it has ANY of the recommendedTags', () => {
     // Rally race recommends ['dirt', 'mixed']
     const rally = { recommendedTags: ['dirt', 'mixed'] }
-    const result = filterCars(ALL_CARS, { filters: f(), activeRace: rally })
+    const result = filterCars(ALL_CARS, { filters: f(), activeRaces: [rally] })
     // WRX has ['dirt','mixed'], GMC has ['offroad','mixed','dirt']
     expect(ids(result)).toEqual(ids([SUBARU_WRX, GMC_JIMMY]))
   })
@@ -452,21 +467,30 @@ describe('filterCars — activeRace (OR logic)', () => {
   it('race filter: OR — car matching just one tag is included', () => {
     // Only one tag "drift"; Nissan Silvia and Ford GT both have it
     const driftRace = { recommendedTags: ['drift'] }
-    const result = filterCars(ALL_CARS, { filters: f(), activeRace: driftRace })
+    const result = filterCars(ALL_CARS, { filters: f(), activeRaces: [driftRace] })
     expect(ids(result)).toEqual(ids([FORD_GT, NISSAN_SILVIA]))
   })
 
   it('race filter with no matching cars returns empty array', () => {
     const snowRace = { recommendedTags: ['snow'] }
-    expect(filterCars(ALL_CARS, { filters: f(), activeRace: snowRace })).toHaveLength(0)
+    expect(filterCars(ALL_CARS, { filters: f(), activeRaces: [snowRace] })).toHaveLength(0)
   })
 
-  it('null activeRace is a no-op (returns all cars)', () => {
-    expect(filterCars(ALL_CARS, { filters: f(), activeRace: null })).toHaveLength(ALL_CARS.length)
+  it('empty activeRaces array is a no-op (returns all cars)', () => {
+    expect(filterCars(ALL_CARS, { filters: f(), activeRaces: [] })).toHaveLength(ALL_CARS.length)
   })
 
-  it('undefined activeRace is a no-op', () => {
+  it('undefined activeRaces is a no-op', () => {
     expect(filterCars(ALL_CARS, { filters: f() })).toHaveLength(ALL_CARS.length)
+  })
+
+  it('multi-select: rally OR dirt race returns union of matching cars', () => {
+    // Rally ['dirt','mixed'] + Drift ['asphalt','drift']
+    // WRX: dirt+mixed ✓ rally; GMC: offroad+mixed+dirt ✓ rally; Silvia: drift ✓ drift; GT: drift ✓ drift
+    const rally = { recommendedTags: ['dirt', 'mixed'] }
+    const drift = { recommendedTags: ['drift'] }
+    const result = filterCars(ALL_CARS, { filters: f(), activeRaces: [rally, drift] })
+    expect(ids(result)).toEqual(ids([SUBARU_WRX, FORD_GT, NISSAN_SILVIA, GMC_JIMMY]))
   })
 })
 
@@ -474,49 +498,73 @@ describe('filterCars — activeRace (OR logic)', () => {
 
 describe('filterCars — division filter', () => {
   it('filters to a specific division', () => {
-    const result = filterCars(ALL_CARS, { filters: f({ division: 'Modern Sports Cars' }) })
+    const result = filterCars(ALL_CARS, { filters: f({ division: ['Modern Sports Cars'] }) })
     expect(ids(result)).toEqual(ids([PORSCHE, TOYOTA]))
   })
 
-  it('empty division string returns all cars', () => {
-    expect(filterCars(ALL_CARS, { filters: f({ division: '' }) })).toHaveLength(ALL_CARS.length)
+  it('empty division array returns all cars', () => {
+    expect(filterCars(ALL_CARS, { filters: f({ division: [] }) })).toHaveLength(ALL_CARS.length)
   })
 
   it('unknown division returns empty array', () => {
-    expect(filterCars(ALL_CARS, { filters: f({ division: 'Fictional Cars' }) })).toHaveLength(0)
+    expect(filterCars(ALL_CARS, { filters: f({ division: ['Fictional Cars'] }) })).toHaveLength(0)
+  })
+
+  it('multi-select: Modern Sports Cars + Retro Sports Cars returns cars from both', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ division: ['Modern Sports Cars', 'Retro Sports Cars'] }) })
+    expect(ids(result)).toEqual(ids([PORSCHE, TOYOTA, NISSAN_SILVIA]))
   })
 })
 
 // ─── selectedGroupId filter ───────────────────────────────────────────────────
 
-describe('filterCars — selectedGroupId (division group)', () => {
+describe('filterCars — selectedGroupIds (division group)', () => {
   it('group id "sports" includes Modern Sports Cars and Retro Sports Cars', () => {
     // Porsche and Toyota: Modern Sports Cars; Nissan Silvia: Retro Sports Cars
     const result = filterCars(ALL_CARS, {
       filters: f(),
-      selectedGroupId: 'sports',
+      selectedGroupIds: ['sports'],
     })
     expect(ids(result)).toEqual(ids([PORSCHE, TOYOTA, NISSAN_SILVIA]))
   })
 
   it('group + division: narrows to a specific division within the group', () => {
     const result = filterCars(ALL_CARS, {
-      filters: f({ division: 'Retro Sports Cars' }),
-      selectedGroupId: 'sports',
+      filters: f({ division: ['Retro Sports Cars'] }),
+      selectedGroupIds: ['sports'],
     })
     expect(ids(result)).toEqual([NISSAN_SILVIA.id])
   })
 
   it('unknown group id returns empty array', () => {
     expect(
-      filterCars(ALL_CARS, { filters: f(), selectedGroupId: 'notAGroup' })
+      filterCars(ALL_CARS, { filters: f(), selectedGroupIds: ['notAGroup'] })
     ).toHaveLength(0)
   })
 
-  it('null selectedGroupId falls back to division filter or no-op', () => {
+  it('empty selectedGroupIds is a no-op', () => {
     expect(
-      filterCars(ALL_CARS, { filters: f(), selectedGroupId: null })
+      filterCars(ALL_CARS, { filters: f(), selectedGroupIds: [] })
     ).toHaveLength(ALL_CARS.length)
+  })
+
+  it('multi-select: ["sports", "hotHatch"] returns cars from both groups', () => {
+    // sports: Modern Sports Cars + Retro Sports Cars → Porsche, Toyota, Nissan Silvia
+    // hotHatch: Hot Hatch → Ford Focus
+    const result = filterCars(ALL_CARS, {
+      filters: f(),
+      selectedGroupIds: ['sports', 'hotHatch'],
+    })
+    expect(ids(result)).toEqual(ids([PORSCHE, TOYOTA, NISSAN_SILVIA, FORD_FOCUS]))
+  })
+
+  it('multi-select groups + division: narrows to selected sub-divisions across groups', () => {
+    // sports + offroad groups, but only Retro Sports Cars sub-division selected
+    const result = filterCars(ALL_CARS, {
+      filters: f({ division: ['Retro Sports Cars'] }),
+      selectedGroupIds: ['sports', 'offroad'],
+    })
+    expect(ids(result)).toEqual([NISSAN_SILVIA.id])
   })
 })
 
@@ -525,7 +573,7 @@ describe('filterCars — selectedGroupId (division group)', () => {
 describe('filterCars — multiple active filters (AND/intersection)', () => {
   it('piClass + make: returns only the intersection', () => {
     // A class + Ford → only Ford Focus (Ford GT is S2)
-    const result = filterCars(ALL_CARS, { filters: f({ piClass: 'A', make: 'Ford' }) })
+    const result = filterCars(ALL_CARS, { filters: f({ piClass: ['A'], make: 'Ford' }) })
     expect(ids(result)).toEqual([FORD_FOCUS.id])
   })
 
@@ -536,14 +584,14 @@ describe('filterCars — multiple active filters (AND/intersection)', () => {
   })
 
   it('search + piClass: search for "GT" in A class returns nothing (GT3 is S1)', () => {
-    const result = filterCars(ALL_CARS, { filters: f({ search: 'GT', piClass: 'A' }) })
+    const result = filterCars(ALL_CARS, { filters: f({ search: 'GT', piClass: ['A'] }) })
     // Ford GT is S2, Porsche 911 GT3 is S1 — no A class "GT" match
     expect(result).toHaveLength(0)
   })
 
   it('piClass + tag: A class + dirt tag → only WRX', () => {
     const result = filterCars(ALL_CARS, {
-      filters: f({ piClass: 'A' }),
+      filters: f({ piClass: ['A'] }),
       selectedTags: new Set(['dirt']),
     })
     expect(ids(result)).toEqual([SUBARU_WRX.id])
@@ -555,11 +603,11 @@ describe('filterCars — multiple active filters (AND/intersection)', () => {
     expect(result).toHaveLength(0)
   })
 
-  it('search + activeRace: search "Silvia" + drift race → Nissan Silvia only', () => {
+  it('search + activeRaces: search "Silvia" + drift race → Nissan Silvia only', () => {
     const drift = { recommendedTags: ['drift'] }
     const result = filterCars(ALL_CARS, {
       filters: f({ search: 'Silvia' }),
-      activeRace: drift,
+      activeRaces: [drift],
     })
     expect(ids(result)).toEqual([NISSAN_SILVIA.id])
   })
@@ -568,7 +616,7 @@ describe('filterCars — multiple active filters (AND/intersection)', () => {
     // Target: Porsche 911 GT3 (piClass S1, make Porsche, drivetrain RWD, country Germany, source Autoshow)
     const result = filterCars(ALL_CARS, {
       filters: f({
-        piClass: 'S1',
+        piClass: ['S1'],
         make: 'Porsche',
         drivetrain: 'RWD',
         country: 'Germany',
@@ -580,7 +628,7 @@ describe('filterCars — multiple active filters (AND/intersection)', () => {
 
   it('all scalar filters + tag chip: still returns intersection', () => {
     const result = filterCars(ALL_CARS, {
-      filters: f({ piClass: 'S1', make: 'Porsche', country: 'Germany' }),
+      filters: f({ piClass: ['S1'], make: 'Porsche', country: 'Germany' }),
       selectedTags: new Set(['grip']),
     })
     expect(ids(result)).toEqual([PORSCHE.id])
@@ -589,19 +637,48 @@ describe('filterCars — multiple active filters (AND/intersection)', () => {
   it('filter combination that matches nothing returns empty array, not a throw', () => {
     expect(() =>
       filterCars(ALL_CARS, {
-        filters: f({ piClass: 'D', make: 'Bugatti', country: 'Japan' }),
+        filters: f({ piClass: ['D'], make: 'Bugatti', country: 'Japan' }),
         selectedTags: new Set(['drift']),
-        activeRace: { recommendedTags: ['snow'] },
+        activeRaces: [{ recommendedTags: ['snow'] }],
       })
     ).not.toThrow()
 
     expect(
       filterCars(ALL_CARS, {
-        filters: f({ piClass: 'D', make: 'Bugatti', country: 'Japan' }),
+        filters: f({ piClass: ['D'], make: 'Bugatti', country: 'Japan' }),
         selectedTags: new Set(['drift']),
-        activeRace: { recommendedTags: ['snow'] },
+        activeRaces: [{ recommendedTags: ['snow'] }],
       })
     ).toHaveLength(0)
+  })
+})
+
+// ─── Multi-select cross-dimension (spec requirement) ─────────────────────────
+
+describe('filterCars — multi-select category AND race type', () => {
+  it('muscle group + drag race: only muscle cars tagged for drag', () => {
+    // Muscle group = Classic/Retro/Modern Muscle; drag race recommendedTags includes 'drag'
+    // In fixtures: Toyota (Modern Sports Cars) has 'asphalt' only — not muscle, not drag
+    // FORD_GT is Modern Supercars, not muscle either
+    // None of the 8 fixtures are in Muscle divisions, so result should be empty
+    const result = filterCars(ALL_CARS, {
+      filters: f(),
+      selectedGroupIds: ['muscle'],
+      activeRaces: [{ recommendedTags: ['asphalt', 'drag'] }],
+    })
+    expect(result).toHaveLength(0)
+  })
+
+  it('sports group + road race: sports cars with asphalt tag', () => {
+    // sports group: Modern Sports Cars + Retro Sports Cars → Porsche, Toyota, Nissan Silvia
+    // road race tags: ['asphalt', 'grip', 'long straights', 'technical']
+    // Porsche: asphalt+grip+technical ✓; Toyota: asphalt ✓; Nissan Silvia: asphalt+grip+technical ✓
+    const result = filterCars(ALL_CARS, {
+      filters: f(),
+      selectedGroupIds: ['sports'],
+      activeRaces: [{ recommendedTags: ['asphalt', 'grip', 'long straights', 'technical'] }],
+    })
+    expect(ids(result)).toEqual(ids([PORSCHE, TOYOTA, NISSAN_SILVIA]))
   })
 })
 
@@ -615,10 +692,10 @@ describe('filterCars — empty input array', () => {
   it('returns [] when all filters are active on empty input', () => {
     expect(
       filterCars([], {
-        filters: f({ search: 'x', piClass: 'S1', make: 'Porsche', drivetrain: 'RWD', country: 'Germany', source: 'Autoshow' }),
+        filters: f({ search: 'x', piClass: ['S1'], make: 'Porsche', drivetrain: 'RWD', country: 'Germany', source: 'Autoshow' }),
         selectedTags: new Set(['grip']),
-        activeRace: { recommendedTags: ['asphalt'] },
-        selectedGroupId: 'sports',
+        activeRaces: [{ recommendedTags: ['asphalt'] }],
+        selectedGroupIds: ['sports'],
       })
     ).toEqual([])
   })
@@ -657,7 +734,7 @@ describe('filterCars — pinned filter', () => {
 
   it('pinned filter combines with piClass — returns only pinned cars of that class', () => {
     // PINNED_PORSCHE is S1, PINNED_FORD_GT is S2 — only S1 + pinned → Porsche
-    const result = filterCars(PINNED_CARS, { filters: f({ pinned: true, piClass: 'S1' }) })
+    const result = filterCars(PINNED_CARS, { filters: f({ pinned: true, piClass: ['S1'] }) })
     expect(ids(result)).toEqual([PINNED_PORSCHE.id])
   })
 
@@ -668,7 +745,7 @@ describe('filterCars — pinned filter', () => {
     const roadRace = { recommendedTags: ['asphalt', 'grip'] as string[] }
     const result = filterCars(PINNED_CARS, {
       filters: f({ pinned: true }),
-      activeRace: roadRace,
+      activeRaces: [roadRace],
     })
     expect(ids(result)).toEqual(ids([PINNED_PORSCHE, PINNED_FORD_GT]))
     result.forEach((c) => expect(c.pinned).toBe(true))
@@ -678,7 +755,7 @@ describe('filterCars — pinned filter', () => {
     const snowRace = { recommendedTags: ['snow'] as string[] }
     const result = filterCars(PINNED_CARS, {
       filters: f({ pinned: true }),
-      activeRace: snowRace,
+      activeRaces: [snowRace],
     })
     expect(result).toHaveLength(0)
   })
@@ -690,7 +767,7 @@ describe('filterCars — purity', () => {
   it('does not mutate the input array', () => {
     const input = [...ALL_CARS]
     const before = input.map((c) => c.id)
-    filterCars(input, { filters: f({ piClass: 'S1' }) })
+    filterCars(input, { filters: f({ piClass: ['S1'] }) })
     expect(input.map((c) => c.id)).toEqual(before)
   })
 })

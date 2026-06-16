@@ -21,7 +21,7 @@ export const STICKY_COL_STATS = {
   pi:    44,
   year:  52,
   make:  80,
-  model: 120,
+  model: 160,
 } as const
 
 export type TableMode = 'standard' | 'stats'

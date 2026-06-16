@@ -48,8 +48,8 @@ export interface Car {
 
 export interface FilterState {
   search: string
-  piClass: string
-  division: string
+  piClass: string[]
+  division: string[]
   make: string
   drivetrain: string
   country: string

@@ -37,6 +37,7 @@ import { RACE_TYPES } from '@/lib/races'
 import { getRankedRaceTypes } from '@/lib/raceMatch'
 import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { filterCars, DEFAULT_FILTERS } from '@/lib/filterCars'
+import { getDivisionsForGroup } from '@/lib/divisionGroups'
 import GarageDrawer from './GarageDrawer'
 import StatBars from './StatBars'
 import { getStatCallouts } from '@/lib/statCallouts'
@@ -503,8 +504,8 @@ export default function GarageShowcase({ initialCars }: Props) {
   const [cars, setCars] = useState<Car[]>(initialCars)
   const [filters, setFilters] = useState<FilterState>({
     search: searchParams.get('q') ?? '',
-    piClass: searchParams.get('class') ?? '',
-    division: searchParams.get('div') ?? '',
+    piClass: (searchParams.get('class') ?? '').split(',').filter(Boolean),
+    division: (searchParams.get('div') ?? '').split(',').filter(Boolean),
     make: searchParams.get('make') ?? '',
     drivetrain: searchParams.get('drive') ?? '',
     country: searchParams.get('country') ?? '',
@@ -522,11 +523,11 @@ export default function GarageShowcase({ initialCars }: Props) {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(
     () => new Set((searchParams.get('tags')?.split(',') ?? []).filter((t) => ALL_TAGS.has(t)))
   )
-  const [selectedRace, setSelectedRace] = useState<string | null>(
-    searchParams.get('race') ?? null
+  const [selectedRaceIds, setSelectedRaceIds] = useState<string[]>(
+    () => (searchParams.get('race') ?? '').split(',').filter(Boolean)
   )
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(
-    searchParams.get('group') ?? null
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(
+    () => (searchParams.get('group') ?? '').split(',').filter(Boolean)
   )
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
@@ -561,16 +562,16 @@ export default function GarageShowcase({ initialCars }: Props) {
   useEffect(() => {
     const params = new URLSearchParams()
     if (filters.search) params.set('q', filters.search)
-    if (filters.piClass) params.set('class', filters.piClass)
-    if (selectedGroupId) params.set('group', selectedGroupId)
-    if (filters.division) params.set('div', filters.division)
+    if (filters.piClass.length > 0) params.set('class', filters.piClass.join(','))
+    if (selectedGroupIds.length > 0) params.set('group', selectedGroupIds.join(','))
+    if (filters.division.length > 0) params.set('div', filters.division.join(','))
     if (filters.make) params.set('make', filters.make)
     if (filters.drivetrain) params.set('drive', filters.drivetrain)
     if (filters.country) params.set('country', filters.country)
     if (filters.source) params.set('src', filters.source)
     if (filters.pinned) params.set('fav', '1')
     if (selectedTags.size > 0) params.set('tags', [...selectedTags].sort().join(','))
-    if (selectedRace) params.set('race', selectedRace)
+    if (selectedRaceIds.length > 0) params.set('race', selectedRaceIds.join(','))
     if (view !== 'table') params.set('view', view)
     const qs = params.toString()
     const timer = setTimeout(() => {
@@ -580,7 +581,7 @@ export default function GarageShowcase({ initialCars }: Props) {
   }, [
     filters.search, filters.piClass, filters.division, filters.make,
     filters.drivetrain, filters.country, filters.source, filters.pinned,
-    selectedGroupId, selectedTags, selectedRace, view,
+    selectedGroupIds, selectedTags, selectedRaceIds, view,
   ])
 
   // Persist table mode preference; reset to standard when switching to grid
@@ -591,15 +592,15 @@ export default function GarageShowcase({ initialCars }: Props) {
 
   // Compute activeFilterCount early so it can be registered with Nav
   const activeFilterCount = [
-    filters.piClass !== '',
-    filters.division !== '' || selectedGroupId !== null,
+    filters.piClass.length > 0,
+    filters.division.length > 0 || selectedGroupIds.length > 0,
     filters.make !== '',
     filters.drivetrain !== '',
     filters.country !== '',
     filters.source !== '',
     filters.pinned,
     selectedTags.size > 0,
-    selectedRace !== null,
+    selectedRaceIds.length > 0,
   ].filter(Boolean).length
 
   // Register search + view + sidebar controls with the navbar
@@ -618,11 +619,12 @@ export default function GarageShowcase({ initialCars }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search, view, sidebarOpen, activeFilterCount, register, unregister])
 
-  const activeRace = useMemo(() => RACE_TYPES.find((r) => r.id === selectedRace) ?? null, [selectedRace])
+  const activeRaces = useMemo(() => RACE_TYPES.filter((r) => selectedRaceIds.includes(r.id)), [selectedRaceIds])
+  const activeRace = activeRaces.length === 1 ? activeRaces[0] : null
 
   const filteredCars = useMemo(
-    () => filterCars(cars, { filters, selectedGroupId, selectedTags, activeRace }),
-    [cars, filters, activeRace, selectedGroupId, selectedTags]
+    () => filterCars(cars, { filters, selectedGroupIds, selectedTags, activeRaces }),
+    [cars, filters, activeRaces, selectedGroupIds, selectedTags]
   )
 
   const sortedCars = useMemo(() => {
@@ -646,17 +648,28 @@ export default function GarageShowcase({ initialCars }: Props) {
     }))
   }, [])
 
-  const handleGroupChange = useCallback((groupId: string | null) => {
-    setSelectedGroupId(groupId)
-    setFilters((f) => ({ ...f, division: '' }))
+  const handleGroupChange = useCallback((groupId: string) => {
+    setSelectedGroupIds((prev) => {
+      const next = prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
+      if (!next.includes(groupId)) {
+        const removed = getDivisionsForGroup(groupId)
+        setFilters((f) => ({ ...f, division: f.division.filter((d) => !removed.includes(d)) }))
+      }
+      return next
+    })
   }, [])
 
   const handleDivisionChange = useCallback((division: string) => {
-    setFilters((f) => ({ ...f, division }))
+    setFilters((f) => ({
+      ...f,
+      division: f.division.includes(division)
+        ? f.division.filter((d) => d !== division)
+        : [...f.division, division],
+    }))
   }, [])
 
   const toggleRace = useCallback((id: string) => {
-    setSelectedRace((prev) => (prev === id ? null : id))
+    setSelectedRaceIds((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]))
   }, [])
 
   const toggleTag = useCallback((tag: string) => {
@@ -685,9 +698,9 @@ export default function GarageShowcase({ initialCars }: Props) {
 
   const clearAllFilters = useCallback(() => {
     setFilters(DEFAULT_FILTERS)
-    setSelectedGroupId(null)
+    setSelectedGroupIds([])
     setSelectedTags(new Set())
-    setSelectedRace(null)
+    setSelectedRaceIds([])
   }, [])
 
   const toggleExpanded = useCallback((carId: number) => {
@@ -769,9 +782,9 @@ export default function GarageShowcase({ initialCars }: Props) {
         filters={filters}
         setFilters={setFilters}
         options={options}
-        selectedGroupId={selectedGroupId}
+        selectedGroupIds={selectedGroupIds}
         selectedTags={selectedTags}
-        selectedRace={selectedRace}
+        selectedRaceIds={selectedRaceIds}
         activeFilterCount={activeFilterCount}
         activeRace={activeRace}
         clearAllFilters={clearAllFilters}

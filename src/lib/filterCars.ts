@@ -3,21 +3,21 @@ import { getDivisionsForGroup } from './divisionGroups'
 
 export interface FilterParams {
   filters: FilterState
-  /** Division group chip selection — filters to all divisions within that group */
-  selectedGroupId?: string | null
+  /** Division group chip multi-selection — OR logic across selected groups */
+  selectedGroupIds?: string[]
   /** Tag chips (AND logic) — car must have every selected tag */
   selectedTags?: Set<string>
   /**
-   * Race-type filter (OR logic) — car must match at least one recommendedTag.
-   * Used by GarageShowcase; omit or pass null to disable.
+   * Race-type filter (OR logic) — car passes if it matches any tag from any selected race.
+   * Used by GarageShowcase and GarageView; omit or pass [] to disable.
    */
-  activeRace?: { recommendedTags: string[] } | null
+  activeRaces?: { recommendedTags: string[] }[]
 }
 
 export const DEFAULT_FILTERS: FilterState = {
   search: '',
-  piClass: '',
-  division: '',
+  piClass: [],
+  division: [],
   make: '',
   drivetrain: '',
   country: '',
@@ -36,9 +36,9 @@ export function filterCars(
   cars: Car[],
   {
     filters,
-    selectedGroupId = null,
+    selectedGroupIds = [],
     selectedTags = new Set(),
-    activeRace = null,
+    activeRaces = [],
   }: FilterParams
 ): Car[] {
   return cars.filter((car) => {
@@ -53,21 +53,20 @@ export function filterCars(
     }
 
     // ── PI class ─────────────────────────────────────────────────────────────
-    // Exact match (PI classes are always uppercase: D C B A S1 S2 R).
-    if (filters.piClass && car.piClass !== filters.piClass) return false
+    // OR logic: car passes if no class selected, or its class is in the selected set.
+    if (filters.piClass.length > 0 && !filters.piClass.includes(car.piClass)) return false
 
     // ── Division / group ─────────────────────────────────────────────────────
-    // A group selection filters to all divisions within that group.
-    // A division filter (from a dropdown inside the group) narrows further.
-    if (selectedGroupId) {
-      const groupDivisions = getDivisionsForGroup(selectedGroupId)
-      if (filters.division) {
-        if (car.division !== filters.division) return false
+    // OR across groups; sub-division chips narrow within the selected groups.
+    if (selectedGroupIds.length > 0) {
+      const groupDivisions = selectedGroupIds.flatMap(getDivisionsForGroup)
+      if (filters.division.length > 0) {
+        if (!filters.division.includes(car.division)) return false
       } else {
         if (!groupDivisions.includes(car.division)) return false
       }
-    } else if (filters.division) {
-      if (car.division !== filters.division) return false
+    } else if (filters.division.length > 0) {
+      if (!filters.division.includes(car.division)) return false
     }
 
     // ── Make ─────────────────────────────────────────────────────────────────
@@ -94,13 +93,12 @@ export function filterCars(
     // Garage-only. When active, only pinned cars pass.
     if (filters.pinned && !car.pinned) return false
 
-    // ── Race-type filter (OR) ─────────────────────────────────────────────────
-    // Used in GarageShowcase (/garage). Car must match at least one tag from
-    // the race type's recommendedTags list.
-    if (activeRace) {
+    // ── Race-type filter (OR across races, OR within each race's tags) ───────
+    // Car passes if it matches at least one tag from at least one selected race.
+    if (activeRaces.length > 0) {
       const carTags = car.tags ?? []
-      if (!activeRace.recommendedTags.some((t) => carTags.includes(t)))
-        return false
+      const allTags = activeRaces.flatMap((r) => r.recommendedTags)
+      if (!allTags.some((t) => carTags.includes(t))) return false
     }
 
     // ── Tag chips (AND) ───────────────────────────────────────────────────────

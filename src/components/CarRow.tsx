@@ -77,8 +77,10 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
         <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] font-medium overflow-hidden whitespace-nowrap text-ellipsis" style={{ left: makeLeft, minWidth: SS.make }}>
           {car.make}
         </td>
-        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] overflow-hidden whitespace-nowrap text-ellipsis" style={{ left: modelLeft, minWidth: SS.model }}>
-          {car.model}
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1]" style={{ left: modelLeft, minWidth: SS.model }}>
+          <div className="overflow-hidden whitespace-nowrap text-ellipsis" style={{ maxWidth: SS.model - 16 }}>
+            {car.model}
+          </div>
         </td>
         <StatTd>{car.statSpeed        ?? '—'}</StatTd>
         <StatTd>{car.statHandling     ?? '—'}</StatTd>

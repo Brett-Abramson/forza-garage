@@ -14,13 +14,13 @@ interface FilterSidebarProps {
   filters: FilterState
   setFilters: Dispatch<SetStateAction<FilterState>>
   options: { divisions: string[]; makes: string[]; countries: string[] }
-  selectedGroupId: string | null
+  selectedGroupIds: string[]
   selectedTags: Set<string>
-  selectedRace: string | null
+  selectedRaceIds: string[]
   activeFilterCount: number
   activeRace: RaceType | null
   clearAllFilters: () => void
-  handleGroupChange: (groupId: string | null) => void
+  handleGroupChange: (groupId: string) => void
   handleDivisionChange: (division: string) => void
   toggleTag: (tag: string) => void
   toggleRace: (raceId: string) => void
@@ -84,9 +84,9 @@ export default function FilterSidebar({
   filters,
   setFilters,
   options,
-  selectedGroupId,
+  selectedGroupIds,
   selectedTags,
-  selectedRace,
+  selectedRaceIds,
   activeFilterCount,
   activeRace,
   clearAllFilters,
@@ -119,7 +119,7 @@ export default function FilterSidebar({
     if (moreCount > 0) setMoreOpen(true)
   }, [moreCount])
 
-  const selectedGroup = selectedGroupId ? DIVISION_GROUPS.find((g) => g.id === selectedGroupId) : null
+  const selectedGroups = DIVISION_GROUPS.filter((g) => selectedGroupIds.includes(g.id))
 
   const content = (
     <div className="flex flex-col h-full">
@@ -154,9 +154,14 @@ export default function FilterSidebar({
             {PI_CLASS_ORDER.map((cls) => (
               <button
                 key={cls}
-                onClick={() => setFilters((f) => ({ ...f, piClass: f.piClass === cls ? '' : cls }))}
+                onClick={() => setFilters((f) => ({
+                  ...f,
+                  piClass: f.piClass.includes(cls)
+                    ? f.piClass.filter((c) => c !== cls)
+                    : [...f.piClass, cls],
+                }))}
                 className={`w-9 h-[26px] rounded-[6px] text-xs font-bold transition-colors ${PI_CLASS_COLORS[cls]} ${
-                  filters.piClass === cls
+                  filters.piClass.includes(cls)
                     ? 'ring-2 ring-offset-1 ring-offset-fh-panel ring-fh-red scale-105'
                     : 'opacity-70 hover:opacity-100'
                 }`}
@@ -189,9 +194,9 @@ export default function FilterSidebar({
             {DIVISION_GROUPS.map((g) => (
               <button
                 key={g.id}
-                onClick={() => handleGroupChange(selectedGroupId === g.id ? null : g.id)}
+                onClick={() => handleGroupChange(g.id)}
                 className={`flex items-center gap-1 px-2.5 py-[5px] rounded-full text-xs font-medium border transition-colors ${
-                  selectedGroupId === g.id
+                  selectedGroupIds.includes(g.id)
                     ? 'bg-fh-red-pale text-fh-red border-fh-red'
                     : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark'
                 }`}
@@ -201,16 +206,17 @@ export default function FilterSidebar({
               </button>
             ))}
           </div>
-          {selectedGroup && (
+          {selectedGroups.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pl-1 mt-0.5">
-              {selectedGroup.divisions
+              {selectedGroups
+                .flatMap((g) => g.divisions)
                 .filter((d) => options.divisions.includes(d))
                 .map((d) => (
                   <button
                     key={d}
-                    onClick={() => handleDivisionChange(filters.division === d ? '' : d)}
+                    onClick={() => handleDivisionChange(d)}
                     className={`px-2 py-[3px] rounded-md text-[11px] font-medium border transition-colors ${
-                      filters.division === d
+                      filters.division.includes(d)
                         ? 'bg-fh-red-pale text-fh-red border-fh-red'
                         : 'bg-fh-panel-2 text-fh-muted border-fh-border hover:text-fh-dark'
                     }`}
@@ -231,7 +237,7 @@ export default function FilterSidebar({
                 key={race.id}
                 onClick={() => toggleRace(race.id)}
                 className={`flex items-center gap-1.5 px-2.5 py-[5px] rounded-full text-xs font-medium border transition-colors ${
-                  selectedRace === race.id
+                  selectedRaceIds.includes(race.id)
                     ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
                     : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark-2'
                 }`}
