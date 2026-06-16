@@ -10,9 +10,9 @@ import { GridIcon, TableIcon } from '@/components/table-ui'
 
 const links = [
   { href: '/garage', label: 'My Garage', icon: GarageIcon, shortcut: 'g' },
+  { href: '/cars', label: 'Car Database', icon: DatabaseIcon, shortcut: 'c' },
   { href: '/races', label: 'Races', icon: RacesIcon, shortcut: 'r' },
   { href: '/builds', label: 'Builds', icon: BuildsIcon, shortcut: 'b' },
-  { href: '/cars', label: 'Car Database', icon: DatabaseIcon, shortcut: 'c' },
 ]
 
 function getInitials(firstName?: string | null, lastName?: string | null, email?: string | null): string {
