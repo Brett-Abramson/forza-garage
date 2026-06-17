@@ -10,6 +10,6 @@ import type { Car } from '@/types/car'
 
 const GarageShowcase = dynamic(() => import('./GarageShowcase'), { ssr: false })
 
-export default function GarageShowcaseClient({ initialCars }: { initialCars: Car[] }) {
-  return <GarageShowcase initialCars={initialCars} />
+export default function GarageShowcaseClient({ initialCars, totalCars }: { initialCars: Car[], totalCars?: number }) {
+  return <GarageShowcase initialCars={initialCars} totalCars={totalCars} />
 }

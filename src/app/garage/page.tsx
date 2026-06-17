@@ -79,11 +79,14 @@ export default async function GaragePage({ searchParams }: PageProps) {
 
   await ensureStarterCars(userId)
 
-  const entries = await prisma.userGarage.findMany({
-    where: { userId },
-    include: { car: true, tags: true },
-    orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
-  })
+  const [entries, totalCars] = await Promise.all([
+    prisma.userGarage.findMany({
+      where: { userId },
+      include: { car: true, tags: true },
+      orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
+    }),
+    prisma.car.count(),
+  ])
 
   // One-time backfill: write auto-tags for any entry with zero stored tags.
   await backfillMissingTags(entries)
@@ -120,7 +123,7 @@ export default async function GaragePage({ searchParams }: PageProps) {
     // from registering as CLS when the skeleton swaps for the real component.
     <main className="max-w-screen-2xl mx-auto min-h-screen">
       <Suspense fallback={<GarageSkeleton view={view} />}>
-        <GarageShowcaseClient initialCars={cars} />
+        <GarageShowcaseClient initialCars={cars} totalCars={totalCars} />
       </Suspense>
     </main>
   )

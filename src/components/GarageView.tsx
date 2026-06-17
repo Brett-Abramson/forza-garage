@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect, useRef, useLayoutEffect } from 'react'
-import { useWindowVirtualizer } from '@tanstack/react-virtual'
+import { useWindowVirtualizer, useVirtualizer } from '@tanstack/react-virtual'
 import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
 import { Car, FilterState } from '@/types/car'
@@ -111,6 +111,9 @@ export default function GarageView({ initialCars }: Props) {
   )
   const [columnCount, setColumnCount]       = useState(calcColumns)
   const [sidebarOpen, setSidebarOpen]       = useState(true)
+  const tableContainerRef                   = useRef<HTMLDivElement>(null)
+  const [tableHeight, setTableHeight]       = useState(600)
+  const [tableContainerWidth, setTableContainerWidth] = useState(1200)
 
   const activeRaces = useMemo(
     () => RACE_TYPES.filter((r) => selectedRaceIds.includes(r.id)),
@@ -122,6 +125,20 @@ export default function GarageView({ initialCars }: Props) {
   // Persist table mode preference; reset to standard when switching to grid
   useEffect(() => { localStorage.setItem('fh-tableMode', tableMode) }, [tableMode])
   useEffect(() => { if (view === 'grid') setTableMode('standard') }, [view])
+
+  // Keep the table container height filling the available viewport below it.
+  useLayoutEffect(() => {
+    if (view !== 'table' || !tableContainerRef.current) return
+    const update = () => {
+      if (!tableContainerRef.current) return
+      const rect = tableContainerRef.current.getBoundingClientRect()
+      setTableHeight(Math.max(200, window.innerHeight - rect.top - 24))
+      setTableContainerWidth(rect.width)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [view, sidebarOpen])
 
   // ── Recalculate column count on resize ─────────────────────────────────────
   useEffect(() => {
@@ -225,10 +242,14 @@ export default function GarageView({ initialCars }: Props) {
   const prevFilteredLength = useRef(sortedCars.length)
   useEffect(() => {
     if (prevFilteredLength.current !== sortedCars.length) {
-      window.scrollTo({ top: 0, behavior: 'instant' })
+      if (view === 'table') {
+        tableContainerRef.current?.scrollTo({ top: 0 })
+      } else {
+        window.scrollTo({ top: 0, behavior: 'instant' })
+      }
       prevFilteredLength.current = sortedCars.length
     }
-  }, [sortedCars.length])
+  }, [sortedCars.length, view])
 
   // ── Virtualizer — grid (lanes) ──────────────────────────────────────────────
   const gridVirtualizer = useWindowVirtualizer({
@@ -240,11 +261,12 @@ export default function GarageView({ initialCars }: Props) {
   })
 
   // ── Virtualizer — table (fixed rows) ───────────────────────────────────────
-  const tableVirtualizer = useWindowVirtualizer({
-    count:         view === 'table' ? sortedCars.length : 0,
-    estimateSize:  () => TABLE_ROW_HEIGHT,
-    overscan:      10,
+  const tableVirtualizer = useVirtualizer({
+    count:          view === 'table' ? sortedCars.length : 0,
+    estimateSize:   () => TABLE_ROW_HEIGHT,
+    overscan:       10,
     measureElement: (el) => el.getBoundingClientRect().height,
+    getScrollElement: () => tableContainerRef.current,
   })
 
   // ── Handlers ────────────────────────────────────────────────────────────────
@@ -319,6 +341,17 @@ export default function GarageView({ initialCars }: Props) {
   }, [])
 
   const ownedCount = cars.filter((c) => c.owned).length
+
+  // ── JS-driven column visibility for standard table mode ─────────────────────
+  const colPiYear       = tableContainerWidth >= 500
+  const colDivision     = tableContainerWidth >= 700
+  const colDriveCountry = tableContainerWidth >= 900
+  const colSourceValue  = tableContainerWidth >= 1100
+  const standardColCount = 4
+    + (colPiYear ? 2 : 0)
+    + (colDivision ? 1 : 0)
+    + (colDriveCountry ? 2 : 0)
+    + (colSourceValue ? 2 : 0)
 
   // ── Grid virtual items ──────────────────────────────────────────────────────
   const gridItems    = gridVirtualizer.getVirtualItems()
@@ -442,26 +475,30 @@ export default function GarageView({ initialCars }: Props) {
             </div>
             <TableModeToggle mode={tableMode} setMode={setTableMode} />
           </div>
-          <div className="overflow-x-auto rounded-xl border border-fh-border">
+          <div
+            ref={tableContainerRef}
+            className="overflow-auto rounded-xl border border-fh-border"
+            style={{ height: tableHeight }}
+          >
             <table
               className="w-full text-sm"
               style={tableMode === 'standard' ? { tableLayout: 'fixed' } : undefined}
             >
-              <thead className="sticky top-12 z-10">
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-fh-panel-2 border-b border-fh-border text-xs uppercase tracking-wide select-none">
                   {tableMode === 'standard' ? (
                     <>
-                      <SortTh label="Class"    sortKey="piClass"    sort={sort} onSort={handleSort} width="5%" />
-                      <SortTh label="PI"       sortKey="piRating"   sort={sort} onSort={handleSort} width="6%" />
-                      <SortTh label="Year"     sortKey="year"       sort={sort} onSort={handleSort} width="5%" />
-                      <SortTh label="Make"     sortKey="make"       sort={sort} onSort={handleSort} width="10%" />
-                      <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} width="12%" />
-                      <SortTh label="Division" sortKey="division"   sort={sort} onSort={handleSort} className="hidden md:table-cell" width="17%" />
-                      <SortTh label="Drive"    sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="5%" />
-                      <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="8%" />
-                      <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="12%" />
-                      <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="10%" />
-                      <th className="text-left py-2.5 px-3 text-fh-muted" style={{ width: '10%' }}>Garage</th>
+                      <SortTh label="Class"    sortKey="piClass"    sort={sort} onSort={handleSort} style={{ width: 52 }} />
+                      {colPiYear && <SortTh label="PI"       sortKey="piRating"   sort={sort} onSort={handleSort} style={{ width: 52 }} />}
+                      {colPiYear && <SortTh label="Year"     sortKey="year"       sort={sort} onSort={handleSort} style={{ width: 58 }} />}
+                      <SortTh label="Make"     sortKey="make"       sort={sort} onSort={handleSort} style={{ width: 100 }} />
+                      <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} />
+                      {colDivision     && <SortTh label="Division" sortKey="division"   sort={sort} onSort={handleSort} style={{ width: 110 }} />}
+                      {colDriveCountry && <SortTh label="Drive"    sortKey="drivetrain" sort={sort} onSort={handleSort} style={{ width: 72 }} />}
+                      {colDriveCountry && <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} style={{ width: 80 }} />}
+                      {colSourceValue  && <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} style={{ width: 72 }} />}
+                      {colSourceValue  && <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} style={{ width: 90 }} />}
+                      <th className="text-left py-2.5 px-3 text-fh-muted" style={{ width: 90 }}>Garage</th>
                     </>
                   ) : (
                     <>
@@ -490,7 +527,7 @@ export default function GarageView({ initialCars }: Props) {
               <tbody>
                 {/* Top spacer */}
                 {tablePadTop > 0 && (
-                  <tr><td colSpan={tableMode === 'stats' ? 16 : 11} style={{ height: tablePadTop, padding: 0 }} /></tr>
+                  <tr><td colSpan={tableMode === 'stats' ? 16 : standardColCount} style={{ height: tablePadTop, padding: 0 }} /></tr>
                 )}
 
                 {tableItems.map((vItem) => {
@@ -503,13 +540,14 @@ export default function GarageView({ initialCars }: Props) {
                       isPending={pendingIds.has(car.id)}
                       onCardClick={setDrawerCar}
                       statsMode={tableMode === 'stats'}
+                      colVis={{ piYear: colPiYear, division: colDivision, driveCountry: colDriveCountry, sourceValue: colSourceValue }}
                     />
                   )
                 })}
 
                 {/* Bottom spacer */}
                 {tablePadBot > 0 && (
-                  <tr><td colSpan={tableMode === 'stats' ? 16 : 11} style={{ height: tablePadBot, padding: 0 }} /></tr>
+                  <tr><td colSpan={tableMode === 'stats' ? 16 : standardColCount} style={{ height: tablePadBot, padding: 0 }} /></tr>
                 )}
               </tbody>
             </table>

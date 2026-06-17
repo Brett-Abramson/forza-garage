@@ -24,9 +24,11 @@ interface Props {
   onTogglePin?: (id: number, pinned: boolean) => void
   /** Swap standard right-side columns for the 11 stat/spec columns with sticky identity cols */
   statsMode?: boolean
+  /** JS-driven column visibility (GarageView only). When omitted, falls back to CSS responsive classes. */
+  colVis?: { piYear: boolean; division: boolean; driveCountry: boolean; sourceValue: boolean }
 }
 
-export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode }: Props) {
+export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode, colVis }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined)
@@ -125,35 +127,41 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
           {car.piClass}
         </span>
       </td>
-      <td className="py-2.5 px-3 text-fh-dark-2 tabular-nums overflow-hidden whitespace-nowrap text-ellipsis">{car.piRating}</td>
-      <td className="py-2.5 px-3 text-fh-dark-2 overflow-hidden whitespace-nowrap text-ellipsis">{car.year}</td>
+      {(!colVis || colVis.piYear) && <td className="py-2.5 px-3 text-fh-dark-2 tabular-nums overflow-hidden whitespace-nowrap text-ellipsis">{car.piRating}</td>}
+      {(!colVis || colVis.piYear) && <td className="py-2.5 px-3 text-fh-dark-2 overflow-hidden whitespace-nowrap text-ellipsis">{car.year}</td>}
       <td className="py-2.5 px-3 font-medium overflow-hidden whitespace-nowrap text-ellipsis">{car.make}</td>
       <td className="py-2.5 px-3 overflow-hidden whitespace-nowrap text-ellipsis">{car.model}</td>
-      <td className="py-2.5 px-3 text-fh-dark-2 hidden md:table-cell overflow-hidden">
-        <div className="truncate">{car.division}</div>
-        {bestRace && (
-          <div className="text-xs text-fh-muted mt-0.5 flex items-center gap-1 min-w-0">
-            <RaceIcon id={bestRace.id} emoji={bestRace.icon} />
-            <span className="truncate">{bestRace.name}</span>
-          </div>
-        )}
-      </td>
-      <td className="py-2.5 px-3 text-fh-dark-2 hidden lg:table-cell overflow-hidden whitespace-nowrap text-ellipsis">{car.drivetrain ?? '—'}</td>
-      <td className="py-2.5 px-3 text-fh-dark-2 hidden lg:table-cell overflow-hidden whitespace-nowrap text-ellipsis">{car.country}</td>
-      <td className={`py-2.5 px-3 hidden xl:table-cell text-xs font-medium overflow-hidden whitespace-nowrap text-ellipsis ${sourceColor}`}>
-        {car.source}
-      </td>
-      <td className="py-2.5 px-3 text-fh-dark-2 tabular-nums hidden xl:table-cell text-xs overflow-hidden whitespace-nowrap text-ellipsis">
-        {car.value != null
-          ? `${car.value.toLocaleString()} Cr`
-          : (
-            <span
-              className="cursor-default"
-              title={car.sourceInfo ?? undefined}
-            >—</span>
-          )
-        }
-      </td>
+      {(!colVis || colVis.division) && (
+        <td className={`py-2.5 px-3 text-fh-dark-2 overflow-hidden${!colVis ? ' hidden md:table-cell' : ''}`}>
+          <div className="truncate">{car.division}</div>
+          {bestRace && (
+            <div className="text-xs text-fh-muted mt-0.5 flex items-center gap-1 min-w-0">
+              <RaceIcon id={bestRace.id} emoji={bestRace.icon} />
+              <span className="truncate">{bestRace.name}</span>
+            </div>
+          )}
+        </td>
+      )}
+      {(!colVis || colVis.driveCountry) && <td className={`py-2.5 px-3 text-fh-dark-2 overflow-hidden whitespace-nowrap text-ellipsis${!colVis ? ' hidden lg:table-cell' : ''}`}>{car.drivetrain ?? '—'}</td>}
+      {(!colVis || colVis.driveCountry) && <td className={`py-2.5 px-3 text-fh-dark-2 overflow-hidden whitespace-nowrap text-ellipsis${!colVis ? ' hidden lg:table-cell' : ''}`}>{car.country}</td>}
+      {(!colVis || colVis.sourceValue) && (
+        <td className={`py-2.5 px-3 text-xs font-medium overflow-hidden whitespace-nowrap text-ellipsis${!colVis ? ' hidden xl:table-cell' : ''} ${sourceColor}`}>
+          {car.source}
+        </td>
+      )}
+      {(!colVis || colVis.sourceValue) && (
+        <td className={`py-2.5 px-3 text-fh-dark-2 tabular-nums text-xs overflow-hidden whitespace-nowrap text-ellipsis${!colVis ? ' hidden xl:table-cell' : ''}`}>
+          {car.value != null
+            ? `${car.value.toLocaleString()} Cr`
+            : (
+              <span
+                className="cursor-default"
+                title={car.sourceInfo ?? undefined}
+              >—</span>
+            )
+          }
+        </td>
+      )}
       {showAddedAtColumn && (
         <td className="py-2.5 px-3 text-fh-muted-2 tabular-nums hidden xl:table-cell text-[11px] overflow-hidden whitespace-nowrap text-ellipsis">
           {showAddedAt && car.addedAt ? formatAddedAt(car.addedAt) : null}

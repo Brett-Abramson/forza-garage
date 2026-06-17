@@ -69,6 +69,7 @@ interface SortState {
 
 interface Props {
   initialCars: Car[]
+  totalCars?: number
 }
 
 function buildOptions(cars: Car[]) {
@@ -511,7 +512,7 @@ function RowStatInput({
   )
 }
 
-export default function GarageShowcase({ initialCars }: Props) {
+export default function GarageShowcase({ initialCars, totalCars }: Props) {
   const searchParams = useSearchParams()
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -890,6 +891,22 @@ export default function GarageShowcase({ initialCars }: Props) {
         )}
       </header>
 
+      {/* Owned progress bar */}
+      {totalCars != null && (
+        <div className="flex items-center gap-6 text-sm">
+          <div>
+            <span className="text-2xl font-bold text-fh-red">{cars.length}</span>
+            <span className="text-fh-muted ml-1.5">/ {totalCars} owned</span>
+          </div>
+          <div className="h-1.5 flex-1 bg-fh-panel-2 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-fh-red rounded-full transition-all duration-500"
+              style={{ width: `${totalCars > 0 ? (cars.length / totalCars) * 100 : 0}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Export confirmation (filtered subset) */}
       {exportPending && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setExportPending(false)}>
@@ -971,15 +988,23 @@ export default function GarageShowcase({ initialCars }: Props) {
       ) : (
         <>
           {view === 'grid' ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {sortedCars.map((car) => (
-                <CarCard key={car.id} car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} onTogglePin={handleTogglePin} isPending={pendingIds.has(car.id)} showAddedAt={sort.key === 'addedAt'} />
-              ))}
-            </div>
+            <>
+              <div className="text-xs text-fh-muted tabular-nums mb-1">
+                Showing {sortedCars.length} of {cars.length} cars
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {sortedCars.map((car) => (
+                  <CarCard key={car.id} car={car} onToggleOwned={handleToggle} onCardClick={setDrawerCar} onTogglePin={handleTogglePin} isPending={pendingIds.has(car.id)} showAddedAt={sort.key === 'addedAt'} />
+                ))}
+              </div>
+            </>
           ) : (
             <>
               {/* Toolbar: Standard / Stats toggle */}
-              <div className="flex items-center justify-end mb-2">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs text-fh-muted tabular-nums">
+                  Showing {sortedCars.length} of {cars.length} cars
+                </div>
                 <TableModeToggle mode={tableMode} setMode={setTableMode} />
               </div>
 
@@ -989,7 +1014,7 @@ export default function GarageShowcase({ initialCars }: Props) {
                   style={tableMode === 'standard' ? { tableLayout: 'fixed' } : undefined}
                 >
                   <thead>
-                    <tr className="bg-fh-panel border-b border-fh-border text-xs uppercase tracking-wide select-none">
+                    <tr className="bg-fh-panel-2 border-b border-fh-border text-xs uppercase tracking-wide select-none">
                       {tableMode === 'standard' ? (
                         <>
                           <th className="py-2.5 pl-3 pr-1" style={{ width: '3%' }} aria-label="Favourite" />
