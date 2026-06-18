@@ -26,6 +26,7 @@ export default function Nav() {
   const pathname = usePathname()
   const { isSignedIn, user, isLoaded } = useUser()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [navMenuOpen, setNavMenuOpen] = useState(false)
   const { controls } = useNavControls()
   const showControls = (pathname === '/cars' || pathname === '/garage') && controls !== null
 
@@ -36,6 +37,36 @@ export default function Nav() {
         user.emailAddresses[0]?.emailAddress,
       )
     : ''
+
+  // Search + grid/table toggle — rendered inline in the bar on desktop, and as a
+  // full-width row below the bar on mobile (where it won't fit in the bar).
+  const searchAndView = controls && showControls ? (
+    <>
+      <input
+        type="text"
+        placeholder="Search make, model, division…"
+        value={controls.search}
+        onChange={(e) => controls.setSearch(e.target.value)}
+        className="flex-1 min-w-0 bg-fh-panel-2 border border-fh-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-fh-red placeholder:text-fh-muted"
+      />
+      <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0">
+        <button
+          onClick={() => controls.setView('grid')}
+          title="Grid view"
+          className={`px-2.5 py-1.5 transition-colors ${controls.view === 'grid' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
+        >
+          <GridIcon />
+        </button>
+        <button
+          onClick={() => controls.setView('table')}
+          title="Table view"
+          className={`px-2.5 py-1.5 transition-colors ${controls.view === 'table' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
+        >
+          <TableIcon />
+        </button>
+      </div>
+    </>
+  ) : null
 
   return (
     <nav className="border-b border-fh-border bg-fh-panel backdrop-blur-sm sticky top-0 z-10">
@@ -55,58 +86,49 @@ export default function Nav() {
             )}
           </button>
         )}
-        <Link href="/" className="text-sm font-bold tracking-tight mr-4 text-fh-dark">
+        {/* Hamburger — mobile only; opens the page-links dropdown */}
+        <button
+          onClick={() => setNavMenuOpen((v) => !v)}
+          aria-label="Menu"
+          aria-expanded={navMenuOpen}
+          className="md:hidden p-1.5 rounded-md text-fh-muted hover:text-fh-dark-2 hover:bg-fh-panel-2 transition-colors shrink-0"
+        >
+          <HamburgerIcon />
+        </button>
+
+        <Link href="/" className="text-sm font-bold tracking-tight mr-1 md:mr-4 text-fh-dark shrink-0">
           Forza<span className="text-fh-red">Garage</span>
         </Link>
 
-        {links.map(({ href, label, icon: Icon, shortcut }) => {
-          const active = pathname === href || (href === '/garage' && pathname === '/')
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium ${
-                active ? 'fh-nav-link-active' : 'fh-nav-link'
-              }`}
-            >
-              <Icon />
-              {label}
-              <kbd className="hidden lg:inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono border border-fh-border text-fh-muted-2 bg-fh-panel-2 leading-none ml-0.5">
-                {shortcut}
-              </kbd>
-            </Link>
-          )
-        })}
+        {/* Page links — inline on desktop, collapsed into the hamburger on mobile */}
+        <div className="hidden md:flex items-center gap-1">
+          {links.map(({ href, label, icon: Icon, shortcut }) => {
+            const active = pathname === href || (href === '/garage' && pathname === '/')
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium ${
+                  active ? 'fh-nav-link-active' : 'fh-nav-link'
+                }`}
+              >
+                <Icon />
+                {label}
+                <kbd className="hidden lg:inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono border border-fh-border text-fh-muted-2 bg-fh-panel-2 leading-none ml-0.5">
+                  {shortcut}
+                </kbd>
+              </Link>
+            )
+          })}
+        </div>
 
-        {showControls && (
-          <div className="ml-auto flex items-center gap-2 flex-1 max-w-sm">
-            <input
-              type="text"
-              placeholder="Search make, model, division…"
-              value={controls!.search}
-              onChange={(e) => controls!.setSearch(e.target.value)}
-              className="flex-1 min-w-0 bg-fh-panel-2 border border-fh-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-fh-red placeholder:text-fh-muted"
-            />
-            <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0">
-              <button
-                onClick={() => controls!.setView('grid')}
-                title="Grid view"
-                className={`px-2.5 py-1.5 transition-colors ${controls!.view === 'grid' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
-              >
-                <GridIcon />
-              </button>
-              <button
-                onClick={() => controls!.setView('table')}
-                title="Table view"
-                className={`px-2.5 py-1.5 transition-colors ${controls!.view === 'table' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
-              >
-                <TableIcon />
-              </button>
-            </div>
+        {searchAndView && (
+          <div className="hidden md:flex ml-auto items-center gap-2 flex-1 max-w-sm">
+            {searchAndView}
           </div>
         )}
 
-        <div className={`flex items-center gap-2 ${showControls ? '' : 'ml-auto'}`}>
+        <div className={`flex items-center gap-2 ${showControls ? 'ml-auto md:ml-0' : 'ml-auto'}`}>
           <ThemeToggle />
 
           {isLoaded && (
@@ -152,7 +174,47 @@ export default function Nav() {
           )}
         </div>
       </div>
+
+      {/* Mobile-only search + view toggle row (the bar is too narrow for it) */}
+      {searchAndView && (
+        <div className="md:hidden max-w-screen-2xl mx-auto px-4 pb-2 flex items-center gap-2">
+          {searchAndView}
+        </div>
+      )}
+
+      {/* Mobile dropdown — page links, opened by the hamburger */}
+      {navMenuOpen && (
+        <>
+          <div className="fixed inset-0 z-10 md:hidden" onClick={() => setNavMenuOpen(false)} />
+          <div className="md:hidden absolute left-0 right-0 top-full bg-fh-panel border-b border-fh-border shadow-lg z-20 py-1">
+            {links.map(({ href, label, icon: Icon }) => {
+              const active = pathname === href || (href === '/garage' && pathname === '/')
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setNavMenuOpen(false)}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium ${
+                    active ? 'fh-nav-link-active' : 'fh-nav-link'
+                  }`}
+                >
+                  <Icon />
+                  {label}
+                </Link>
+              )
+            })}
+          </div>
+        </>
+      )}
     </nav>
+  )
+}
+
+function HamburgerIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <path d="M2 4h12M2 8h12M2 12h12" />
+    </svg>
   )
 }
 
