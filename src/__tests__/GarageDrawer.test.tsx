@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GarageDrawer from '@/components/GarageDrawer'
 import type { Car } from '@/types/car'
@@ -134,6 +134,34 @@ describe('GarageDrawer — close', () => {
     const { onClose } = renderDrawer()
     await user.keyboard('{Escape}')
     expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('calls onClose on a rightward swipe past the threshold', () => {
+    const { onClose, container } = renderDrawer()
+    const panel = container.querySelector('.fixed.top-0.right-0') as HTMLElement
+    fireEvent.touchStart(panel, { touches: [{ clientX: 20, clientY: 100 }] })
+    fireEvent.touchMove(panel, { touches: [{ clientX: 160, clientY: 105 }] }) // dx=140 (> 90), horizontal
+    fireEvent.touchEnd(panel)
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('does not close on a small rightward swipe under the threshold', () => {
+    const { onClose, container } = renderDrawer()
+    const panel = container.querySelector('.fixed.top-0.right-0') as HTMLElement
+    fireEvent.touchStart(panel, { touches: [{ clientX: 20, clientY: 100 }] })
+    fireEvent.touchMove(panel, { touches: [{ clientX: 60, clientY: 105 }] }) // dx=40 (< 90)
+    fireEvent.touchEnd(panel)
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('ignores a vertical scroll gesture (does not close)', () => {
+    const { onClose, container } = renderDrawer()
+    const panel = container.querySelector('.fixed.top-0.right-0') as HTMLElement
+    fireEvent.touchStart(panel, { touches: [{ clientX: 20, clientY: 100 }] })
+    fireEvent.touchMove(panel, { touches: [{ clientX: 25, clientY: 300 }] }) // vertical dominates → bail
+    fireEvent.touchMove(panel, { touches: [{ clientX: 200, clientY: 320 }] }) // later horizontal ignored
+    fireEvent.touchEnd(panel)
+    expect(onClose).not.toHaveBeenCalled()
   })
 })
 

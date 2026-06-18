@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type TouchEvent } from 'react'
 import type { Car } from '@/types/car'
 import { PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { RaceIcon } from '@/components/RaceIcons'
@@ -42,6 +42,38 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
   }, [car])
 
   const open = car !== null
+
+  // ── Swipe-to-dismiss (touch) ────────────────────────────────────────────────
+  // On phones the drawer is full-screen, so there's no backdrop to tap. Let a
+  // rightward swipe dismiss it, with the panel following the finger.
+  const SWIPE_CLOSE_PX = 90
+  const touchStart = useRef<{ x: number; y: number } | null>(null)
+  const swiping = useRef(false)
+  const [dragX, setDragX] = useState(0)
+
+  const onTouchStart = (e: TouchEvent) => {
+    const t = e.touches[0]
+    touchStart.current = { x: t.clientX, y: t.clientY }
+    swiping.current = false
+  }
+  const onTouchMove = (e: TouchEvent) => {
+    if (!touchStart.current) return
+    const t = e.touches[0]
+    const dx = t.clientX - touchStart.current.x
+    const dy = t.clientY - touchStart.current.y
+    // Lock in horizontal-dismiss intent once; otherwise yield to vertical scroll.
+    if (!swiping.current) {
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) swiping.current = true
+      else if (Math.abs(dy) > 10) { touchStart.current = null; return }
+    }
+    if (swiping.current && dx > 0) setDragX(dx)
+  }
+  const onTouchEnd = () => {
+    if (dragX > SWIPE_CLOSE_PX) onClose()
+    setDragX(0)
+    touchStart.current = null
+    swiping.current = false
+  }
 
   // Derive auto/user split from displayCar's tagDetails
   const { auto: initAutoTags, user: initUserTags } = splitTagsBySource(displayCar?.tagDetails ?? [])
@@ -230,6 +262,9 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
 
       {/* Drawer */}
       <div
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
         className={`
           fixed top-0 right-0 h-full w-full sm:w-[420px] z-50
           bg-fh-panel border-l border-fh-border
@@ -237,6 +272,9 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
           transition-transform duration-300 ease-in-out
           ${open ? 'translate-x-0' : 'translate-x-full'}
         `}
+        // While actively swiping, follow the finger and drop the CSS transition
+        // so the drawer tracks 1:1; release snaps back or completes the close.
+        style={dragX > 0 ? { transform: `translateX(${dragX}px)`, transition: 'none' } : undefined}
       >
         {displayCar && (
           <>
@@ -250,10 +288,10 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
               </div>
               <button
                 onClick={onClose}
-                className="shrink-0 mt-0.5 text-fh-muted hover:text-fh-dark transition-colors"
+                className="shrink-0 -mr-1.5 -mt-1 p-2.5 rounded-lg text-fh-dark-2 hover:text-fh-dark hover:bg-fh-panel-2 transition-colors"
                 aria-label="Close"
               >
-                <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+                <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
                 </svg>
               </button>
