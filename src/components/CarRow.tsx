@@ -26,7 +26,7 @@ interface Props {
   /** Swap standard right-side columns for the 11 stat/spec columns with sticky identity cols */
   statsMode?: boolean
   /** JS-driven column visibility (GarageView only). When omitted, falls back to CSS responsive classes. */
-  colVis?: { piYear: boolean; division: boolean; driveCountry: boolean; sourceValue: boolean; addedAt?: boolean }
+  colVis?: { piYear: boolean; division: boolean; driveCountry: boolean; sourceValue: boolean; addedAt?: boolean; star?: boolean }
 }
 
 export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode, colVis }: Props) {
@@ -106,8 +106,8 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
 
   return (
     <tr onClick={() => onCardClick?.(car)} className={trCls}>
-      {/* Star — only rendered in garage (when onTogglePin is provided) */}
-      {onTogglePin && (
+      {/* Star — garage only (onTogglePin); hidden on narrow widths via colVis (use the drawer instead) */}
+      {onTogglePin && (!colVis || colVis.star) && (
         <td className="py-2.5 pl-3 pr-1 overflow-hidden">
           <button
             onClick={(e) => { e.stopPropagation(); onTogglePin(car.id, !car.pinned) }}

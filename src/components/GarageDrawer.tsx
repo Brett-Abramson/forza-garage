@@ -32,9 +32,11 @@ interface Props {
   onTagDetailsChange?: (carId: number, tagDetails: TagDetail[]) => void
   onStatsChange?: (carId: number, partial: Partial<Car>) => void
   onToggleOwned?: (id: number, owned: boolean) => Promise<void> | void
+  /** Garage only — toggle pinned/favourite. When provided, a star button shows in the header. */
+  onTogglePin?: (id: number, pinned: boolean) => void
 }
 
-export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStatsChange, onToggleOwned }: Props) {
+export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStatsChange, onToggleOwned, onTogglePin }: Props) {
   // Keep a stale copy so the drawer content doesn't vanish during slide-out
   const [displayCar, setDisplayCar] = useState<Car | null>(car)
   useEffect(() => {
@@ -286,15 +288,31 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                 </div>
                 <h2 className="text-base font-semibold leading-snug">{displayCar.model}</h2>
               </div>
-              <button
-                onClick={onClose}
-                className="shrink-0 -mr-1.5 -mt-1 p-2.5 rounded-lg text-fh-dark-2 hover:text-fh-dark hover:bg-fh-panel-2 transition-colors"
-                aria-label="Close"
-              >
-                <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-0.5 shrink-0 -mr-1.5 -mt-1">
+                {onTogglePin && (
+                  <button
+                    onClick={() => onTogglePin(displayCar.id, !displayCar.pinned)}
+                    aria-label={displayCar.pinned ? 'Remove from favourites' : 'Add to favourites'}
+                    title={displayCar.pinned ? 'Remove from favourites' : 'Add to favourites'}
+                    className={`p-2.5 rounded-lg text-2xl leading-none transition-colors ${
+                      displayCar.pinned
+                        ? 'text-amber-400 hover:text-amber-300'
+                        : 'text-fh-border hover:text-amber-400 hover:bg-fh-panel-2'
+                    }`}
+                  >
+                    <span className="block text-lg leading-none">{displayCar.pinned ? '★' : '☆'}</span>
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2.5 rounded-lg text-fh-dark-2 hover:text-fh-dark hover:bg-fh-panel-2 transition-colors"
+                  aria-label="Close"
+                >
+                  <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Scrollable body */}

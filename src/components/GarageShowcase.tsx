@@ -374,13 +374,18 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
   const pinnedCount = cars.filter((c) => c.pinned).length
 
   // ── JS-driven column visibility for standard table mode (sidebar-aware) ──────
-  const colPiYear       = tableContainerWidth >= 500
-  const colDivision     = tableContainerWidth >= 700
-  const colDriveCountry = tableContainerWidth >= 900
-  const colSourceValue  = tableContainerWidth >= 1100
-  const colAdded        = tableContainerWidth >= 1300
-  // Some columns are dropped at this width — surface the SortSelect so they stay sortable.
-  const hasHiddenStandardCols = !(colPiYear && colDivision && colDriveCountry && colSourceValue && colAdded)
+  // The active sort column is force-shown so the user can see the values they're
+  // sorting by, even when that column would otherwise be dropped at this width.
+  const sk = sort.key
+  const colStar         = tableContainerWidth >= 500
+  const colPiYear       = tableContainerWidth >= 500  || sk === 'piRating' || sk === 'year'
+  const colDivision     = tableContainerWidth >= 700  || sk === 'division'
+  const colDriveCountry = tableContainerWidth >= 900  || sk === 'drivetrain' || sk === 'country'
+  const colSourceValue  = tableContainerWidth >= 1100 || sk === 'source' || sk === 'value'
+  const colAdded        = tableContainerWidth >= 1300 || sk === 'addedAt'
+  // Columns get dropped to fit below 1300px — surface the SortSelect (and rotate
+  // hint) so the hidden columns stay reachable.
+  const hasHiddenStandardCols = tableContainerWidth < 1300
 
   return (
     <>
@@ -604,6 +609,13 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                 </div>
               </div>
 
+              {/* Mobile-portrait hint: the full table is best in landscape */}
+              {tableMode === 'standard' && hasHiddenStandardCols && (
+                <div className="md:hidden landscape:hidden flex items-center gap-1.5 text-[11px] text-fh-muted mb-2">
+                  <span aria-hidden>📱↔</span> Rotate your phone to see more columns
+                </div>
+              )}
+
               <div ref={tableContainerRef} className="overflow-x-auto rounded-xl border border-fh-border">
                 <table
                   className="w-full text-sm"
@@ -613,7 +625,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                     <tr className="bg-fh-panel-2 border-b border-fh-border text-xs uppercase tracking-wide select-none">
                       {tableMode === 'standard' ? (
                         <>
-                          <th className="py-2.5 pl-3 pr-1" style={{ width: 36 }} aria-label="Favourite" />
+                          {colStar && <th className="py-2.5 pl-3 pr-1" style={{ width: 36 }} aria-label="Favourite" />}
                           <SortTh label="Class"    sortKey="piClass"    sort={sort} onSort={handleSort} style={{ width: 52 }} />
                           {colPiYear && <SortTh label="PI"   sortKey="piRating" sort={sort} onSort={handleSort} style={{ width: 52 }} />}
                           {colPiYear && <SortTh label="Year" sortKey="year"     sort={sort} onSort={handleSort} style={{ width: 58 }} />}
@@ -666,7 +678,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                         showAddedAtColumn
                         hideGarage
                         statsMode={tableMode === 'stats'}
-                        colVis={{ piYear: colPiYear, division: colDivision, driveCountry: colDriveCountry, sourceValue: colSourceValue, addedAt: colAdded }}
+                        colVis={{ star: colStar, piYear: colPiYear, division: colDivision, driveCountry: colDriveCountry, sourceValue: colSourceValue, addedAt: colAdded }}
                       />
                     ))}
                   </tbody>
@@ -684,6 +696,10 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
       onClose={() => setDrawerCar(null)}
       onTagDetailsChange={handleTagDetailsChange}
       onStatsChange={handleStatsChange}
+      onTogglePin={(id, pinned) => {
+        handleTogglePin(id, pinned)
+        setDrawerCar((prev) => (prev && prev.id === id ? { ...prev, pinned } : prev))
+      }}
       onToggleOwned={async (id, owned) => {
         await handleToggle(id, owned)
         if (!owned) setDrawerCar(null)
