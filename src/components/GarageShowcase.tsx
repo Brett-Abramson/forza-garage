@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef, Fragment } from 'react'
-import { RaceIcon } from '@/components/RaceIcons'
+import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
 import { Car, FilterState } from '@/types/car'
-import { SortKey, SortDir, compareRows, defaultSort, formatAddedAt } from '@/lib/sort'
+import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
 import { buildCsvString, csvFilename } from '@/lib/exportCsv'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
@@ -32,17 +31,12 @@ const SHL_S = {
 }
 import { CAR_TAGS } from '@/lib/tags'
 const ALL_TAGS = new Set<string>(CAR_TAGS)
-import { splitTagsBySource } from '@/lib/autotags'
 import { RACE_TYPES } from '@/lib/races'
-import { getRankedRaceTypes } from '@/lib/raceMatch'
-import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { filterCars, DEFAULT_FILTERS } from '@/lib/filterCars'
 import { getDivisionsForGroup } from '@/lib/divisionGroups'
 import GarageDrawer from './GarageDrawer'
-import StatBars from './StatBars'
-import { getStatCallouts } from '@/lib/statCallouts'
-import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS, STAT_OVERRIDE_MAP, hasOverrides, resolveEffectiveStats } from '@/lib/statUtils'
-import { setOwned, setTags, setNotes as persistNotes, tuneCar, resetTuning, setPinned } from '@/server/actions/garage'
+import { resolveEffectiveStats } from '@/lib/statUtils'
+import { setOwned, setPinned } from '@/server/actions/garage'
 import Link from 'next/link'
 import BackToTop from './BackToTop'
 import FilterSidebar from './FilterSidebar'
@@ -83,418 +77,7 @@ function buildOptions(cars: Car[]) {
 
 // DEFAULT_FILTERS is re-exported from filterCars — imported above.
 
-// ─── Inline expansion row for list view ──────────────────────────────────────
-
 type TagDetail = { tag: string; source: string }
-
-function ExpandedContent({
-  car,
-  onTagDetailsChange,
-  onNotesChange,
-  onStatsChange,
-}: {
-  car: Car
-  onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
-  onNotesChange: (carId: number, notes: string) => void
-  onStatsChange: (carId: number, partial: Partial<Car>) => void
-}) {
-  const { auto: initAutoTags, user: initUserTags } = splitTagsBySource(car.tagDetails ?? [])
-  const [autoTags, setAutoTags] = useState<string[]>(initAutoTags)
-  const [userTags, setUserTags] = useState<string[]>(initUserTags)
-  const [notes, setNotes] = useState(car.notes ?? '')
-  const [notesDirty, setNotesDirty] = useState(false)
-
-  // Stat entry state
-  const [stats, setStats] = useState<StatFields>(() => carToStats(car))
-  const [statsDirty, setStatsDirty] = useState(false)
-  const [savingStats, setSavingStats] = useState(false)
-  const [showStatEntry, setShowStatEntry] = useState(false)
-
-  const rankedRaces = getRankedRaceTypes(
-    car.division,
-    [...autoTags, ...userTags],
-    car.drivetrain ?? undefined
-  )
-  const tuningGuide =
-    rankedRaces.length > 0
-      ? getTuningGuide(rankedRaces[0].race.id, car.division)
-      : null
-  const divisionFallback = !tuningGuide ? getDivisionFallback(car.division) : null
-  const statCallouts = getStatCallouts(car, car.tags ?? [])
-
-  async function patchTags(nextAuto: string[], nextUser: string[]) {
-    setAutoTags(nextAuto)
-    setUserTags(nextUser)
-    const nextDetails: TagDetail[] = [
-      ...nextAuto.map((tag) => ({ tag, source: 'auto' })),
-      ...nextUser.map((tag) => ({ tag, source: 'user' })),
-    ]
-    onTagDetailsChange(car.id, nextDetails)
-    await setTags(car.id, { auto: nextAuto, user: nextUser })
-  }
-
-  async function saveNotes() {
-    if (!notesDirty) return
-    setNotesDirty(false)
-    onNotesChange(car.id, notes)
-    await persistNotes(car.id, notes)
-  }
-
-  async function saveStats() {
-    if (!statsDirty) return
-    setSavingStats(true)
-    const payload = statsToPayload(stats)
-    await tuneCar(car.id, payload)
-    const overrideUpdates = Object.fromEntries(
-      Object.entries(STAT_OVERRIDE_MAP).map(([field, overrideField]) => [overrideField, payload[field] ?? null])
-    ) as Partial<Car>
-    onStatsChange(car.id, { ...payload as Partial<Car>, ...overrideUpdates })
-    setSavingStats(false)
-    setStatsDirty(false)
-  }
-
-  async function resetStats() {
-    const res = await resetTuning(car.id)
-    if (!res.ok) return
-    const base = res.car as unknown as Record<string, number | string | null>
-    const overrideClears = Object.fromEntries(
-      Object.values(STAT_OVERRIDE_MAP).map((k) => [k, null])
-    ) as Partial<Car>
-    const baseValues = Object.fromEntries(
-      Object.keys(STAT_OVERRIDE_MAP).map((k) => [k, base[k] ?? null])
-    ) as Partial<Car>
-    setStats(carToStats({ ...car, ...baseValues } as Car))
-    setStatsDirty(false)
-    onStatsChange(car.id, { ...baseValues, ...overrideClears })
-  }
-
-  function updateStat(key: keyof StatFields, value: string) {
-    setStats((prev) => ({ ...prev, [key]: value }))
-    setStatsDirty(true)
-  }
-
-  const hasAnyStats = Object.values(stats).some((v) => v !== '')
-
-  const available = (CAR_TAGS as readonly string[]).filter(
-    (t) => !userTags.includes(t) && !autoTags.includes(t)
-  )
-
-  return (
-    <div className="flex flex-col gap-3">
-          <div>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {autoTags.length === 0 && userTags.length === 0 && (
-                <span className="text-xs text-fh-muted">No tags — add one below</span>
-              )}
-              {/* Auto tags — muted by default, removable */}
-              {autoTags.map((tag) => (
-                <button
-                  key={`auto-${tag}`}
-                  onClick={() => patchTags(autoTags.filter((t) => t !== tag), userTags)}
-                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red opacity-60 hover:opacity-100 hover:bg-red-500/20 transition-opacity"
-                  title="Default tag from division — click to remove"
-                  aria-label={`Remove ${tag}`}
-                >
-                  {tag} <span aria-hidden="true" className="opacity-70">×</span>
-                </button>
-              ))}
-              {/* User tags — full color, removable */}
-              {userTags.map((tag) => (
-                <button
-                  key={`user-${tag}`}
-                  onClick={() => patchTags(autoTags, userTags.filter((t) => t !== tag))}
-                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30 transition-colors"
-                  aria-label={`Remove ${tag}`}
-                >
-                  {tag} <span aria-hidden="true" className="opacity-70">×</span>
-                </button>
-              ))}
-            </div>
-            {available.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {available.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => patchTags(autoTags, [...userTags, tag])}
-                    className="px-2.5 py-0.5 rounded-full text-xs border border-dashed border-fh-border text-fh-muted hover:text-fh-dark-2 hover:border-fh-border transition-colors"
-                  >
-                    + {tag}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <textarea
-            value={notes}
-            onChange={(e) => { setNotes(e.target.value); setNotesDirty(true) }}
-            onBlur={saveNotes}
-            placeholder="Notes..."
-            rows={2}
-            className="w-full bg-fh-panel border border-fh-border rounded-lg px-3 py-2 text-xs text-fh-dark-2 placeholder:text-fh-muted focus:outline-none focus:border-fh-red resize-none"
-          />
-          {/* Stat bars + inline editor — owned cars only */}
-          {car.owned && (
-            <div className="border-t border-fh-border pt-3 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <StatBars car={car} />
-                </div>
-                <div className="flex items-center gap-3 shrink-0 ml-3">
-                  {hasOverrides(car) && (
-                    <span className="text-[10px] text-fh-red font-medium bg-fh-red-pale border border-fh-red/30 px-1.5 py-0.5 rounded">edited</span>
-                  )}
-                  {hasOverrides(car) && !showStatEntry && (
-                    <button onClick={resetStats} className="text-[10px] text-fh-muted-2 hover:text-fh-red transition-colors">
-                      Reset to stock
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setShowStatEntry((v) => !v)}
-                    className="text-[10px] text-fh-muted hover:text-fh-dark-2 transition-colors"
-                  >
-                    {showStatEntry ? 'Hide' : 'Edit stats'}
-                  </button>
-                </div>
-              </div>
-
-              {showStatEntry && (
-                <div className="flex flex-col gap-2 pt-1">
-                  <div className="grid grid-cols-6 gap-1.5">
-                    <RowStatInput label="Speed"    value={stats.statSpeed}        step={0.1} min={0} max={10}   onChange={(v) => updateStat('statSpeed', v)}        onBlur={saveStats} />
-                    <RowStatInput label="Handling" value={stats.statHandling}     step={0.1} min={0} max={10}   onChange={(v) => updateStat('statHandling', v)}     onBlur={saveStats} />
-                    <RowStatInput label="Accel"    value={stats.statAcceleration} step={0.1} min={0} max={10}   onChange={(v) => updateStat('statAcceleration', v)} onBlur={saveStats} />
-                    <RowStatInput label="Launch"   value={stats.statLaunch}       step={0.1} min={0} max={10}   onChange={(v) => updateStat('statLaunch', v)}       onBlur={saveStats} />
-                    <RowStatInput label="Braking"  value={stats.statBraking}      step={0.1} min={0} max={10}   onChange={(v) => updateStat('statBraking', v)}      onBlur={saveStats} />
-                    <RowStatInput label="Offroad"  value={stats.statOffroad}      step={0.1} min={0} max={10}   onChange={(v) => updateStat('statOffroad', v)}      onBlur={saveStats} />
-                  </div>
-                  <div className="grid grid-cols-6 gap-1.5">
-                    <RowStatInput label="HP"       value={stats.powerHp}      min={0} max={5000}  onChange={(v) => updateStat('powerHp', v)}      onBlur={saveStats} />
-                    <RowStatInput label="Torque"   value={stats.torqueFtLb}   min={0} max={5000}  onChange={(v) => updateStat('torqueFtLb', v)}   onBlur={saveStats} />
-                    <RowStatInput label="Weight"   value={stats.weightLb}     min={0} max={10000} onChange={(v) => updateStat('weightLb', v)}     onBlur={saveStats} />
-                    <RowStatInput label="F.Wt %"   value={stats.frontWeight}  min={0} max={100}   onChange={(v) => updateStat('frontWeight', v)}  onBlur={saveStats} />
-                    <RowStatInput label="Disp (L)" value={stats.displacementL} step={0.1} min={0} max={20} onChange={(v) => updateStat('displacementL', v)} onBlur={saveStats} />
-                    <div className="min-w-0">
-                      <div className="text-[10px] text-fh-muted mb-0.5">Rarity</div>
-                      <select
-                        value={stats.rarity}
-                        onChange={(e) => { updateStat('rarity', e.target.value); setTimeout(saveStats, 0) }}
-                        className="w-full bg-fh-panel border border-fh-border rounded px-1 py-0.5 text-[10px] text-fh-dark-2 focus:outline-none focus:border-fh-red"
-                      >
-                        <option value="">—</option>
-                        {RARITY_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  {hasOverrides(car) && (
-                    <button onClick={resetStats} className="self-start text-[10px] text-fh-muted-2 hover:text-fh-red transition-colors">
-                      Reset to stock
-                    </button>
-                  )}
-                  {savingStats && <span className="text-[10px] text-fh-muted-2">Saving…</span>}
-                </div>
-              )}
-            </div>
-          )}
-
-          {rankedRaces.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap text-xs text-fh-muted mt-1">
-              <span>Best for:</span>
-              <a
-                href={`/races/${rankedRaces[0].race.id}`}
-                className="text-fh-dark-2 hover:text-fh-red transition-colors"
-              >
-                <RaceIcon id={rankedRaces[0].race.id} emoji={rankedRaces[0].race.icon} /> {rankedRaces[0].race.name}
-              </a>
-              {rankedRaces.slice(1).map(({ race }) => (
-                <span key={race.id} className="flex items-center gap-1.5">
-                  <span className="text-fh-dark-2">·</span>
-                  <a
-                    href={`/races/${race.id}`}
-                    className="text-fh-muted hover:text-fh-dark-2 transition-colors"
-                  >
-                    <RaceIcon id={race.id} emoji={race.icon} /> {race.name}
-                  </a>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Stat analysis callouts */}
-          {statCallouts.length > 0 && (
-            <div className="border-t border-fh-border pt-3">
-              <div className="flex items-baseline gap-2 mb-2">
-                <div className="text-[10px] text-fh-muted uppercase tracking-wide">Stat analysis</div>
-                <div className="text-[9px] text-fh-dark-2 italic">based on available data</div>
-              </div>
-              <div className="flex flex-col gap-2">
-                {statCallouts.map((c) => (
-                  <div key={c.id} className="rounded border border-fh-blue/20 bg-fh-blue-pale px-2.5 py-2">
-                    <div className="text-[10px] text-fh-blue font-medium uppercase tracking-wide mb-0.5">
-                      {c.title}
-                    </div>
-                    <p className="text-xs text-fh-dark-2 leading-relaxed">{c.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Tuning guide */}
-          {(rankedRaces.length > 0 || divisionFallback) && (
-            <div className="border-t border-fh-border pt-3 flex flex-col gap-3">
-              {tuningGuide ? (
-                <>
-                  <p className="text-xs text-fh-muted leading-relaxed">{tuningGuide.philosophy}</p>
-                  <p className="text-xs text-fh-muted italic leading-relaxed">{tuningGuide.spectrum}</p>
-                  <ol className="space-y-1">
-                    {tuningGuide.priorities.map((p, i) => (
-                      <li key={i} className="flex items-start gap-1.5 text-xs">
-                        <span className="text-fh-red/50 font-mono shrink-0 w-4">{i + 1}.</span>
-                        <span className="text-fh-dark-2">{p}</span>
-                      </li>
-                    ))}
-                  </ol>
-                  <div className="rounded border border-fh-amber/20 bg-fh-amber-pale px-2.5 py-2">
-                    <span className="text-[10px] text-fh-amber uppercase tracking-wide mr-1.5">Watch out:</span>
-                    <span className="text-xs text-fh-dark-2 leading-relaxed">{tuningGuide.watchOut}</span>
-                  </div>
-                </>
-              ) : divisionFallback ? (
-                <>
-                  <p className="text-xs text-fh-muted leading-relaxed">{divisionFallback.philosophy}</p>
-                  <ol className="space-y-1">
-                    {divisionFallback.priorities.map((p, i) => (
-                      <li key={i} className="flex items-start gap-1.5 text-xs">
-                        <span className="text-fh-red/50 font-mono shrink-0 w-4">{i + 1}.</span>
-                        <span className="text-fh-dark-2">{p}</span>
-                      </li>
-                    ))}
-                  </ol>
-                  <div className="rounded border border-fh-amber/20 bg-fh-amber-pale px-2.5 py-2">
-                    <span className="text-[10px] text-fh-amber uppercase tracking-wide mr-1.5">Watch out:</span>
-                    <span className="text-xs text-fh-dark-2 leading-relaxed">{divisionFallback.watchOut}</span>
-                  </div>
-                </>
-              ) : null}
-            </div>
-          )}
-
-        </div>
-  )
-}
-
-// ─── Desktop: inline table row ────────────────────────────────────────────────
-
-function ExpandedRow(props: {
-  car: Car
-  onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
-  onNotesChange: (carId: number, notes: string) => void
-  onStatsChange: (carId: number, partial: Partial<Car>) => void
-  colSpan?: number
-}) {
-  return (
-    <tr className="hidden sm:table-row border-b border-fh-border bg-fh-panel">
-      <td colSpan={props.colSpan ?? 99} className="px-5 py-3">
-        <div className="max-w-2xl">
-          <ExpandedContent {...props} />
-        </div>
-      </td>
-    </tr>
-  )
-}
-
-// ─── Mobile: fixed bottom sheet ───────────────────────────────────────────────
-
-function MobileExpandedSheet({
-  car,
-  onClose,
-  onTagDetailsChange,
-  onNotesChange,
-  onStatsChange,
-}: {
-  car: Car
-  onClose: () => void
-  onTagDetailsChange: (carId: number, tagDetails: TagDetail[]) => void
-  onNotesChange: (carId: number, notes: string) => void
-  onStatsChange: (carId: number, partial: Partial<Car>) => void
-}) {
-  return (
-    <div className="sm:hidden fixed inset-0 z-50 flex flex-col justify-end">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      {/* Sheet */}
-      <div className="relative bg-fh-panel rounded-t-2xl max-h-[78vh] flex flex-col shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-fh-border shrink-0">
-          <div>
-            <div className="text-sm font-semibold">{car.make} {car.model}</div>
-            <div className="text-xs text-fh-muted">{car.year}</div>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="text-fh-muted hover:text-fh-dark transition-colors p-1 -mr-1"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
-            </svg>
-          </button>
-        </div>
-        {/* Scrollable content */}
-        <div className="overflow-y-auto flex-1 px-5 py-4">
-          <ExpandedContent
-            car={car}
-            onTagDetailsChange={onTagDetailsChange}
-            onNotesChange={onNotesChange}
-            onStatsChange={onStatsChange}
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function RowStatInput({
-  label, value, step, min, max, onChange, onBlur,
-}: {
-  label: string
-  value: string
-  step?: number
-  min?: number
-  max?: number
-  onChange: (v: string) => void
-  onBlur: () => void
-}) {
-  function handleBlur() {
-    if (value !== '' && min != null && max != null) {
-      const isFloat = step != null && step < 1
-      const num = isFloat ? parseFloat(value) : parseInt(value)
-      if (!isNaN(num)) {
-        const clamped = Math.min(Math.max(num, min), max)
-        if (clamped !== num) onChange(String(clamped))
-      }
-    }
-    onBlur()
-  }
-
-  return (
-    <div className="min-w-0">
-      <div className="text-[10px] text-fh-muted mb-0.5">{label}</div>
-      <input
-        type="number"
-        aria-label={label}
-        value={value}
-        step={step ?? 1}
-        min={min}
-        max={max}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={handleBlur}
-        placeholder="—"
-        className="w-full bg-fh-panel border border-fh-border rounded px-1.5 py-0.5 text-[10px] text-fh-dark-2 focus:outline-none focus:border-fh-red placeholder:text-fh-muted [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-      />
-    </div>
-  )
-}
 
 export default function GarageShowcase({ initialCars, totalCars }: Props) {
   const searchParams = useSearchParams()
@@ -535,7 +118,6 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
   )
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
-  const [expandedCarId, setExpandedCarId] = useState<number | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   // True when the viewport is narrow enough that standard columns are dropped
   // (Source/Value/Added hide below the xl breakpoint) — gates the SortSelect.
@@ -714,10 +296,6 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
     } : c))
   }, [])
 
-  const handleNotesChange = useCallback((carId: number, notes: string) => {
-    setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, notes } : c)))
-  }, [])
-
   const handleStatsChange = useCallback((carId: number, partial: Partial<Car>) => {
     setCars((prev) => prev.map((c) => {
       if (c.id !== carId) return c
@@ -733,10 +311,6 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
     setSelectedGroupIds([])
     setSelectedTags(new Set())
     setSelectedRaceIds([])
-  }, [])
-
-  const toggleExpanded = useCallback((carId: number) => {
-    setExpandedCarId((prev) => (prev === carId ? null : carId))
   }, [])
 
   const handleToggle = useCallback(async (id: number, owned: boolean) => {
@@ -1066,28 +640,19 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                   </thead>
                   <tbody>
                     {sortedCars.map((car) => (
-                      <Fragment key={car.id}>
-                        <CarRow
-                          car={car}
-                          onToggleOwned={handleToggle}
-                          onTogglePin={handleTogglePin}
-                          isPending={pendingIds.has(car.id)}
-                          isExpanded={expandedCarId === car.id}
-                          onCardClick={(c) => toggleExpanded(c.id)}
-                          showAddedAt={sort.key === 'addedAt'}
-                          showAddedAtColumn
-                          hideGarage
-                          statsMode={tableMode === 'stats'}
-                        />
-                        {expandedCarId === car.id && (
-                          <ExpandedRow
-                            car={car}
-                            onTagDetailsChange={handleTagDetailsChange}
-                            onNotesChange={handleNotesChange}
-                            onStatsChange={handleStatsChange}
-                          />
-                        )}
-                      </Fragment>
+                      <CarRow
+                        key={car.id}
+                        car={car}
+                        onToggleOwned={handleToggle}
+                        onTogglePin={handleTogglePin}
+                        isPending={pendingIds.has(car.id)}
+                        isExpanded={drawerCar?.id === car.id}
+                        onCardClick={setDrawerCar}
+                        showAddedAt={sort.key === 'addedAt'}
+                        showAddedAtColumn
+                        hideGarage
+                        statsMode={tableMode === 'stats'}
+                      />
                     ))}
                   </tbody>
                 </table>
@@ -1098,20 +663,6 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
       )}
       </div>{/* end main content column */}
     </div>
-
-    {/* Mobile bottom sheet — shown when a list-view row is expanded on small screens */}
-    {expandedCarId !== null && (() => {
-      const expandedCar = sortedCars.find((c) => c.id === expandedCarId)
-      return expandedCar ? (
-        <MobileExpandedSheet
-          car={expandedCar}
-          onClose={() => setExpandedCarId(null)}
-          onTagDetailsChange={handleTagDetailsChange}
-          onNotesChange={handleNotesChange}
-          onStatsChange={handleStatsChange}
-        />
-      ) : null
-    })()}
 
     <GarageDrawer
       car={drawerCar}

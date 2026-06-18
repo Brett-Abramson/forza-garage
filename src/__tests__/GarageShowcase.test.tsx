@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GarageShowcase from '@/components/GarageShowcase'
 import { NavControlsProvider, useNavControls } from '@/context/NavControls'
@@ -7,7 +7,6 @@ import { GridIcon, TableIcon } from '@/components/table-ui'
 import { RACE_TYPES } from '@/lib/races'
 import type { Car } from '@/types/car'
 import { useSearchParams } from 'next/navigation'
-import { setTags } from '@/server/actions/garage'
 
 // Mutations go through Server Actions, not fetch — mock the action module.
 vi.mock('@/server/actions/garage', () => ({
@@ -329,12 +328,12 @@ describe('GarageShowcase — drawer', () => {
     expect(container.querySelector('.translate-x-0')).toBeTruthy()
   })
 
-  it('clicking a row in table view does not open the drawer', async () => {
+  it('clicking a row in table view opens the drawer', async () => {
     const user = userEvent.setup()
     const { container } = renderShowcase(mockCars)
     const row = screen.getByText('911 GT3').closest('tr')!
     await user.click(row)
-    expect(container.querySelector('.translate-x-0')).toBeFalsy()
+    expect(container.querySelector('.translate-x-0')).toBeTruthy()
   })
 
   it('empty garage shows a link to the car database', () => {
@@ -343,184 +342,12 @@ describe('GarageShowcase — drawer', () => {
   })
 })
 
-// ─── List view row expansion ──────────────────────────────────────────────────
-// NOTE: In jsdom, Tailwind breakpoint classes (hidden sm:table-row, sm:hidden)
-// don't apply CSS — both the desktop <tr> and the mobile bottom sheet render
-// their content into the DOM simultaneously. Tests use within(tbody) to target
-// the desktop inline row exclusively and avoid "multiple elements" errors.
+// ─── Table view ───────────────────────────────────────────────────────────────
 
-describe('GarageShowcase — list view expansion', () => {
+describe('GarageShowcase — table view', () => {
   it('default view is table', () => {
     const { container } = renderShowcase(mockCars)
     expect(container.querySelector('table')).toBeInTheDocument()
-  })
-
-  it('clicking a row expands it to show tags and notes', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByPlaceholderText('Notes...')).toBeInTheDocument()
-  })
-
-  it('expanded row shows the car\'s current tags as removable pills', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    // 911 GT3 now has auto: asphalt, street racing; user: long straights, technical
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByRole('button', { name: 'Remove asphalt' })).toBeInTheDocument()
-    expect(within(tbody).getByRole('button', { name: 'Remove technical' })).toBeInTheDocument()
-  })
-
-  it('expanded row shows available tags as add buttons', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    // 'drift' is not on the 911 GT3, so it should appear as an add button
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByRole('button', { name: '+ drift' })).toBeInTheDocument()
-  })
-
-  it('clicking the same row again collapses it', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    const row = screen.getByText('911 GT3').closest('tr')!
-    await user.click(row)
-    await user.click(row)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).queryByPlaceholderText('Notes...')).not.toBeInTheDocument()
-  })
-
-  it('only one row is expanded at a time', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    await user.click(screen.getByText('Silvia').closest('tr')!)
-    // One ExpandedRow <tr> in the tbody (desktop); Silvia's, not 911 GT3's
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getAllByPlaceholderText('Notes...').length).toBe(1)
-  })
-
-  it('adding a tag calls the setTags action', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    await user.click(within(tbody).getByRole('button', { name: '+ drift' }))
-    expect(setTags).toHaveBeenCalledWith(
-      1,
-      expect.objectContaining({ user: expect.arrayContaining(['drift']) })
-    )
-  })
-})
-
-// ─── Expanded row — tuning content ───────────────────────────────────────────
-
-describe('GarageShowcase — expanded row tuning content', () => {
-  it('shows a "Best for" race type line when the car has matching tags', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    // Modern Sports Cars + asphalt + street racing + long straights + technical → Road Racing (tie-break)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByText(/Best for:/i)).toBeInTheDocument()
-    expect(within(tbody).getByRole('link', { name: /Road Racing/i })).toBeInTheDocument()
-  })
-
-  it('shows the tuning guide philosophy in the expanded row', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByText(/most varied division for road racing/i)).toBeInTheDocument()
-  })
-
-  it('shows the spectrum note in the expanded row', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByText(/lightweight naturally-aspirated RWD coupes/i)).toBeInTheDocument()
-  })
-
-  it('shows the Watch out callout in the expanded row', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByText(/AWD conversion without checking PI cost/i)).toBeInTheDocument()
-  })
-
-  it('shows division fallback guide when no race-type-specific guide exists', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    // Silvia: Retro Sports Cars + drift/asphalt → best match is Drift Zones
-    // No tuning guide exists for Drift Zones + Retro Sports Cars,
-    // but the division fallback (Sports Cars) should appear instead
-    await user.click(screen.getByText('Silvia').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).queryByText(/coming soon/i)).not.toBeInTheDocument()
-    expect(within(tbody).getByText(/sports cars are the most versatile/i)).toBeInTheDocument()
-  })
-})
-
-// ─── Expanded row — stat editor ───────────────────────────────────────────────
-
-describe('GarageShowcase — expanded row stat editor', () => {
-  it('"Edit stats" button renders in an expanded owned-car row', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByRole('button', { name: 'Edit stats' })).toBeInTheDocument()
-  })
-
-  it('clicking "Edit stats" reveals the stat input fields', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    // Inputs should not be present before toggling
-    expect(within(tbody).queryByRole('spinbutton', { name: /Speed/i })).not.toBeInTheDocument()
-    await user.click(within(tbody).getByRole('button', { name: 'Edit stats' }))
-    expect(within(tbody).getByRole('spinbutton', { name: /Speed/i })).toBeInTheDocument()
-  })
-
-  it('clicking "Hide" collapses the stat inputs', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    await user.click(within(tbody).getByRole('button', { name: 'Edit stats' }))
-    await user.click(within(tbody).getByRole('button', { name: 'Hide' }))
-    expect(within(tbody).queryByRole('spinbutton', { name: /Speed/i })).not.toBeInTheDocument()
-  })
-
-  it('"edited" badge is absent when car has no overrides', async () => {
-    const user = userEvent.setup()
-    const { container } = renderShowcase(mockCars)
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).queryByText('edited')).not.toBeInTheDocument()
-  })
-
-  it('"edited" badge appears when car has active overrides', async () => {
-    const carWithOverride: Car = { ...mockCars[0], statSpeedOverride: 9.5 }
-    const user = userEvent.setup()
-    const { container } = renderShowcase([carWithOverride, mockCars[1], mockCars[2]])
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByText('edited')).toBeInTheDocument()
-  })
-
-  it('"Reset to stock" button appears when car has active overrides', async () => {
-    const carWithOverride: Car = { ...mockCars[0], statSpeedOverride: 9.5 }
-    const user = userEvent.setup()
-    const { container } = renderShowcase([carWithOverride, mockCars[1], mockCars[2]])
-    await user.click(screen.getByText('911 GT3').closest('tr')!)
-    const tbody = container.querySelector('tbody')!
-    expect(within(tbody).getByRole('button', { name: 'Reset to stock' })).toBeInTheDocument()
   })
 })
 
