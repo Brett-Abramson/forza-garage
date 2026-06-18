@@ -4,6 +4,10 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
+  // Neon's pooled endpoint natively supports the session-level commands and
+  // prepared statements Prisma's migration engine needs, so a single pooled
+  // URL serves both runtime queries and `prisma migrate` — no separate
+  // directUrl required. (Add ?pgbouncer=true&connection_limit=1 for serverless.)
   url       = env("DATABASE_URL")
 }
 
@@ -110,4 +114,7 @@ model CarTag {
   userGarage    UserGarage @relation(fields: [userGarageId], references: [id], onDelete: Cascade)
   tag           String
   source        String     @default("user") // "auto" | "user"
+
+  // Every tag read (include) and tag edit (deleteMany) filters on this FK.
+  @@index([userGarageId])
 }

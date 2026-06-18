@@ -1,5 +1,10 @@
-import { prisma } from '../src/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import { getAutoTags } from '../src/lib/autotags'
+
+// Standalone CLI script (run via tsx) — instantiate its own client like the
+// sibling scripts (seed.ts, restore-garage.ts). It must not import the app's
+// server-only Prisma singleton, which would throw outside the RSC graph.
+const prisma = new PrismaClient()
 
 async function main() {
   const entries = await prisma.userGarage.findMany({

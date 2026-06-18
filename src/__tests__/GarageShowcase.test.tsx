@@ -7,6 +7,17 @@ import { GridIcon, TableIcon } from '@/components/table-ui'
 import { RACE_TYPES } from '@/lib/races'
 import type { Car } from '@/types/car'
 import { useSearchParams } from 'next/navigation'
+import { setTags } from '@/server/actions/garage'
+
+// Mutations go through Server Actions, not fetch — mock the action module.
+vi.mock('@/server/actions/garage', () => ({
+  setOwned:    vi.fn().mockResolvedValue({ ok: true, car: { id: 1, owned: false } }),
+  setTags:     vi.fn().mockResolvedValue({ ok: true }),
+  setNotes:    vi.fn().mockResolvedValue({ ok: true }),
+  tuneCar:     vi.fn().mockResolvedValue({ ok: true }),
+  resetTuning: vi.fn().mockResolvedValue({ ok: true, car: null }),
+  setPinned:   vi.fn().mockResolvedValue({ ok: true }),
+}))
 
 function NavToggle() {
   const { controls } = useNavControls()
@@ -76,6 +87,7 @@ const mockCars: Car[] = [
 ]
 
 beforeEach(() => {
+  vi.clearAllMocks()
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }))
 })
 
@@ -390,15 +402,15 @@ describe('GarageShowcase — list view expansion', () => {
     expect(within(tbody).getAllByPlaceholderText('Notes...').length).toBe(1)
   })
 
-  it('adding a tag calls the garage API', async () => {
+  it('adding a tag calls the setTags action', async () => {
     const user = userEvent.setup()
     const { container } = renderShowcase(mockCars)
     await user.click(screen.getByText('911 GT3').closest('tr')!)
     const tbody = container.querySelector('tbody')!
     await user.click(within(tbody).getByRole('button', { name: '+ drift' }))
-    expect(fetch).toHaveBeenCalledWith(
-      '/api/garage/1',
-      expect.objectContaining({ method: 'PATCH' })
+    expect(setTags).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ user: expect.arrayContaining(['drift']) })
     )
   })
 })

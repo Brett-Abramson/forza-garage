@@ -42,6 +42,7 @@ import GarageDrawer from './GarageDrawer'
 import StatBars from './StatBars'
 import { getStatCallouts } from '@/lib/statCallouts'
 import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS, STAT_OVERRIDE_MAP, hasOverrides, resolveEffectiveStats } from '@/lib/statUtils'
+import { setOwned, setTags, setNotes as persistNotes, tuneCar, resetTuning, setPinned } from '@/server/actions/garage'
 import Link from 'next/link'
 import BackToTop from './BackToTop'
 import FilterSidebar from './FilterSidebar'
@@ -129,33 +130,21 @@ function ExpandedContent({
       ...nextUser.map((tag) => ({ tag, source: 'user' })),
     ]
     onTagDetailsChange(car.id, nextDetails)
-    await fetch(`/api/garage/${car.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tags: { auto: nextAuto, user: nextUser } }),
-    })
+    await setTags(car.id, { auto: nextAuto, user: nextUser })
   }
 
   async function saveNotes() {
     if (!notesDirty) return
     setNotesDirty(false)
     onNotesChange(car.id, notes)
-    await fetch(`/api/garage/${car.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notes }),
-    })
+    await persistNotes(car.id, notes)
   }
 
   async function saveStats() {
     if (!statsDirty) return
     setSavingStats(true)
     const payload = statsToPayload(stats)
-    await fetch(`/api/cars/${car.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
+    await tuneCar(car.id, payload)
     const overrideUpdates = Object.fromEntries(
       Object.entries(STAT_OVERRIDE_MAP).map(([field, overrideField]) => [overrideField, payload[field] ?? null])
     ) as Partial<Car>
@@ -165,14 +154,9 @@ function ExpandedContent({
   }
 
   async function resetStats() {
-    const nullPayload = Object.fromEntries(Object.keys(STAT_OVERRIDE_MAP).map((k) => [k, null]))
-    await fetch(`/api/cars/${car.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(nullPayload),
-    })
-    const res = await fetch(`/api/cars/${car.id}`)
-    const base = await res.json()
+    const res = await resetTuning(car.id)
+    if (!res.ok) return
+    const base = res.car as unknown as Record<string, number | string | null>
     const overrideClears = Object.fromEntries(
       Object.values(STAT_OVERRIDE_MAP).map((k) => [k, null])
     ) as Partial<Car>
@@ -737,12 +721,8 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
     if (owned) return
     setPendingIds((s) => new Set(s).add(id))
     try {
-      const res = await fetch(`/api/cars/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owned: false }),
-      })
-      if (!res.ok) throw new Error('Failed')
+      const res = await setOwned(id, false)
+      if (!res.ok) throw new Error(res.error)
       setCars((prev) => prev.filter((c) => c.id !== id))
     } catch (err) {
       console.error(err)
@@ -760,12 +740,8 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
     // Optimistic update
     setCars((prev) => prev.map((c) => (c.id === id ? { ...c, pinned } : c)))
     try {
-      const res = await fetch(`/api/garage/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pinned }),
-      })
-      if (!res.ok) throw new Error('Failed')
+      const res = await setPinned(id, pinned)
+      if (!res.ok) throw new Error(res.error)
     } catch (err) {
       // Revert on failure
       setCars((prev) => prev.map((c) => (c.id === id ? { ...c, pinned: !pinned } : c)))

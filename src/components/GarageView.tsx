@@ -5,6 +5,7 @@ import { useWindowVirtualizer, useVirtualizer } from '@tanstack/react-virtual'
 import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
 import { Car, FilterState } from '@/types/car'
+import { setOwned } from '@/server/actions/garage'
 import { CAR_TAGS } from '@/lib/tags'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
 import { RACE_TYPES } from '@/lib/races'
@@ -312,13 +313,9 @@ export default function GarageView({ initialCars }: Props) {
   const toggleOwned = useCallback(async (id: number, owned: boolean) => {
     setPendingIds((s) => new Set(s).add(id))
     try {
-      const res = await fetch(`/api/cars/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owned }),
-      })
-      if (!res.ok) throw new Error('Failed to update')
-      const updated: Car = await res.json()
+      const res = await setOwned(id, owned)
+      if (!res.ok) throw new Error(res.error)
+      const updated = res.car
       setCars((prev) => prev.map((c) => (c.id === updated.id ? updated : c)))
       setDrawerCar((prev) => (prev?.id === updated.id ? { ...prev, ...updated } : prev))
     } catch (err) {

@@ -1,8 +1,9 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { auth } from '@clerk/nextjs/server'
-import { unstable_cache } from 'next/cache'
-import { prisma } from '@/lib/prisma'
+import { getCarCount } from '@/server/dal/cars'
+import { getGarageStats } from '@/server/dal/garage'
+import { getFeaturedCars } from '@/server/dal/meta'
 import { PI_CLASS_COLORS } from '@/types/car'
 import { FujiSvg, BlossomSvg, ToriiSvg } from '@/components/JapanDecor'
 import type { MetaCarEntry } from '@/components/MetaCarousel'
@@ -12,76 +13,12 @@ export const dynamic = 'force-dynamic'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface ClassCount { piClass: string; _count_id: number }
-
 interface PinnedCar {
   car: { id: number; make: string; model: string; year: number; piClass: string; piRating: number; division: string }
 }
 
-interface RecentCar extends PinnedCar {
-  addedAt: Date
-}
-
-// Cached for 24 hours — CarMeta changes infrequently; purge with revalidateTag('featured-cars')
-const getFeaturedCars = unstable_cache(
-  async (): Promise<MetaCarEntry[]> => {
-    const rows = await prisma.carMeta.findMany({
-      where: { active: true },
-      orderBy: { recordedAt: 'desc' },
-      include: {
-        car: { select: { id: true, make: true, model: true, year: true, piClass: true, piRating: true } },
-      },
-    })
-    return rows.map((r) => ({
-      id: r.id,
-      carId: r.car.id,
-      make: r.car.make,
-      model: r.car.model,
-      year: r.car.year,
-      piClass: r.car.piClass,
-      piRating: r.car.piRating,
-      raceType: r.raceType,
-      rank: r.rank,
-      label: r.label,
-      notes: r.notes,
-      source: r.source,
-    }))
-  },
-  ['featured-cars'],
-  { tags: ['featured-cars'], revalidate: 86400 },
-)
-
-// ── Data fetching ─────────────────────────────────────────────────────────────
-
-async function getGarageStats(userId: string) {
-  const [total, byClass, pinned, recent] = await Promise.all([
-    prisma.userGarage.count({ where: { userId } }),
-
-    prisma.$queryRaw<ClassCount[]>`
-      SELECT c."piClass", COUNT(ug.id)::int AS "_count_id"
-      FROM "UserGarage" ug
-      JOIN "Car" c ON c.id = ug."carId"
-      WHERE ug."userId" = ${userId}
-      GROUP BY c."piClass"
-    `,
-
-    prisma.userGarage.findMany({
-      where: { userId, pinned: true },
-      take: 2,
-      include: { car: { select: { id: true, make: true, model: true, year: true, piClass: true, piRating: true, division: true } } },
-      orderBy: { addedAt: 'desc' },
-    }) as Promise<PinnedCar[]>,
-
-    prisma.userGarage.findMany({
-      where: { userId },
-      take: 3,
-      include: { car: { select: { id: true, make: true, model: true, year: true, piClass: true, piRating: true, division: true } } },
-      orderBy: { addedAt: 'desc' },
-    }) as Promise<RecentCar[]>,
-  ])
-
-  return { total, byClass, pinned, recent }
-}
+// Data fetching (getGarageStats, getFeaturedCars) lives in the DAL —
+// see @/server/dal/garage and @/server/dal/meta.
 
 // ── Async server component for the stats-dependent dashboard ─────────────────
 // Wrapped in Suspense so the hero renders at TTFB while these queries run.
@@ -272,7 +209,7 @@ export default async function LandingPage() {
   // fetch are independent and can all run at the same time.
   const [{ userId }, carCount, featuredCars] = await Promise.all([
     auth(),
-    prisma.car.count(),
+    getCarCount(),
     getFeaturedCars(),
   ])
 

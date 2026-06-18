@@ -12,6 +12,7 @@ import { getGroupForDivision } from '@/lib/divisionGroups'
 import StatBars from './StatBars'
 import { getStatCallouts } from '@/lib/statCallouts'
 import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS, resolveEffectiveStats, STAT_OVERRIDE_MAP, hasOverrides } from '@/lib/statUtils'
+import { setTags, setNotes as persistNotes, tuneCar, resetTuning } from '@/server/actions/garage'
 
 type TagDetail = { tag: string; source: string }
 
@@ -113,24 +114,6 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  async function patchGarage(body: Record<string, unknown>) {
-    if (!displayCar) return
-    await fetch(`/api/garage/${displayCar.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-  }
-
-  async function patchCar(body: Record<string, unknown>) {
-    if (!displayCar) return
-    await fetch(`/api/cars/${displayCar.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-  }
-
   async function patchTags(nextAuto: string[], nextUser: string[]) {
     setAutoTags(nextAuto)
     setUserTags(nextUser)
@@ -139,7 +122,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
       ...nextUser.map((t) => ({ tag: t, source: 'user' })),
     ]
     onTagDetailsChange?.(displayCar!.id, nextDetails)
-    await patchGarage({ tags: { auto: nextAuto, user: nextUser } })
+    await setTags(displayCar!.id, { auto: nextAuto, user: nextUser })
   }
 
   async function addTag(tag: string) {
@@ -162,9 +145,9 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
   }
 
   async function saveNotes() {
-    if (!notesDirty) return
+    if (!notesDirty || !displayCar) return
     setSaving(true)
-    await patchGarage({ notes })
+    await persistNotes(displayCar.id, notes)
     setSaving(false)
     setNotesDirty(false)
   }
@@ -173,7 +156,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
     if (!statsDirty || !displayCar) return
     setSavingStats(true)
     const payload = statsToPayload(stats)
-    await patchCar(payload)
+    await tuneCar(displayCar.id, payload)
     const overrideUpdates = Object.fromEntries(
       Object.entries(STAT_OVERRIDE_MAP).map(([field, overrideField]) => [overrideField, payload[field] ?? null])
     ) as Partial<Car>
@@ -185,10 +168,9 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
 
   async function resetStats() {
     if (!displayCar) return
-    const nullPayload = Object.fromEntries(Object.keys(STAT_OVERRIDE_MAP).map((k) => [k, null]))
-    await patchCar(nullPayload)
-    const res = await fetch(`/api/cars/${displayCar.id}`)
-    const base = await res.json()
+    const res = await resetTuning(displayCar.id)
+    if (!res.ok) return
+    const base = res.car as unknown as Record<string, number | string | null>
     const overrideClears = Object.fromEntries(
       Object.values(STAT_OVERRIDE_MAP).map((k) => [k, null])
     ) as Partial<Car>

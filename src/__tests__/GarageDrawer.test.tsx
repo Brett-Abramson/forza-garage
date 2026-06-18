@@ -4,6 +4,19 @@ import userEvent from '@testing-library/user-event'
 import GarageDrawer from '@/components/GarageDrawer'
 import type { Car } from '@/types/car'
 import { CAR_TAGS } from '@/lib/tags'
+import { setTags, setNotes, resetTuning } from '@/server/actions/garage'
+
+// Mutations go through Server Actions, not fetch. Mock the action module so we
+// can assert calls without a server. The drawer still uses fetch for the
+// read-only spec GET (/api/cars/:id) on open — that stays real (stubbed below).
+vi.mock('@/server/actions/garage', () => ({
+  setTags:     vi.fn().mockResolvedValue({ ok: true }),
+  setNotes:    vi.fn().mockResolvedValue({ ok: true }),
+  tuneCar:     vi.fn().mockResolvedValue({ ok: true }),
+  resetTuning: vi.fn().mockResolvedValue({ ok: true, car: null }),
+  setOwned:    vi.fn().mockResolvedValue({ ok: true }),
+  setPinned:   vi.fn().mockResolvedValue({ ok: true }),
+}))
 
 // baseCar: Modern Sports Cars, auto-tags asphalt + street racing (v2 mapping),
 // plus user tags long straights + technical so Road Racing wins by stable-sort
@@ -50,6 +63,7 @@ function renderDrawer(
 }
 
 beforeEach(() => {
+  vi.clearAllMocks()
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) }))
 })
 
@@ -164,10 +178,10 @@ describe('GarageDrawer — tag display', () => {
         { tag: 'technical', source: 'user' },
       ])
     )
-    expect(fetch).toHaveBeenCalledWith(
-      `/api/garage/${baseCar.id}`,
-      expect.objectContaining({ method: 'PATCH' })
-    )
+    expect(setTags).toHaveBeenCalledWith(baseCar.id, {
+      auto: ['asphalt', 'street racing'],
+      user: ['technical'],
+    })
   })
 })
 
@@ -209,10 +223,10 @@ describe('GarageDrawer — add tags', () => {
         { tag: 'dirt',           source: 'user' },
       ])
     )
-    expect(fetch).toHaveBeenCalledWith(
-      `/api/garage/${baseCar.id}`,
-      expect.objectContaining({ method: 'PATCH' })
-    )
+    expect(setTags).toHaveBeenCalledWith(baseCar.id, {
+      auto: ['asphalt', 'street racing'],
+      user: ['long straights', 'technical', 'dirt'],
+    })
   })
 })
 
@@ -308,13 +322,7 @@ describe('GarageDrawer — notes', () => {
     await user.click(textarea)
     await user.type(textarea, 'lap time notes')
     await user.tab()
-    expect(fetch).toHaveBeenCalledWith(
-      `/api/garage/${baseCar.id}`,
-      expect.objectContaining({
-        method: 'PATCH',
-        body: expect.stringContaining('notes'),
-      })
-    )
+    expect(setNotes).toHaveBeenCalledWith(baseCar.id, 'lap time notes')
   })
 
   it('does not call fetch on blur when notes have not changed', async () => {
@@ -422,31 +430,24 @@ describe('GarageDrawer — stat overrides', () => {
 
   // ── Reset to stock ────────────────────────────────────────────────────────
 
-  it('clicking "Reset to stock" sends PATCH with all stat fields as null', async () => {
+  it('clicking "Reset to stock" calls the resetTuning action for the car', async () => {
+    vi.mocked(resetTuning).mockResolvedValue({ ok: true, car: canonicalCar as Car })
     vi.stubGlobal('fetch', vi.fn().mockImplementation(fetchImpl))
     const user = userEvent.setup()
     renderDrawer(carWithOverride)
 
-    // Wait for the drawer's lazy-fetch to complete before interacting
+    // Wait for the drawer's lazy spec-fetch to complete before interacting
     await waitFor(() => expect(fetch).toHaveBeenCalledWith(`/api/cars/${carWithOverride.id}`))
-    vi.mocked(fetch).mockClear()
 
     await user.click(screen.getByRole('button', { name: /Reset to stock/i }))
 
     await waitFor(() => {
-      const patchCall = vi.mocked(fetch).mock.calls.find(
-        ([, opts]) => (opts as RequestInit)?.method === 'PATCH'
-      )
-      expect(patchCall).toBeDefined()
-      const body = JSON.parse((patchCall![1] as RequestInit).body as string)
-      expect(body.statSpeed).toBeNull()
-      expect(body.statHandling).toBeNull()
-      expect(body.powerHp).toBeNull()
-      expect(body.rarity).toBeNull()
+      expect(resetTuning).toHaveBeenCalledWith(carWithOverride.id)
     })
   })
 
-  it('clicking "Reset to stock" re-fetches canonical Car values from the API', async () => {
+  it('clicking "Reset to stock" does not issue a second canonical GET (action returns the car)', async () => {
+    vi.mocked(resetTuning).mockResolvedValue({ ok: true, car: canonicalCar as Car })
     vi.stubGlobal('fetch', vi.fn().mockImplementation(fetchImpl))
     const user = userEvent.setup()
     renderDrawer(carWithOverride)
@@ -456,16 +457,13 @@ describe('GarageDrawer — stat overrides', () => {
 
     await user.click(screen.getByRole('button', { name: /Reset to stock/i }))
 
-    await waitFor(() => {
-      const getCalls = vi.mocked(fetch).mock.calls.filter(
-        ([, opts]) => !opts || (opts as RequestInit).method !== 'PATCH'
-      )
-      expect(getCalls.length).toBeGreaterThanOrEqual(1)
-      expect(getCalls[0][0]).toBe(`/api/cars/${carWithOverride.id}`)
-    })
+    await waitFor(() => expect(resetTuning).toHaveBeenCalledWith(carWithOverride.id))
+    // Canonical values come straight from the action result — no follow-up fetch.
+    expect(fetch).not.toHaveBeenCalled()
   })
 
   it('stat inputs revert to canonical values after reset', async () => {
+    vi.mocked(resetTuning).mockResolvedValue({ ok: true, car: canonicalCar as Car })
     vi.stubGlobal('fetch', vi.fn().mockImplementation(fetchImpl))
     const user = userEvent.setup()
     renderDrawer(carWithOverride)
