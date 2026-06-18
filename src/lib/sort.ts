@@ -1,7 +1,7 @@
 import { Car, PI_CLASS_ORDER } from '@/types/car'
 
 export type SortKey =
-  | 'piClass' | 'piRating' | 'year' | 'make' | 'model' | 'division' | 'drivetrain' | 'country' | 'source' | 'value' | 'addedAt'
+  | 'piClass' | 'piRating' | 'year' | 'make' | 'model' | 'division' | 'drivetrain' | 'country' | 'source' | 'value' | 'addedAt' | 'owned'
   | 'statSpeed' | 'statHandling' | 'statAcceleration' | 'statLaunch' | 'statBraking' | 'statOffroad'
   | 'powerHp' | 'torqueFtLb' | 'weightLb' | 'frontWeight' | 'displacementL'
 export type SortDir = 'asc' | 'desc'
@@ -25,6 +25,9 @@ export function compareRows(a: Car, b: Car, key: SortKey, dir: SortDir): number 
   let result = 0
   if (key === 'piClass') {
     result = (PI_CLASS_INDEX[a.piClass] ?? -1) - (PI_CLASS_INDEX[b.piClass] ?? -1)
+  } else if (key === 'owned') {
+    // Owned cars first on the natural (asc) click — first tap groups your garage at the top.
+    result = (b.owned ? 1 : 0) - (a.owned ? 1 : 0)
   } else if (key === 'piRating' || key === 'year') {
     result = a[key] - b[key]
   } else if (key === 'value') {

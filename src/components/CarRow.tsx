@@ -7,6 +7,7 @@ import { hasOverrides } from '@/lib/statUtils'
 import { RaceIcon } from '@/components/RaceIcons'
 import { formatAddedAt } from '@/lib/sort'
 import { STICKY_COL_STATS } from './table-ui'
+import TruncatedText from './TruncatedText'
 
 interface Props {
   car: Car
@@ -82,7 +83,7 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
         </td>
         <td className="py-2.5 px-2 bg-fh-bg sticky z-[1]" style={{ left: modelLeft, minWidth: SS.model }}>
           <div className="flex items-center gap-1 overflow-hidden" style={{ maxWidth: SS.model - 16 }}>
-            <span className="overflow-hidden whitespace-nowrap text-ellipsis">{car.model}</span>
+            <TruncatedText text={car.model} className="flex-1 min-w-0" />
             {hasOverrides(car) && (
               <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-fh-red" title="Stats edited" />
             )}
@@ -129,8 +130,8 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
       </td>
       {(!colVis || colVis.piYear) && <td className="py-2.5 px-3 text-fh-dark-2 tabular-nums overflow-hidden whitespace-nowrap text-ellipsis">{car.piRating}</td>}
       {(!colVis || colVis.piYear) && <td className="py-2.5 px-3 text-fh-dark-2 overflow-hidden whitespace-nowrap text-ellipsis">{car.year}</td>}
-      <td className="py-2.5 px-3 font-medium overflow-hidden whitespace-nowrap text-ellipsis">{car.make}</td>
-      <td className="py-2.5 px-3 overflow-hidden whitespace-nowrap text-ellipsis">{car.model}</td>
+      <td className="py-2.5 px-3 font-medium overflow-hidden"><TruncatedText text={car.make} /></td>
+      <td className="py-2.5 px-3 overflow-hidden"><TruncatedText text={car.model} /></td>
       {(!colVis || colVis.division) && (
         <td className={`py-2.5 px-3 text-fh-dark-2 overflow-hidden${!colVis ? ' hidden md:table-cell' : ''}`}>
           <div className="truncate">{car.division}</div>

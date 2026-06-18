@@ -492,13 +492,13 @@ export default function GarageView({ initialCars }: Props) {
                       {colPiYear && <SortTh label="PI"       sortKey="piRating"   sort={sort} onSort={handleSort} style={{ width: 52 }} />}
                       {colPiYear && <SortTh label="Year"     sortKey="year"       sort={sort} onSort={handleSort} style={{ width: 58 }} />}
                       <SortTh label="Make"     sortKey="make"       sort={sort} onSort={handleSort} style={{ width: 100 }} />
-                      <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} />
+                      <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} style={{ width: 150 }} />
                       {colDivision     && <SortTh label="Division" sortKey="division"   sort={sort} onSort={handleSort} style={{ width: 110 }} />}
                       {colDriveCountry && <SortTh label="Drive"    sortKey="drivetrain" sort={sort} onSort={handleSort} style={{ width: 72 }} />}
                       {colDriveCountry && <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} style={{ width: 80 }} />}
                       {colSourceValue  && <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} style={{ width: 72 }} />}
                       {colSourceValue  && <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} style={{ width: 90 }} />}
-                      <th className="text-left py-2.5 px-3 text-fh-muted" style={{ width: 90 }}>Garage</th>
+                      <SortTh label="Garage"   sortKey="owned"      sort={sort} onSort={handleSort} style={{ width: 90 }} />
                     </>
                   ) : (
                     <>
