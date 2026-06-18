@@ -70,6 +70,65 @@ export function SortTh({
   )
 }
 
+// Every sortable column in standard table mode, in header order. Used by the
+// mobile SortSelect so columns that get dropped at narrow widths stay sortable.
+export const STANDARD_SORT_COLUMNS: { key: SortKey; label: string }[] = [
+  { key: 'piClass',    label: 'Class'    },
+  { key: 'piRating',   label: 'PI'       },
+  { key: 'year',       label: 'Year'     },
+  { key: 'make',       label: 'Make'     },
+  { key: 'model',      label: 'Model'    },
+  { key: 'division',   label: 'Division' },
+  { key: 'drivetrain', label: 'Drive'    },
+  { key: 'country',    label: 'Country'  },
+  { key: 'source',     label: 'Source'   },
+  { key: 'value',      label: 'Value'    },
+  { key: 'owned',      label: 'Garage'   },
+]
+
+/**
+ * Compact sort control for narrow screens: a column picker plus a direction
+ * toggle. Lets users sort by columns that are hidden when the table drops them
+ * at small widths, since their clickable headers aren't on screen.
+ */
+export function SortSelect({
+  columns,
+  sort,
+  onSelect,
+  onToggleDir,
+}: {
+  columns: { key: SortKey; label: string }[]
+  sort: SortState
+  onSelect: (key: SortKey | '') => void
+  onToggleDir: () => void
+}) {
+  return (
+    <div className="flex items-center gap-1.5 shrink-0">
+      <span className="text-xs text-fh-muted">Sort</span>
+      <select
+        value={sort.key ?? ''}
+        onChange={(e) => onSelect(e.target.value as SortKey | '')}
+        aria-label="Sort column"
+        className="bg-fh-panel border border-fh-border rounded-lg text-xs font-medium text-fh-dark-2 px-2 py-1.5 focus:outline-none focus:border-fh-red"
+      >
+        <option value="">Default</option>
+        {columns.map((c) => (
+          <option key={c.key} value={c.key}>{c.label}</option>
+        ))}
+      </select>
+      <button
+        onClick={onToggleDir}
+        disabled={!sort.key}
+        aria-label={sort.dir === 'asc' ? 'Sort ascending' : 'Sort descending'}
+        title={sort.dir === 'asc' ? 'Ascending' : 'Descending'}
+        className="bg-fh-panel border border-fh-border rounded-lg text-xs px-2 py-1.5 text-fh-muted hover:text-fh-dark-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        {sort.dir === 'asc' ? '▲' : '▼'}
+      </button>
+    </div>
+  )
+}
+
 export function GridIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">

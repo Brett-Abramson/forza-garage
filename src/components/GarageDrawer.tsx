@@ -291,6 +291,11 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                     <span className="text-fh-dark-2 text-xs">{displayCar.drivetrain}</span>
                   </Stat>
                 )}
+                {displayCar.value != null && (
+                  <Stat label="Value">
+                    <span className="text-fh-dark-2 tabular-nums text-xs">{displayCar.value.toLocaleString()} Cr</span>
+                  </Stat>
+                )}
                 {displayCar.engineType && (
                   <Stat label="Engine">
                     <span className="text-fh-dark-2 text-xs">{displayCar.engineType}</span>

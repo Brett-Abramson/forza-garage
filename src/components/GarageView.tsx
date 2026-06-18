@@ -12,7 +12,7 @@ import { RACE_TYPES } from '@/lib/races'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
 import GarageDrawer from './GarageDrawer'
-import { SortTh, GridIcon, TableIcon, TableModeToggle, STICKY_COL, STICKY_COL_STATS, type TableMode } from './table-ui'
+import { SortTh, GridIcon, TableIcon, TableModeToggle, SortSelect, STANDARD_SORT_COLUMNS, STICKY_COL, STICKY_COL_STATS, type TableMode } from './table-ui'
 
 // Cumulative left offsets for stats-mode sticky header cells (View has no star col)
 const SC = STICKY_COL
@@ -281,6 +281,15 @@ export default function GarageView({ initialCars }: Props) {
     }))
   }, [])
 
+  // Mobile SortSelect: picking a column sets it (asc by default); empty restores
+  // the default sort. The direction toggle flips asc/desc for the active column.
+  const handleSortSelect = useCallback((key: SortKey | '') => {
+    setSort(key === '' ? { key: null, dir: 'desc' } : { key, dir: 'asc' })
+  }, [])
+  const toggleSortDir = useCallback(() => {
+    setSort((prev) => ({ ...prev, dir: prev.dir === 'asc' ? 'desc' : 'asc' }))
+  }, [])
+
   const handleGroupChange = useCallback((groupId: string) => {
     setSelectedGroupIds((prev) => {
       const next = prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
@@ -352,6 +361,9 @@ export default function GarageView({ initialCars }: Props) {
     + (colDivision ? 1 : 0)
     + (colDriveCountry ? 2 : 0)
     + (colSourceValue ? 2 : 0)
+  // Some standard columns are dropped at this width — their headers aren't on
+  // screen, so offer the SortSelect to keep them sortable.
+  const hasHiddenStandardCols = !(colPiYear && colDivision && colDriveCountry && colSourceValue)
 
   // ── Grid virtual items ──────────────────────────────────────────────────────
   const gridItems    = gridVirtualizer.getVirtualItems()
@@ -469,11 +481,21 @@ export default function GarageView({ initialCars }: Props) {
 
         /* ── Table view (virtual, spacer rows) ───────────────────────────── */
         <>
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
             <div className="text-xs text-fh-muted tabular-nums">
               Showing {sortedCars.length} of {cars.length} cars
             </div>
-            <TableModeToggle mode={tableMode} setMode={setTableMode} />
+            <div className="flex items-center gap-2">
+              {tableMode === 'standard' && hasHiddenStandardCols && (
+                <SortSelect
+                  columns={STANDARD_SORT_COLUMNS}
+                  sort={sort}
+                  onSelect={handleSortSelect}
+                  onToggleDir={toggleSortDir}
+                />
+              )}
+              <TableModeToggle mode={tableMode} setMode={setTableMode} />
+            </div>
           </div>
           <div
             ref={tableContainerRef}
