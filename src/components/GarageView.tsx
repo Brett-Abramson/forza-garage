@@ -413,19 +413,21 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
       <header>
         <h1 className="text-2xl font-bold tracking-tight">Car Database</h1>
         <p className="text-fh-muted text-sm mt-1">
-          Browse all {initialCars.length} cars — mark the ones you own to add them to your garage.
+          {isSignedIn
+            ? `Browse all ${initialCars.length} cars — mark the ones you own to add them to your garage.`
+            : `Browse all ${initialCars.length} cars — sign in to track the ones you own.`}
         </p>
       </header>
 
-      {/* Owned progress bar */}
+      {/* Owned progress bar — softened (muted, not red) for signed-out visitors */}
       <div className="flex items-center gap-6 text-sm">
         <div>
-          <span className="text-2xl font-bold text-fh-red">{ownedCount}</span>
+          <span className={`text-2xl font-bold ${isSignedIn ? 'text-fh-red' : 'text-fh-muted-2'}`}>{ownedCount}</span>
           <span className="text-fh-muted ml-1.5">/ {cars.length} owned</span>
         </div>
         <div className="h-1.5 flex-1 bg-fh-panel-2 rounded-full overflow-hidden">
           <div
-            className="h-full bg-fh-red rounded-full transition-all duration-500"
+            className={`h-full rounded-full transition-all duration-500 ${isSignedIn ? 'bg-fh-red' : 'bg-fh-muted-2'}`}
             style={{ width: `${cars.length > 0 ? (ownedCount / cars.length) * 100 : 0}%` }}
           />
         </div>
@@ -476,7 +478,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
                   }}
                 >
                   <div className={pendingIds.has(car.id) ? 'opacity-60 pointer-events-none' : ''}>
-                    <CarCard car={car} onToggleOwned={toggleOwned} onCardClick={setDrawerCar} />
+                    <CarCard car={car} onToggleOwned={toggleOwned} onCardClick={setDrawerCar} isSignedIn={isSignedIn} />
                   </div>
                 </div>
               )
@@ -600,6 +602,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
       onClose={() => setDrawerCar(null)}
       onStatsChange={handleStatsChange}
       onToggleOwned={toggleOwned}
+      isSignedIn={isSignedIn}
     />
     <BackToTop />
     </>

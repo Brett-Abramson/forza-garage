@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type TouchEvent } from 'react'
+import { SignInButton } from '@clerk/nextjs'
 import type { Car } from '@/types/car'
 import { PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { RaceIcon } from '@/components/RaceIcons'
@@ -34,9 +35,11 @@ interface Props {
   onToggleOwned?: (id: number, owned: boolean) => Promise<void> | void
   /** Garage only — toggle pinned/favourite. When provided, a star button shows in the header. */
   onTogglePin?: (id: number, pinned: boolean) => void
+  /** When false, the add-to-garage button becomes a sign-in prompt. */
+  isSignedIn?: boolean
 }
 
-export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStatsChange, onToggleOwned, onTogglePin }: Props) {
+export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStatsChange, onToggleOwned, onTogglePin, isSignedIn = true }: Props) {
   // Keep a stale copy so the drawer content doesn't vanish during slide-out
   const [displayCar, setDisplayCar] = useState<Car | null>(car)
   useEffect(() => {
@@ -362,17 +365,25 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
               {/* Add to garage — only for non-owned cars */}
               {onToggleOwned && !displayCar.owned && (
                 <div className="px-5 py-3 border-b border-fh-border">
-                  <button
-                    disabled={toggling}
-                    onClick={async () => {
-                      setToggling(true)
-                      await onToggleOwned(displayCar.id, true)
-                      setToggling(false)
-                    }}
-                    className="w-full py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-fh-red text-white border border-fh-red hover:opacity-90"
-                  >
-                    {toggling ? '…' : 'Add to garage'}
-                  </button>
+                  {isSignedIn ? (
+                    <button
+                      disabled={toggling}
+                      onClick={async () => {
+                        setToggling(true)
+                        await onToggleOwned(displayCar.id, true)
+                        setToggling(false)
+                      }}
+                      className="w-full py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-fh-red text-white border border-fh-red hover:opacity-90"
+                    >
+                      {toggling ? '…' : 'Add to garage'}
+                    </button>
+                  ) : (
+                    <SignInButton mode="modal">
+                      <button className="w-full py-2 rounded-lg text-sm font-medium transition-colors bg-transparent border border-fh-border text-fh-muted hover:border-fh-red hover:text-fh-red">
+                        Sign in to add to garage
+                      </button>
+                    </SignInButton>
+                  )}
                 </div>
               )}
 
