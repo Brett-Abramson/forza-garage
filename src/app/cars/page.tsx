@@ -34,7 +34,7 @@ export default async function CarsPage({ searchParams }: PageProps) {
         then the JS chunk for GarageView loads and replaces it.
       */}
       <Suspense fallback={<CarsSkeleton view={view} totalCars={cars.length} />}>
-        <GarageViewClient initialCars={cars} totalCars={cars.length} />
+        <GarageViewClient initialCars={cars} totalCars={cars.length} isSignedIn={!!userId} />
       </Suspense>
     </main>
   )

@@ -60,6 +60,8 @@ interface SortState {
 
 interface Props {
   initialCars: Car[]
+  /** Whether a user is signed in — gates the Garage (own/add) column. */
+  isSignedIn?: boolean
 }
 
 function buildOptions(cars: Car[]) {
@@ -72,7 +74,7 @@ function buildOptions(cars: Car[]) {
 
 const ALL_TAGS = new Set<string>(CAR_TAGS)
 
-export default function GarageView({ initialCars }: Props) {
+export default function GarageView({ initialCars, isSignedIn = false }: Props) {
   const searchParams = useSearchParams()
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -352,18 +354,23 @@ export default function GarageView({ initialCars }: Props) {
   const ownedCount = cars.filter((c) => c.owned).length
 
   // ── JS-driven column visibility for standard table mode ─────────────────────
-  const colPiYear       = tableContainerWidth >= 500
-  const colDivision     = tableContainerWidth >= 700
-  const colDriveCountry = tableContainerWidth >= 900
-  const colSourceValue  = tableContainerWidth >= 1100
-  const standardColCount = 4
+  // The active sort column is force-shown so the user can see the values they're
+  // sorting by, even when that column would otherwise be dropped at this width.
+  const sk = sort.key
+  const colPiYear       = tableContainerWidth >= 500  || sk === 'piRating' || sk === 'year'
+  const colDivision     = tableContainerWidth >= 700  || sk === 'division'
+  const colDriveCountry = tableContainerWidth >= 900  || sk === 'drivetrain' || sk === 'country'
+  const colSourceValue  = tableContainerWidth >= 1100 || sk === 'source' || sk === 'value'
+  // Garage (own/add) column is only meaningful when signed in.
+  const standardColCount = 3
+    + (isSignedIn ? 1 : 0)
     + (colPiYear ? 2 : 0)
     + (colDivision ? 1 : 0)
     + (colDriveCountry ? 2 : 0)
     + (colSourceValue ? 2 : 0)
-  // Some standard columns are dropped at this width — their headers aren't on
-  // screen, so offer the SortSelect to keep them sortable.
-  const hasHiddenStandardCols = !(colPiYear && colDivision && colDriveCountry && colSourceValue)
+  // Columns get dropped to fit below 1100px — surface the SortSelect (and rotate
+  // hint) so the hidden columns stay reachable.
+  const hasHiddenStandardCols = tableContainerWidth < 1100
 
   // ── Grid virtual items ──────────────────────────────────────────────────────
   const gridItems    = gridVirtualizer.getVirtualItems()
@@ -497,6 +504,14 @@ export default function GarageView({ initialCars }: Props) {
               <TableModeToggle mode={tableMode} setMode={setTableMode} />
             </div>
           </div>
+
+          {/* Mobile-portrait hint: the full table is best in landscape */}
+          {tableMode === 'standard' && hasHiddenStandardCols && (
+            <div className="md:hidden landscape:hidden flex items-center gap-1.5 text-[11px] text-fh-muted mb-2">
+              <span aria-hidden>📱↔</span> Rotate your phone to see more columns
+            </div>
+          )}
+
           <div
             ref={tableContainerRef}
             className="overflow-auto rounded-xl border border-fh-border"
@@ -520,7 +535,7 @@ export default function GarageView({ initialCars }: Props) {
                       {colDriveCountry && <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} style={{ width: 80 }} />}
                       {colSourceValue  && <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} style={{ width: 72 }} />}
                       {colSourceValue  && <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} style={{ width: 90 }} />}
-                      <SortTh label="Garage"   sortKey="owned"      sort={sort} onSort={handleSort} style={{ width: 90 }} />
+                      {isSignedIn && <SortTh label="Garage"   sortKey="owned"      sort={sort} onSort={handleSort} style={{ width: 90 }} />}
                     </>
                   ) : (
                     <>
@@ -562,6 +577,7 @@ export default function GarageView({ initialCars }: Props) {
                       isPending={pendingIds.has(car.id)}
                       onCardClick={setDrawerCar}
                       statsMode={tableMode === 'stats'}
+                      hideGarage={!isSignedIn}
                       colVis={{ piYear: colPiYear, division: colDivision, driveCountry: colDriveCountry, sourceValue: colSourceValue }}
                     />
                   )

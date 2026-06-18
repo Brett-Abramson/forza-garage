@@ -14,8 +14,9 @@ interface Props {
   initialCars: Car[]
   /** Unused at runtime but accepted so the call-site type-checks cleanly. */
   totalCars?: number
+  isSignedIn?: boolean
 }
 
-export default function GarageViewClient({ initialCars }: Props) {
-  return <GarageView initialCars={initialCars} />
+export default function GarageViewClient({ initialCars, isSignedIn }: Props) {
+  return <GarageView initialCars={initialCars} isSignedIn={isSignedIn} />
 }
