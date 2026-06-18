@@ -9,7 +9,7 @@ import { SortKey, SortDir, compareRows, defaultSort, formatAddedAt } from '@/lib
 import { buildCsvString, csvFilename } from '@/lib/exportCsv'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
-import { SortTh, GridIcon, TableIcon, TableModeToggle, STICKY_COL, STICKY_COL_STATS, type TableMode } from './table-ui'
+import { SortTh, GridIcon, TableIcon, TableModeToggle, SortSelect, GARAGE_SORT_COLUMNS, STICKY_COL, STICKY_COL_STATS, type TableMode } from './table-ui'
 
 // Cumulative left offsets for stats-mode sticky header cells (Showcase has a star col)
 const SC = STICKY_COL
@@ -537,12 +537,25 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
   const [expandedCarId, setExpandedCarId] = useState<number | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  // True when the viewport is narrow enough that standard columns are dropped
+  // (Source/Value/Added hide below the xl breakpoint) — gates the SortSelect.
+  const [columnsHidden, setColumnsHidden] = useState(false)
 
   // Close sidebar on mobile by default
   useEffect(() => {
     if (window.matchMedia('(max-width: 900px)').matches) {
       setSidebarOpen(false)
     }
+  }, [])
+
+  // Track whether standard columns are dropped so the mobile sort control can
+  // appear, keeping the hidden columns sortable. xl breakpoint = 1280px.
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1279px)')
+    const update = () => setColumnsHidden(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
   }, [])
 
   // Press / to focus search (skips when cursor is already in a form field)
@@ -650,6 +663,15 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
       key,
       dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc',
     }))
+  }, [])
+
+  // Mobile SortSelect: picking a column sets it (asc by default); empty restores
+  // the default sort. The direction toggle flips asc/desc for the active column.
+  const handleSortSelect = useCallback((key: SortKey | '') => {
+    setSort(key === '' ? { key: null, dir: 'desc' } : { key, dir: 'asc' })
+  }, [])
+  const toggleSortDir = useCallback(() => {
+    setSort((prev) => ({ ...prev, dir: prev.dir === 'asc' ? 'desc' : 'asc' }))
   }, [])
 
   const handleGroupChange = useCallback((groupId: string) => {
@@ -976,12 +998,22 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
             </>
           ) : (
             <>
-              {/* Toolbar: Standard / Stats toggle */}
-              <div className="flex items-center justify-between mb-2">
+              {/* Toolbar: mobile sort control + Standard / Stats toggle */}
+              <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
                 <div className="text-xs text-fh-muted tabular-nums">
                   Showing {sortedCars.length} of {cars.length} cars
                 </div>
-                <TableModeToggle mode={tableMode} setMode={setTableMode} />
+                <div className="flex items-center gap-2">
+                  {tableMode === 'standard' && columnsHidden && (
+                    <SortSelect
+                      columns={GARAGE_SORT_COLUMNS}
+                      sort={sort}
+                      onSelect={handleSortSelect}
+                      onToggleDir={toggleSortDir}
+                    />
+                  )}
+                  <TableModeToggle mode={tableMode} setMode={setTableMode} />
+                </div>
               </div>
 
               <div className="overflow-x-auto rounded-xl border border-fh-border">

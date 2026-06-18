@@ -13,7 +13,15 @@ interface PageProps {
 }
 
 export default async function GaragePage({ searchParams }: PageProps) {
-  const { userId } = await auth()
+  const { userId: authUserId } = await auth()
+  // Dev-only preview fallback: when SKIP_AUTH_FOR_PREVIEW is on, load PREVIEW_USER_ID's
+  // garage so localhost preview/automation can view this page (it otherwise redirects
+  // to sign-in, since auth() returns null without a Clerk session). Inert in production.
+  const previewUserId =
+    process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH_FOR_PREVIEW === 'true'
+      ? process.env.PREVIEW_USER_ID ?? null
+      : null
+  const userId = authUserId ?? previewUserId
   if (!userId) redirect('/sign-in')
 
   // No-op after the user's first visit (skips once they own anything), so this

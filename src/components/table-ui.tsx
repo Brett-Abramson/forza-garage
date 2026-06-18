@@ -86,6 +86,22 @@ export const STANDARD_SORT_COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'owned',      label: 'Garage'   },
 ]
 
+// My Garage standard columns: like the Car Database but with Added (when the
+// car was added) instead of the Garage/owned column (every car here is owned).
+export const GARAGE_SORT_COLUMNS: { key: SortKey; label: string }[] = [
+  { key: 'piClass',    label: 'Class'    },
+  { key: 'piRating',   label: 'PI'       },
+  { key: 'year',       label: 'Year'     },
+  { key: 'make',       label: 'Make'     },
+  { key: 'model',      label: 'Model'    },
+  { key: 'division',   label: 'Division' },
+  { key: 'drivetrain', label: 'Drive'    },
+  { key: 'country',    label: 'Country'  },
+  { key: 'source',     label: 'Source'   },
+  { key: 'value',      label: 'Value'    },
+  { key: 'addedAt',    label: 'Added'    },
+]
+
 /**
  * Compact sort control for narrow screens: a column picker plus a direction
  * toggle. Lets users sort by columns that are hidden when the table drops them
