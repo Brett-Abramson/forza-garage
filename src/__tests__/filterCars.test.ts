@@ -702,7 +702,7 @@ describe('filterCars — empty input array', () => {
   it('returns [] when all filters are active on empty input', () => {
     expect(
       filterCars([], {
-        filters: f({ search: 'x', piClass: ['S1'], make: 'Porsche', drivetrain: 'RWD', country: 'Germany', source: 'Autoshow' }),
+        filters: f({ search: 'x', piClass: ['S1'], make: ['Porsche'], drivetrain: 'RWD', country: 'Germany', source: 'Autoshow' }),
         selectedTags: new Set(['grip']),
         activeRaces: [{ recommendedTags: ['asphalt'] }],
         selectedGroupIds: ['sports'],

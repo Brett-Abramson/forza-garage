@@ -413,7 +413,9 @@ describe('getAutoTags — null / undefined drivetrain', () => {
   })
 
   it('null coerced to undefined returns division tags only', () => {
-    const tags = getAutoTags('Modern Rally', null ?? undefined)
+    // Mirrors callers that hold `drivetrain: string | null` and pass `?? undefined`.
+    const nullDrivetrain: string | null = null
+    const tags = getAutoTags('Modern Rally', nullDrivetrain ?? undefined)
     expect(tags).toEqual(getAutoTags('Modern Rally', undefined))
   })
 

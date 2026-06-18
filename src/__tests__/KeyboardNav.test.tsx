@@ -6,7 +6,7 @@ import KeyboardNav from '@/components/KeyboardNav'
 // useRouter is globally mocked in setup.ts — override per-test to capture push
 function renderNav() {
   const push = vi.fn()
-  vi.mocked(useRouter).mockReturnValue({ push } as ReturnType<typeof useRouter>)
+  vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>)
   const result = render(<KeyboardNav />)
   return { push, ...result }
 }
