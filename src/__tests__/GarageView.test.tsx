@@ -6,6 +6,37 @@ import { NavControlsProvider, useNavControls } from '@/context/NavControls'
 import { GridIcon, TableIcon } from '@/components/table-ui'
 import type { Car } from '@/types/car'
 
+// @tanstack/react-virtual measures its scroll container via ResizeObserver +
+// getBoundingClientRect, neither of which works in jsdom — the virtual window
+// collapses to zero rows. Mock the virtualizer to yield every item so the
+// sort/column logic under test runs over the full set. Production virtualization
+// is unaffected.
+vi.mock('@tanstack/react-virtual', () => {
+  type Opts = { count?: number; estimateSize?: () => number; lanes?: number }
+  const makeVirtualizer = (opts: Opts) => {
+    const count = opts.count ?? 0
+    const size = opts.estimateSize?.() ?? 50
+    const lanes = opts.lanes ?? 1
+    return {
+      getVirtualItems: () =>
+        Array.from({ length: count }, (_, index) => ({
+          key: index,
+          index,
+          start: index * size,
+          end: (index + 1) * size,
+          size,
+          lane: index % lanes,
+        })),
+      getTotalSize: () => count * size,
+      measureElement: () => {},
+    }
+  }
+  return {
+    useVirtualizer: (opts: Opts) => makeVirtualizer(opts),
+    useWindowVirtualizer: (opts: Opts) => makeVirtualizer(opts),
+  }
+})
+
 // Renders the view toggle by consuming NavControlsProvider — mirrors what Nav does
 function NavToggle() {
   const { controls } = useNavControls()

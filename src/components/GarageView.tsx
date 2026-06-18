@@ -134,7 +134,10 @@ export default function GarageView({ initialCars }: Props) {
       if (!tableContainerRef.current) return
       const rect = tableContainerRef.current.getBoundingClientRect()
       setTableHeight(Math.max(200, window.innerHeight - rect.top - 24))
-      setTableContainerWidth(rect.width)
+      // A 0-width measurement means the container isn't laid out yet (e.g. just
+      // mounted, or in a non-layout test env). Ignore it and keep the last good
+      // width so we never collapse every responsive column to nothing.
+      if (rect.width > 0) setTableContainerWidth(rect.width)
     }
     update()
     window.addEventListener('resize', update)
