@@ -119,9 +119,8 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [drawerCar, setDrawerCar] = useState<Car | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  // True when the viewport is narrow enough that standard columns are dropped
-  // (Source/Value/Added hide below the xl breakpoint) — gates the SortSelect.
-  const [columnsHidden, setColumnsHidden] = useState(false)
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+  const [tableContainerWidth, setTableContainerWidth] = useState(1200)
 
   // Close sidebar on mobile by default
   useEffect(() => {
@@ -130,15 +129,21 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
     }
   }, [])
 
-  // Track whether standard columns are dropped so the mobile sort control can
-  // appear, keeping the hidden columns sortable. xl breakpoint = 1280px.
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1279px)')
-    const update = () => setColumnsHidden(mq.matches)
+  // Measure the table container so standard columns size to the available width
+  // (sidebar-aware) and drop responsively, matching the Car Database table. A
+  // 0-width reading (unlaid-out / jsdom) keeps the last good width.
+  useLayoutEffect(() => {
+    if (view !== 'table' || !tableContainerRef.current) return
+    const update = () => {
+      const el = tableContainerRef.current
+      if (!el) return
+      const w = el.getBoundingClientRect().width
+      if (w > 0) setTableContainerWidth(w)
+    }
     update()
-    mq.addEventListener('change', update)
-    return () => mq.removeEventListener('change', update)
-  }, [])
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [view, sidebarOpen])
 
   // Press / to focus search (skips when cursor is already in a form field)
   useEffect(() => {
@@ -368,6 +373,15 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
   const unknownCount = cars.length - carsWithValue.length
   const pinnedCount = cars.filter((c) => c.pinned).length
 
+  // ── JS-driven column visibility for standard table mode (sidebar-aware) ──────
+  const colPiYear       = tableContainerWidth >= 500
+  const colDivision     = tableContainerWidth >= 700
+  const colDriveCountry = tableContainerWidth >= 900
+  const colSourceValue  = tableContainerWidth >= 1100
+  const colAdded        = tableContainerWidth >= 1300
+  // Some columns are dropped at this width — surface the SortSelect so they stay sortable.
+  const hasHiddenStandardCols = !(colPiYear && colDivision && colDriveCountry && colSourceValue && colAdded)
+
   return (
     <>
     <div className="flex items-start min-h-screen">
@@ -578,7 +592,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                   Showing {sortedCars.length} of {cars.length} cars
                 </div>
                 <div className="flex items-center gap-2">
-                  {tableMode === 'standard' && columnsHidden && (
+                  {tableMode === 'standard' && hasHiddenStandardCols && (
                     <SortSelect
                       columns={GARAGE_SORT_COLUMNS}
                       sort={sort}
@@ -590,7 +604,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                 </div>
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-fh-border">
+              <div ref={tableContainerRef} className="overflow-x-auto rounded-xl border border-fh-border">
                 <table
                   className="w-full text-sm"
                   style={tableMode === 'standard' ? { tableLayout: 'fixed' } : undefined}
@@ -599,18 +613,18 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                     <tr className="bg-fh-panel-2 border-b border-fh-border text-xs uppercase tracking-wide select-none">
                       {tableMode === 'standard' ? (
                         <>
-                          <th className="py-2.5 pl-3 pr-1" style={{ width: '3%' }} aria-label="Favourite" />
-                          <SortTh label="Class"    sortKey="piClass"    sort={sort} onSort={handleSort} width="5%" />
-                          <SortTh label="PI"       sortKey="piRating"   sort={sort} onSort={handleSort} width="6%" />
-                          <SortTh label="Year"     sortKey="year"       sort={sort} onSort={handleSort} width="5%" />
-                          <SortTh label="Make"     sortKey="make"       sort={sort} onSort={handleSort} width="10%" />
-                          <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} width="12%" />
-                          <SortTh label="Division" sortKey="division"   sort={sort} onSort={handleSort} className="hidden md:table-cell" width="17%" />
-                          <SortTh label="Drive"    sortKey="drivetrain" sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="5%" />
-                          <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} className="hidden lg:table-cell" width="8%" />
-                          <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="11%" />
-                          <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="9%" />
-                          <SortTh label="Added"    sortKey="addedAt"    sort={sort} onSort={handleSort} className="hidden xl:table-cell" width="9%" />
+                          <th className="py-2.5 pl-3 pr-1" style={{ width: 36 }} aria-label="Favourite" />
+                          <SortTh label="Class"    sortKey="piClass"    sort={sort} onSort={handleSort} style={{ width: 52 }} />
+                          {colPiYear && <SortTh label="PI"   sortKey="piRating" sort={sort} onSort={handleSort} style={{ width: 52 }} />}
+                          {colPiYear && <SortTh label="Year" sortKey="year"     sort={sort} onSort={handleSort} style={{ width: 58 }} />}
+                          <SortTh label="Make"     sortKey="make"       sort={sort} onSort={handleSort} style={{ width: 100 }} />
+                          <SortTh label="Model"    sortKey="model"      sort={sort} onSort={handleSort} style={{ width: 150 }} />
+                          {colDivision     && <SortTh label="Division" sortKey="division"   sort={sort} onSort={handleSort} style={{ width: 110 }} />}
+                          {colDriveCountry && <SortTh label="Drive"    sortKey="drivetrain" sort={sort} onSort={handleSort} style={{ width: 72 }} />}
+                          {colDriveCountry && <SortTh label="Country"  sortKey="country"    sort={sort} onSort={handleSort} style={{ width: 80 }} />}
+                          {colSourceValue  && <SortTh label="Source"   sortKey="source"     sort={sort} onSort={handleSort} style={{ width: 72 }} />}
+                          {colSourceValue  && <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} style={{ width: 90 }} />}
+                          {colAdded        && <SortTh label="Added"    sortKey="addedAt"    sort={sort} onSort={handleSort} style={{ width: 96 }} />}
                         </>
                       ) : (
                         <>
@@ -652,6 +666,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                         showAddedAtColumn
                         hideGarage
                         statsMode={tableMode === 'stats'}
+                        colVis={{ piYear: colPiYear, division: colDivision, driveCountry: colDriveCountry, sourceValue: colSourceValue, addedAt: colAdded }}
                       />
                     ))}
                   </tbody>

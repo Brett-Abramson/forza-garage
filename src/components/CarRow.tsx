@@ -26,7 +26,7 @@ interface Props {
   /** Swap standard right-side columns for the 11 stat/spec columns with sticky identity cols */
   statsMode?: boolean
   /** JS-driven column visibility (GarageView only). When omitted, falls back to CSS responsive classes. */
-  colVis?: { piYear: boolean; division: boolean; driveCountry: boolean; sourceValue: boolean }
+  colVis?: { piYear: boolean; division: boolean; driveCountry: boolean; sourceValue: boolean; addedAt?: boolean }
 }
 
 export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode, colVis }: Props) {
@@ -163,8 +163,8 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
           }
         </td>
       )}
-      {showAddedAtColumn && (
-        <td className="py-2.5 px-3 text-fh-muted-2 tabular-nums hidden xl:table-cell text-[11px] overflow-hidden whitespace-nowrap text-ellipsis">
+      {showAddedAtColumn && (!colVis || colVis.addedAt) && (
+        <td className={`py-2.5 px-3 text-fh-muted-2 tabular-nums text-[11px] overflow-hidden whitespace-nowrap text-ellipsis${!colVis ? ' hidden xl:table-cell' : ''}`}>
           {showAddedAt && car.addedAt ? formatAddedAt(car.addedAt) : null}
         </td>
       )}
