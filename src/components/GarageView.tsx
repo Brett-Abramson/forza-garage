@@ -400,6 +400,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         isGarage={false}
+        isSignedIn={isSignedIn}
         filters={filters}
         setFilters={setFilters}
         options={options}

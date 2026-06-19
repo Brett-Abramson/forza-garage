@@ -11,6 +11,7 @@ interface FilterSidebarProps {
   isOpen: boolean
   onClose: () => void
   isGarage: boolean
+  isSignedIn?: boolean
   filters: FilterState
   setFilters: Dispatch<SetStateAction<FilterState>>
   options: { divisions: string[]; makes: string[]; countries: string[]; years: { min: number; max: number; decades: number[] } }
@@ -143,6 +144,7 @@ export default function FilterSidebar({
   isOpen,
   onClose,
   isGarage,
+  isSignedIn = false,
   filters,
   setFilters,
   options,
@@ -369,8 +371,9 @@ export default function FilterSidebar({
           )}
         </div>
 
-        {/* Garage status (cars page only) */}
-        {!isGarage && (
+        {/* Garage status (cars page, signed-in only — owned/not-owned is
+            meaningless without a garage) */}
+        {!isGarage && isSignedIn && (
           <div className="flex flex-col gap-2">
             <div className="text-[10px] font-semibold text-fh-muted uppercase tracking-wider">Garage status</div>
             <Segmented
