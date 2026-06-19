@@ -24,6 +24,8 @@ export const DEFAULT_FILTERS: FilterState = {
   source: '',
   owned: 'all',
   pinned: false,
+  yearMin: null,
+  yearMax: null,
 }
 
 /**
@@ -72,6 +74,12 @@ export function filterCars(
     // ── Make ─────────────────────────────────────────────────────────────────
     // OR logic: car passes if no make selected, or its make is in the selected set.
     if (filters.make.length > 0 && !filters.make.includes(car.make)) return false
+
+    // ── Year range ───────────────────────────────────────────────────────────
+    // Inclusive bounds; either side may be null. Drives the "cars from the 80s"
+    // style season-challenge filtering.
+    if (filters.yearMin != null && car.year < filters.yearMin) return false
+    if (filters.yearMax != null && car.year > filters.yearMax) return false
 
     // ── Drivetrain ───────────────────────────────────────────────────────────
     if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false

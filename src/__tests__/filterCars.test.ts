@@ -781,3 +781,43 @@ describe('filterCars — purity', () => {
     expect(input.map((c) => c.id)).toEqual(before)
   })
 })
+
+// ─── Year range ───────────────────────────────────────────────────────────────
+// Fixture years: 1=2019, 2=2015, 3=2022, 4=2018, 5=2020, 6=1989, 7=1970, 8=2017.
+
+describe('filterCars — year range', () => {
+  it('yearMin only keeps cars at or after the lower bound (inclusive)', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ yearMin: 2018 }) })
+    expect(ids(result)).toEqual([1, 3, 4, 5]) // 2019, 2022, 2018, 2020
+  })
+
+  it('yearMax only keeps cars at or before the upper bound (inclusive)', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ yearMax: 1989 }) })
+    expect(ids(result)).toEqual([6, 7]) // 1989, 1970
+  })
+
+  it('a decade range (the 80s: 1980–1989) keeps only that decade', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ yearMin: 1980, yearMax: 1989 }) })
+    expect(ids(result)).toEqual([6]) // only the 1989 Silvia
+  })
+
+  it('the 70s (1970–1979) keeps only the 1970 GMC', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ yearMin: 1970, yearMax: 1979 }) })
+    expect(ids(result)).toEqual([7])
+  })
+
+  it('null bounds are a no-op (returns every car)', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ yearMin: null, yearMax: null }) })
+    expect(ids(result)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+  })
+
+  it('an empty range (min > max with no matching year) returns nothing', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ yearMin: 1990, yearMax: 1999 }) })
+    expect(result).toHaveLength(0)
+  })
+
+  it('combines with other filters (AND): 80s + make Nissan', () => {
+    const result = filterCars(ALL_CARS, { filters: f({ yearMin: 1980, yearMax: 1989, make: ['Nissan'] }) })
+    expect(ids(result)).toEqual([6])
+  })
+})

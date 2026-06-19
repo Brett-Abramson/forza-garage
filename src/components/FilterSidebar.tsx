@@ -13,7 +13,7 @@ interface FilterSidebarProps {
   isGarage: boolean
   filters: FilterState
   setFilters: Dispatch<SetStateAction<FilterState>>
-  options: { divisions: string[]; makes: string[]; countries: string[] }
+  options: { divisions: string[]; makes: string[]; countries: string[]; years: { min: number; max: number; decades: number[] } }
   selectedGroupIds: string[]
   selectedTags: Set<string>
   selectedRaceIds: string[]
@@ -73,6 +73,68 @@ function Segmented({
           {o.label}
         </button>
       ))}
+    </div>
+  )
+}
+
+// ── Year range — custom From/To inputs, committed on blur or Enter ──────────────
+// Keeps local string state while typing so partial values (e.g. "19") don't
+// momentarily filter the list to empty; commits a clamped, ordered range.
+function YearRange({
+  min,
+  max,
+  yearMin,
+  yearMax,
+  onChange,
+}: {
+  min: number
+  max: number
+  yearMin: number | null
+  yearMax: number | null
+  onChange: (next: { yearMin: number | null; yearMax: number | null }) => void
+}) {
+  const [from, setFrom] = useState(yearMin?.toString() ?? '')
+  const [to, setTo] = useState(yearMax?.toString() ?? '')
+
+  // Re-sync inputs when the bounds change externally (decade chip / clear all).
+  useEffect(() => { setFrom(yearMin?.toString() ?? '') }, [yearMin])
+  useEffect(() => { setTo(yearMax?.toString() ?? '') }, [yearMax])
+
+  function commit(rawFrom: string, rawTo: string) {
+    const clamp = (raw: string): number | null => {
+      if (raw.trim() === '') return null
+      const n = parseInt(raw, 10)
+      if (isNaN(n)) return null
+      return Math.min(Math.max(n, min), max)
+    }
+    let lo = clamp(rawFrom)
+    let hi = clamp(rawTo)
+    if (lo != null && hi != null && lo > hi) [lo, hi] = [hi, lo]
+    onChange({ yearMin: lo, yearMax: hi })
+  }
+
+  const inputCls =
+    'w-full bg-fh-panel border border-fh-border rounded-lg px-2.5 py-1.5 text-xs text-fh-dark focus:outline-none focus:border-fh-red tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="number" inputMode="numeric" aria-label="From year"
+        placeholder={String(min)} value={from}
+        onChange={(e) => setFrom(e.target.value)}
+        onBlur={() => commit(from, to)}
+        onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+        className={inputCls}
+      />
+      <span className="text-fh-muted text-xs shrink-0">–</span>
+      <input
+        type="number" inputMode="numeric" aria-label="To year"
+        placeholder={String(max)} value={to}
+        onChange={(e) => setTo(e.target.value)}
+        onBlur={() => commit(from, to)}
+        onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+        className={inputCls}
+      />
     </div>
   )
 }
@@ -204,6 +266,38 @@ export default function FilterSidebar({
               ))}
             </div>
           )}
+        </div>
+
+        {/* Year */}
+        <div className="flex flex-col gap-2">
+          <div className="text-[10px] font-semibold text-fh-muted uppercase tracking-wider">Year</div>
+          <div className="flex flex-wrap gap-1.5">
+            {options.years.decades.map((d) => {
+              const active = filters.yearMin === d && filters.yearMax === d + 9
+              return (
+                <button
+                  key={d}
+                  onClick={() => setFilters((f) => active
+                    ? { ...f, yearMin: null, yearMax: null }
+                    : { ...f, yearMin: d, yearMax: d + 9 })}
+                  className={`px-2.5 py-[5px] rounded-full text-xs font-medium border transition-colors tabular-nums ${
+                    active
+                      ? 'bg-fh-red-pale text-fh-red border-fh-red'
+                      : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark'
+                  }`}
+                >
+                  {`${d}s`}
+                </button>
+              )
+            })}
+          </div>
+          <YearRange
+            min={options.years.min}
+            max={options.years.max}
+            yearMin={filters.yearMin}
+            yearMax={filters.yearMax}
+            onChange={(next) => setFilters((f) => ({ ...f, ...next }))}
+          />
         </div>
 
         {/* Category */}

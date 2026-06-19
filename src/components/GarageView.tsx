@@ -65,10 +65,13 @@ interface Props {
 }
 
 function buildOptions(cars: Car[]) {
+  const years = cars.map((c) => c.year)
+  const decades = [...new Set(years.map((y) => Math.floor(y / 10) * 10))].sort((a, b) => a - b)
   return {
     divisions: [...new Set(cars.map((c) => c.division))].sort(),
     makes:     [...new Set(cars.map((c) => c.make))].sort(),
     countries: [...new Set(cars.map((c) => c.country))].sort(),
+    years:     years.length ? { min: Math.min(...years), max: Math.max(...years), decades } : { min: 0, max: 0, decades: [] },
   }
 }
 
@@ -88,6 +91,8 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
     country:   searchParams.get('country')?? '',
     source:    searchParams.get('src')    ?? '',
     owned:     (searchParams.get('owned') as FilterState['owned']) ?? 'all',
+    yearMin:   Number(searchParams.get('ymin')) || null,
+    yearMax:   Number(searchParams.get('ymax')) || null,
     pinned:    false,  // pin/star is garage-only; always false on the Car Database
   })
   const [view, setView]                     = useState<ViewMode>(
@@ -169,6 +174,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
     filters.country !== '',
     filters.source !== '',
     filters.owned !== 'all',
+    filters.yearMin !== null || filters.yearMax !== null,
     selectedTags.size > 0,
     selectedRaceIds.length > 0,
   ].filter(Boolean).length
@@ -218,6 +224,8 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
     if (filters.country)      params.set('country', filters.country)
     if (filters.source)       params.set('src',     filters.source)
     if (filters.owned !== 'all') params.set('owned', filters.owned)
+    if (filters.yearMin != null) params.set('ymin', String(filters.yearMin))
+    if (filters.yearMax != null) params.set('ymax', String(filters.yearMax))
     if (selectedTags.size > 0)   params.set('tags',  [...selectedTags].sort().join(','))
     if (selectedRaceIds.length > 0) params.set('race', selectedRaceIds.join(','))
     if (view !== 'grid')         params.set('view',  view)
@@ -229,6 +237,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
   }, [
     filters.search, filters.piClass, filters.division, filters.make,
     filters.drivetrain, filters.country, filters.source, filters.owned,
+    filters.yearMin, filters.yearMax,
     selectedGroupIds, selectedTags, selectedRaceIds, view,
   ])
 

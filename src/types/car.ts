@@ -70,6 +70,8 @@ export interface FilterState {
   source: string   // empty = all; non-empty = car.source.includes(value)
   owned: 'all' | 'owned' | 'not-owned'
   pinned: boolean  // garage only — true = show only pinned/favourite cars
+  yearMin: number | null  // inclusive lower bound; null = no lower bound
+  yearMax: number | null  // inclusive upper bound; null = no upper bound
 }
 
 // Broad acquisition-method categories used for source chips
