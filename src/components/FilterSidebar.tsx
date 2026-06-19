@@ -214,7 +214,9 @@ export default function FilterSidebar({
         {/* Class */}
         <div className="flex flex-col gap-2">
           <div className="text-[10px] font-semibold text-fh-muted uppercase tracking-wider">Class</div>
-          <div className="flex flex-wrap gap-1.5">
+          {/* 7-column grid keeps all classes (D…R) on one row, shrinking the
+              chips to fit the sidebar width instead of wrapping R onto line 2. */}
+          <div className="grid grid-cols-7 gap-1.5">
             {PI_CLASS_ORDER.map((cls) => (
               <button
                 key={cls}
@@ -224,7 +226,7 @@ export default function FilterSidebar({
                     ? f.piClass.filter((c) => c !== cls)
                     : [...f.piClass, cls],
                 }))}
-                className={`w-9 h-[26px] rounded-[6px] text-xs font-bold transition-colors ${PI_CLASS_COLORS[cls]} ${
+                className={`w-full h-[26px] rounded-[6px] text-xs font-bold transition-colors ${PI_CLASS_COLORS[cls]} ${
                   filters.piClass.includes(cls)
                     ? 'ring-2 ring-offset-1 ring-offset-fh-panel ring-fh-red scale-105'
                     : 'opacity-70 hover:opacity-100'
