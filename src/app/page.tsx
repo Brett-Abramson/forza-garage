@@ -204,14 +204,24 @@ function SignedOutLayout({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+// Below-hero content — auth() + featured cars (+ stats, inside UserDashboard).
+// Split into its own async component so the hero can flush at TTFB instead of
+// waiting on auth() and the featured-cars fetch. carCount is passed down from
+// the (cached) top-level fetch so neither layout re-queries it.
+async function MainContent({ carCount }: { carCount: number }) {
+  const [{ userId }, featuredCars] = await Promise.all([auth(), getFeaturedCars()])
+
+  return userId ? (
+    <UserDashboard userId={userId} carCount={carCount} featuredCars={featuredCars} />
+  ) : (
+    <SignedOutLayout carCount={carCount} featuredCars={featuredCars} />
+  )
+}
+
 export default async function LandingPage() {
-  // Start all three concurrently — auth(), carCount, and the cached CarMeta
-  // fetch are independent and can all run at the same time.
-  const [{ userId }, carCount, featuredCars] = await Promise.all([
-    auth(),
-    getCarCount(),
-    getFeaturedCars(),
-  ])
+  // Only the (cached) car count gates the hero; auth() and the featured-cars
+  // fetch are deferred into <MainContent> so the hero streams at TTFB.
+  const carCount = await getCarCount()
 
   return (
     <div>
@@ -261,23 +271,11 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── Main content ──────────────────────────────────────────────────── */}
+      {/* ── Main content — streams in below the already-visible hero ──────── */}
       <div className="max-w-screen-2xl mx-auto px-4 py-10">
-        {userId ? (
-          // Stats-dependent sections stream in while the hero is already visible
-          <Suspense fallback={<DashboardSkeleton />}>
-            <UserDashboard
-              userId={userId}
-              carCount={carCount}
-              featuredCars={featuredCars}
-            />
-          </Suspense>
-        ) : (
-          <SignedOutLayout
-            carCount={carCount}
-            featuredCars={featuredCars}
-          />
-        )}
+        <Suspense fallback={<DashboardSkeleton />}>
+          <MainContent carCount={carCount} />
+        </Suspense>
       </div>
     </div>
   )
