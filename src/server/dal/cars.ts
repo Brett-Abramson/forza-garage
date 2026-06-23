@@ -1,4 +1,5 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { prisma } from '@/server/db'
 import { getAutoTags } from '@/lib/autotags'
 import type { Car } from '@/types/car'
@@ -21,10 +22,18 @@ const SPEC_DEFAULTS = {
   engineType: null, engineCC: null, cylinders: null, bodyStyle: null,
 } as const
 
-/** Total number of cars in the database. */
-export function getCarCount(): Promise<number> {
-  return prisma.car.count()
-}
+/**
+ * Total number of cars in the database. Used on the hero of `/` and as the
+ * garage's totalCars. Cached for 24h with the 'car-count' tag — the count only
+ * changes when new cars are imported (upsert_cars.js inserts; it never deletes).
+ * A redeploy clears this cache; otherwise it self-revalidates within 24h.
+ * upsert_cars.js prints a reminder whenever it inserts cars.
+ */
+export const getCarCount = unstable_cache(
+  (): Promise<number> => prisma.car.count(),
+  ['car-count'],
+  { tags: ['car-count'], revalidate: 86400 },
+)
 
 /** Full single car (all columns), or null. Used by the on-demand spec fetch. */
 export function getCarById(carId: number) {

@@ -433,6 +433,18 @@ async function main() {
   console.log(`Auto-tags invalidated: ${invalidatedCount} CarTag rows (${divChangedIds.length} car(s) changed division/drivetrain)`)
   console.log(`Stat fields populated: ${statFieldsNewlyPopulated} newly filled, ${statFieldsAlreadyPresent} already present`)
   console.log('──────────────────────────────────────────────────────')
+
+  // ── Cache reminder ──────────────────────────────────────────────────────────
+  // The landing-page car count is cached in the deployed app (unstable_cache,
+  // tag 'car-count', 24h). Inserts change the count; updates don't. This script
+  // runs locally and can't purge Vercel's cache, so flag it only when it matters.
+  if (insertedCars.length > 0) {
+    console.log('')
+    console.log('⚠ REMINDER: the car count changed (+' + insertedCars.length + ' inserted).')
+    console.log("  The landing page shows a CACHED count (tag 'car-count', 24h TTL).")
+    console.log('  To refresh it on the live site now: redeploy (clears the cache).')
+    console.log('  Otherwise it self-corrects within 24h. (Stat-only updates need no action.)')
+  }
 }
 
 main()
