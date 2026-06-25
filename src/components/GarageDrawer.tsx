@@ -664,7 +664,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                           {autoTags.map((tag) => (
                             <span
                               key={`auto-${tag}`}
-                              className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red opacity-60 hover:opacity-100 transition-opacity"
+                              className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-fh-red-pale border border-fh-red opacity-70 hover:opacity-100 transition-opacity"
+                              style={{ color: 'var(--fh-red-fg)' }}
                             >
                               {tag}
                               <button
@@ -681,7 +682,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                           {userTags.map((tag) => (
                             <span
                               key={`user-${tag}`}
-                              className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red"
+                              className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-fh-red-pale border border-fh-red"
+                              style={{ color: 'var(--fh-red-fg)' }}
                             >
                               {tag}
                               <button
