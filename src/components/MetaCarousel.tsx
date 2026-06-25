@@ -37,9 +37,10 @@ export function MetaCarousel({ entries }: { entries: MetaCarEntry[] }) {
   const [paused, setPaused] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Shuffle once on mount — runs client-side only, after hydration is done.
+  // Shuffle once on mount and take 10 — runs client-side only, after hydration.
+  // Each reload gets a fresh random subset so users see the full pool over time.
   useEffect(() => {
-    setItems(shuffle(entries))
+    setItems(shuffle(entries).slice(0, 10))
     setIndex(0)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
