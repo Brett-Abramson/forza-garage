@@ -95,6 +95,19 @@ export const PI_CLASS_COLORS: Record<string, string> = {
   R:  'bg-[#D4018B] text-white',
 }
 
+// Raw accent color per PI class — for places that need an actual CSS color value
+// rather than a Tailwind class string (e.g. the garage drawer header's left-border
+// stripe). Mirrors the bg- hues in PI_CLASS_COLORS.
+export const PI_CLASS_HEX: Record<string, string> = {
+  D:  '#38bdf8', // sky-400
+  C:  '#facc15', // yellow-400
+  B:  '#f97316', // orange-500
+  A:  '#dc2626', // red-600
+  S1: '#9333ea', // purple-600
+  S2: '#2563eb', // blue-600
+  R:  '#D4018B',
+}
+
 // Color the source badge by how hard the car is to obtain
 export function getSourceColor(source: string): string {
   if (source.includes('DLC')) return 'text-fh-red'

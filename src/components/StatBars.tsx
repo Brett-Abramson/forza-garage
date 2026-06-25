@@ -4,6 +4,10 @@ import type { StatAvg } from '@/lib/statCallouts'
 
 interface Props {
   car: Car
+  /** 'large' renders 8px bars with 12px labels for the drawer; 'default' is the compact 6px card size. */
+  variant?: 'default' | 'large'
+  /** When false, the bottom specs row is omitted (the drawer renders its own spec tile grid instead). */
+  showSpecs?: boolean
 }
 
 const BARS: { key: keyof Car; label: string; avgKey: keyof StatAvg; description: string }[] = [
@@ -41,9 +45,16 @@ const COLOR_LABELS: Record<string, string> = {
   'bg-red-500':   'Well below average',
 }
 
-export default function StatBars({ car }: Props) {
+export default function StatBars({ car, variant = 'default', showSpecs = true }: Props) {
   const hasAnyBarStat = BARS.some(({ key }) => car[key] != null)
   const divAvg = DIVISION_CLASS_AVERAGES[car.division]?.[car.piClass] ?? null
+
+  const large = variant === 'large'
+  const barTrack = large ? 'h-2' : 'h-1.5'
+  const labelText = large ? 'text-xs' : 'text-[10px]'
+  const valueText = large ? 'text-xs font-semibold' : 'text-[10px]'
+  const labelW = large ? 'w-16' : 'w-14'
+  const valueW = large ? 'w-8' : 'w-6'
 
   if (!hasAnyBarStat) {
     return (
@@ -77,8 +88,8 @@ export default function StatBars({ car }: Props) {
 
         return (
           <div key={key} className="relative group flex items-center gap-2">
-            <div className="text-[10px] text-fh-muted w-14 shrink-0 text-right">{label}</div>
-            <div className="flex-1 h-1.5 bg-fh-panel-2 rounded-full overflow-hidden">
+            <div className={`${labelText} text-fh-muted ${labelW} shrink-0 text-right`}>{label}</div>
+            <div className={`flex-1 ${barTrack} bg-fh-panel-2 rounded-full overflow-hidden`}>
               {value != null && (
                 <div
                   className={`h-full rounded-full ${color} opacity-80 transition-all duration-300`}
@@ -86,7 +97,7 @@ export default function StatBars({ car }: Props) {
                 />
               )}
             </div>
-            <div className="text-[10px] text-fh-muted tabular-nums w-6 shrink-0">
+            <div className={`${valueText} text-fh-muted tabular-nums ${valueW} shrink-0`}>
               {value != null ? value.toFixed(1) : '—'}
             </div>
 
@@ -118,8 +129,9 @@ export default function StatBars({ car }: Props) {
         )
       })}
 
-      {/* Specs row — only show fields that have values */}
-      <SpecsRow car={car} />
+      {/* Specs row — only show fields that have values (omitted when the caller
+          renders its own spec grid, e.g. the drawer's tile grid) */}
+      {showSpecs && <SpecsRow car={car} />}
     </div>
   )
 }

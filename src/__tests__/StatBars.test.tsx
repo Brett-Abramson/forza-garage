@@ -164,3 +164,23 @@ describe('StatBars — specs row', () => {
     expect(screen.getByText(/no stats yet/i)).toBeInTheDocument()
   })
 })
+
+// ─── variant + showSpecs props ──────────────────────────────────────────────
+
+describe('StatBars — variant + showSpecs props', () => {
+  it('renders all six bars in the large variant', () => {
+    render(<StatBars car={barStatCar} variant="large" />)
+    expect(screen.getByText('Speed')).toBeInTheDocument()
+    expect(screen.getByText('Offroad')).toBeInTheDocument()
+  })
+
+  it('omits the specs row when showSpecs is false', () => {
+    render(<StatBars car={{ ...barStatCar, powerHp: 510 }} showSpecs={false} />)
+    expect(screen.queryByText('HP')).not.toBeInTheDocument()
+  })
+
+  it('renders the specs row by default (showSpecs defaults to true)', () => {
+    render(<StatBars car={{ ...barStatCar, powerHp: 510 }} />)
+    expect(screen.getByText('HP')).toBeInTheDocument()
+  })
+})
