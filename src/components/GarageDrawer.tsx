@@ -317,7 +317,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
               }}
             >
               <div className="min-w-0">
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', marginBottom: 5 }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.56)', marginBottom: 5 }}>
                   {displayCar.year} · {displayCar.make}
                 </div>
                 <h2
@@ -335,7 +335,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                   >
                     {displayCar.piClass}
                   </span>
-                  <span className="tabular-nums" style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: 700 }}>
+                  <span className="tabular-nums" style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: 700 }}>
                     {displayCar.piRating}
                   </span>
                   {displayCar.drivetrain && <GhostPill>{displayCar.drivetrain}</GhostPill>}
@@ -353,7 +353,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                     aria-label={displayCar.pinned ? 'Remove from favourites' : 'Add to favourites'}
                     title={displayCar.pinned ? 'Remove from favourites' : 'Add to favourites'}
                     className={`p-2 rounded-lg text-lg leading-none transition-colors ${
-                      displayCar.pinned ? 'text-amber-400 hover:text-amber-300' : 'text-white/35 hover:text-white/70'
+                      displayCar.pinned ? 'text-amber-400 hover:text-amber-300' : 'text-white/55 hover:text-white/80'
                     }`}
                   >
                     <span className="block leading-none">{displayCar.pinned ? '★' : '☆'}</span>
@@ -361,7 +361,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                 )}
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg text-white/30 hover:text-white/70 transition-colors"
+                  className="p-2 rounded-lg text-white/50 hover:text-white/80 transition-colors"
                   aria-label="Close"
                 >
                   <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
@@ -832,8 +832,8 @@ function GhostPill({ children, color }: { children: React.ReactNode; color?: str
   return (
     <span
       style={{
-        background: 'rgba(255,255,255,0.09)',
-        color: color ?? 'rgba(255,255,255,0.6)',
+        background: 'rgba(255,255,255,0.13)',
+        color: color ?? 'rgba(255,255,255,0.78)',
         padding: '3px 9px',
         borderRadius: 6,
         fontSize: 11,
