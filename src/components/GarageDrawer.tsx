@@ -313,7 +313,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                 background: '#1E1A14',
                 padding: '20px 20px 18px',
                 borderLeft: `4px solid ${accent}`,
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                borderBottom: '1px solid rgba(255,255,255,0.14)',
               }}
             >
               <div className="min-w-0">
@@ -435,8 +435,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                     {/* Spec tiles grid */}
                     {hasAnySpec ? (
                       <div
-                        className="grid grid-cols-3 border border-fh-border rounded-[9px] overflow-hidden"
-                        style={{ marginTop: 14 }}
+                        className="grid grid-cols-3 rounded-[9px] overflow-hidden"
+                        style={{ marginTop: 14, border: '1px solid var(--fh-border-strong)' }}
                       >
                         {specTiles.map((t, i) => (
                           <div
@@ -444,8 +444,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                             className="bg-fh-panel"
                             style={{
                               padding: '11px 14px',
-                              borderRight: i % 3 !== 2 ? '1px solid var(--fh-border)' : undefined,
-                              borderBottom: i < 3 ? '1px solid var(--fh-border)' : undefined,
+                              borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
+                              borderBottom: i < 3 ? '1px solid var(--fh-border-strong)' : undefined,
                             }}
                           >
                             <div className="font-bold uppercase text-fh-muted" style={{ fontSize: 9, letterSpacing: '0.1em', marginBottom: 3 }}>
@@ -814,7 +814,7 @@ function TabBtn({ label, active, onClick }: { label: string; active: boolean; on
   return (
     <button
       onClick={onClick}
-      className={`flex-1 transition-colors ${active ? 'text-fh-red' : 'text-fh-muted hover:text-fh-dark'}`}
+      className={`flex-1 transition-colors ${active ? 'text-fh-red bg-fh-red-pale' : 'text-fh-muted hover:text-fh-dark'}`}
       style={{
         padding: '10px 0',
         fontSize: 12,

@@ -23,6 +23,7 @@
   --fh-muted2:      #A09080;
   --fh-border:      rgba(30,26,20,0.12);
   --fh-border2:     rgba(30,26,20,0.07);
+  --fh-border-strong: rgba(30,26,20,0.2);
   --fh-amber:       #B87010;
   --fh-amber-pale:  rgba(184,112,16,0.08);
   --fh-blue:        #1A5FA0;
@@ -43,6 +44,7 @@
   --fh-muted2:      #5C544A;
   --fh-border:      rgba(240,232,216,0.1);
   --fh-border2:     rgba(240,232,216,0.06);
+  --fh-border-strong: rgba(240,232,216,0.18);
   --fh-amber:       #D4920A;
   --fh-amber-pale:  rgba(212,146,10,0.1);
   --fh-blue-pale:   rgba(26,95,160,0.1);
