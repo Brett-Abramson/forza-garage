@@ -87,6 +87,14 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
   const searchRef = useRef<HTMLInputElement>(null)
 
   const [exportPending, setExportPending] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
+  const [toast, setToast] = useState<{ kind: 'success' | 'error'; msg: string } | null>(null)
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 3500)
+    return () => clearTimeout(t)
+  }, [toast])
 
   // Tags come directly from stored CarTag rows (backfilled at load time in
   // garage/page.tsx for cars added before the auto-tag fix). No client-side
@@ -246,13 +254,27 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
     return copy
   }, [filteredCars, sort])
 
+  const doExport = useCallback((carsToExport: typeof sortedCars) => {
+    setExportLoading(true)
+    setTimeout(() => {
+      try {
+        triggerCsvDownload(carsToExport)
+        setToast({ kind: 'success', msg: 'Export successful! Check your downloads folder.' })
+      } catch {
+        setToast({ kind: 'error', msg: 'Export failed. Please try again.' })
+      } finally {
+        setExportLoading(false)
+      }
+    }, 0)
+  }, [])
+
   const handleExport = useCallback(() => {
     if (sortedCars.length < cars.length) {
       setExportPending(true)
     } else {
-      triggerCsvDownload(sortedCars)
+      doExport(sortedCars)
     }
-  }, [sortedCars, cars.length])
+  }, [sortedCars, cars.length, doExport])
 
   const handleSort = useCallback((key: SortKey) => {
     setSort((prev) => ({
@@ -480,13 +502,29 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
         ) : (
           <button
             onClick={handleExport}
+            disabled={exportLoading}
             title={sortedCars.length < cars.length ? `${sortedCars.length} of ${cars.length} cars (filtered)` : `Export all ${cars.length} cars`}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-fh-border text-fh-muted hover:text-fh-dark hover:border-fh-dark transition-colors"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              exportLoading
+                ? 'border-fh-border text-fh-muted opacity-60 cursor-not-allowed'
+                : 'border-fh-border text-fh-muted hover:text-fh-dark hover:border-fh-dark'
+            }`}
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 1v7M3 5l3 3 3-3M1 9v1a1 1 0 001 1h8a1 1 0 001-1V9" />
-            </svg>
-            Export CSV
+            {exportLoading ? (
+              <>
+                <svg className="animate-spin" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M6 1a5 5 0 1 0 5 5" />
+                </svg>
+                Exporting...
+              </>
+            ) : (
+              <>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 1v7M3 5l3 3 3-3M1 9v1a1 1 0 001 1h8a1 1 0 001-1V9" />
+                </svg>
+                Export CSV
+              </>
+            )}
           </button>
         )}
       </header>
@@ -529,10 +567,11 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                 Cancel
               </button>
               <button
-                onClick={() => { triggerCsvDownload(sortedCars); setExportPending(false) }}
-                className="px-4 py-1.5 rounded-lg text-sm font-medium bg-fh-red text-white hover:opacity-90 transition-opacity"
+                disabled={exportLoading}
+                onClick={() => { setExportPending(false); doExport(sortedCars) }}
+                className="px-4 py-1.5 rounded-lg text-sm font-medium bg-fh-red text-white hover:opacity-90 transition-opacity disabled:opacity-60"
               >
-                Export {sortedCars.length} cars
+                {exportLoading ? 'Exporting...' : `Export ${sortedCars.length} cars`}
               </button>
             </div>
           </div>
@@ -700,6 +739,22 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
       </div>{/* end main content column */}
     </div>
 
+    {toast && (
+      <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium pointer-events-none select-none ${
+        toast.kind === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+      }`}>
+        {toast.kind === 'success' ? (
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M2 7l4 4 6-6" />
+          </svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M2 2l10 10M12 2L2 12" />
+          </svg>
+        )}
+        {toast.msg}
+      </div>
+    )}
     <GarageDrawer
       car={drawerCar}
       onClose={() => setDrawerCar(null)}

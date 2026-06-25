@@ -15,7 +15,6 @@ function makeCar(overrides: Partial<Car> = {}): Car {
     piRating: 900,
     country: 'USA',
     value: 500000,
-    // all other fields irrelevant to CSV export
     drivetrain: null, engineType: null, engineCC: null, cylinders: null,
     bodyStyle: null, statSpeed: null, statHandling: null,
     statAcceleration: null, statLaunch: null, statBraking: null,
@@ -25,6 +24,10 @@ function makeCar(overrides: Partial<Car> = {}): Car {
     ...overrides,
   }
 }
+
+// Column index helper — keeps tests resilient to column reordering
+const col = (header: typeof CSV_HEADERS[number]) =>
+  (CSV_HEADERS as readonly string[]).indexOf(header)
 
 // ─── csvCell — null / undefined ───────────────────────────────────────────────
 
@@ -62,7 +65,6 @@ describe('csvCell — RFC 4180 quoting', () => {
   })
 
   it('wraps a value containing a double-quote and escapes it by doubling', () => {
-    // RFC 4180 §2.7: embed a " by writing ""
     expect(csvCell('He said "hello"')).toBe('"He said ""hello"""')
   })
 
@@ -80,9 +82,6 @@ describe('csvCell — RFC 4180 quoting', () => {
 
 describe('csvCell — CSV injection sanitisation', () => {
   it('prepends a single quote to a value starting with =', () => {
-    // Pipeline: sanitise "=HYPERLINK(\"evil\")" → "'=HYPERLINK(\"evil\")"
-    // then RFC-quote because it contains " → output: "'=HYPERLINK(""evil"")"
-    // (outer double-quotes are CSV quoting; internal " are doubled per RFC 4180)
     expect(csvCell('=HYPERLINK("evil")')).toBe('"\'=HYPERLINK(""evil"")"')
     expect(csvCell('=HYPERLINK("evil")')).toMatch(/^"'=/)
   })
@@ -105,7 +104,6 @@ describe('csvCell — CSV injection sanitisation', () => {
   })
 
   it('injection sanitisation + comma: prefixes quote then wraps in CSV quotes', () => {
-    // Value: "=SUM(A,B)" → sanitised to "'=SUM(A,B)" → contains comma → wrap in "..."
     expect(csvCell('=SUM(A,B)')).toBe('"\'=SUM(A,B)"')
   })
 })
@@ -113,21 +111,25 @@ describe('csvCell — CSV injection sanitisation', () => {
 // ─── buildCsvString — headers ─────────────────────────────────────────────────
 
 describe('buildCsvString — column headers', () => {
-  it('first line contains the correct headers in the correct order', () => {
-    const csv = buildCsvString([])
-    const firstLine = csv.split('\r\n')[0]
-    expect(firstLine).toBe('Year,Make,Model,Division,Class,PI,Country,Value (Cr)')
-  })
-
   it('headers match CSV_HEADERS constant exactly', () => {
     const csv = buildCsvString([])
     const firstLine = csv.split('\r\n')[0]
     expect(firstLine).toBe(CSV_HEADERS.join(','))
   })
 
-  it('header row has exactly 8 columns', () => {
+  it('header row has the same number of columns as CSV_HEADERS', () => {
     const firstLine = buildCsvString([]).split('\r\n')[0]
-    expect(firstLine.split(',').length).toBe(8)
+    expect(firstLine.split(',').length).toBe(CSV_HEADERS.length)
+  })
+
+  it('Year is the first header', () => {
+    const headers = buildCsvString([]).split('\r\n')[0].split(',')
+    expect(headers[0]).toBe('Year')
+  })
+
+  it('Tags is the last header', () => {
+    const headers = buildCsvString([]).split('\r\n')[0].split(',')
+    expect(headers[headers.length - 1]).toBe('Tags')
   })
 })
 
@@ -136,8 +138,7 @@ describe('buildCsvString — column headers', () => {
 describe('buildCsvString — empty input', () => {
   it('empty array returns headers only with no trailing newline after them', () => {
     const csv = buildCsvString([])
-    // One line only — the header row — no \r\n at the end
-    expect(csv).toBe('Year,Make,Model,Division,Class,PI,Country,Value (Cr)')
+    expect(csv).toBe(CSV_HEADERS.join(','))
   })
 
   it('empty array produces no data rows', () => {
@@ -164,14 +165,20 @@ describe('buildCsvString — single car', () => {
       division: 'Modern Sports Cars', piClass: 'S1',
       piRating: 826, country: 'Germany', value: 250000,
     })
-    const lines = buildCsvString([car]).split('\r\n')
-    expect(lines[1]).toBe('2019,Porsche,911 GT3,Modern Sports Cars,S1,826,Germany,250000')
+    const cells = buildCsvString([car]).split('\r\n')[1].split(',')
+    expect(cells[col('Year')]).toBe('2019')
+    expect(cells[col('Make')]).toBe('Porsche')
+    expect(cells[col('Model')]).toBe('911 GT3')
+    expect(cells[col('Division')]).toBe('Modern Sports Cars')
+    expect(cells[col('Class')]).toBe('S1')
+    expect(cells[col('PI')]).toBe('826')
+    expect(cells[col('Country')]).toBe('Germany')
+    expect(cells[col('Value (Cr)')]).toBe('250000')
   })
 
-  it('the data row has exactly 8 comma-separated values (before any quoting)', () => {
-    // Use a car with no special characters so we can split on comma safely
+  it('the data row has the same number of columns as the header', () => {
     const lines = buildCsvString([makeCar()]).split('\r\n')
-    expect(lines[1].split(',').length).toBe(8)
+    expect(lines[1].split(',').length).toBe(CSV_HEADERS.length)
   })
 })
 
@@ -179,26 +186,74 @@ describe('buildCsvString — single car', () => {
 
 describe('buildCsvString — null value (credits)', () => {
   it('null value field produces a blank cell, not "null" or "0"', () => {
-    const car = makeCar({ value: null })
-    const lines = buildCsvString([car]).split('\r\n')
-    const cells = lines[1].split(',')
-    // Value (Cr) is the 8th column (index 7)
-    expect(cells[7]).toBe('')
+    const cells = buildCsvString([makeCar({ value: null })]).split('\r\n')[1].split(',')
+    expect(cells[col('Value (Cr)')]).toBe('')
   })
 
   it('null value cell is not the string "null"', () => {
     const cells = buildCsvString([makeCar({ value: null })]).split('\r\n')[1].split(',')
-    expect(cells[7]).not.toBe('null')
+    expect(cells[col('Value (Cr)')]).not.toBe('null')
   })
 
   it('null value cell is not "0"', () => {
     const cells = buildCsvString([makeCar({ value: null })]).split('\r\n')[1].split(',')
-    expect(cells[7]).not.toBe('0')
+    expect(cells[col('Value (Cr)')]).not.toBe('0')
   })
 
   it('zero value is preserved as "0", not treated as null', () => {
     const cells = buildCsvString([makeCar({ value: 0 })]).split('\r\n')[1].split(',')
-    expect(cells[7]).toBe('0')
+    expect(cells[col('Value (Cr)')]).toBe('0')
+  })
+})
+
+// ─── buildCsvString — garage-specific fields ─────────────────────────────────
+
+describe('buildCsvString — garage metadata fields', () => {
+  it('pinned true outputs "true"', () => {
+    const cells = buildCsvString([makeCar({ pinned: true })]).split('\r\n')[1].split(',')
+    expect(cells[col('Pinned')]).toBe('true')
+  })
+
+  it('pinned false outputs "false"', () => {
+    const cells = buildCsvString([makeCar({ pinned: false })]).split('\r\n')[1].split(',')
+    expect(cells[col('Pinned')]).toBe('false')
+  })
+
+  it('pinned undefined outputs empty string', () => {
+    const cells = buildCsvString([makeCar()]).split('\r\n')[1].split(',')
+    expect(cells[col('Pinned')]).toBe('')
+  })
+
+  it('tags array joined with semicolons', () => {
+    const cells = buildCsvString([makeCar({ tags: ['drift', 'tuned'] })]).split('\r\n')[1].split(',')
+    expect(cells[col('Tags')]).toBe('drift; tuned')
+  })
+
+  it('undefined tags outputs empty string', () => {
+    const cells = buildCsvString([makeCar()]).split('\r\n')[1].split(',')
+    expect(cells[col('Tags')]).toBe('')
+  })
+
+  it('addedAt ISO string is preserved', () => {
+    const cells = buildCsvString([makeCar({ addedAt: '2026-01-15T10:00:00.000Z' })]).split('\r\n')[1].split(',')
+    expect(cells[col('Added At')]).toBe('2026-01-15T10:00:00.000Z')
+  })
+})
+
+// ─── buildCsvString — stat overrides ─────────────────────────────────────────
+
+describe('buildCsvString — stat overrides', () => {
+  it('stat override is written to the override column, not the base stat column', () => {
+    const car = makeCar({ statSpeed: 7, statSpeedOverride: 9 })
+    const cells = buildCsvString([car]).split('\r\n')[1].split(',')
+    expect(cells[col('Speed')]).toBe('7')
+    expect(cells[col('Speed Override')]).toBe('9')
+  })
+
+  it('null override outputs empty string', () => {
+    const car = makeCar({ statSpeedOverride: null })
+    const cells = buildCsvString([car]).split('\r\n')[1].split(',')
+    expect(cells[col('Speed Override')]).toBe('')
   })
 })
 
@@ -206,7 +261,6 @@ describe('buildCsvString — null value (credits)', () => {
 
 describe('buildCsvString — comma in field value', () => {
   it('a make containing a comma is wrapped in double-quotes', () => {
-    // Unlikely in practice but must be handled per RFC 4180
     const car = makeCar({ make: 'Ford, Co.' })
     const line = buildCsvString([car]).split('\r\n')[1]
     expect(line).toContain('"Ford, Co."')
@@ -215,10 +269,8 @@ describe('buildCsvString — comma in field value', () => {
   it('a division containing a comma does not break column alignment', () => {
     const car = makeCar({ division: 'Pickups & 4x4s, Offroad' })
     const lines = buildCsvString([car]).split('\r\n')
-    // The row should still parse to 8 fields (the comma is inside quotes)
-    // Simple check: the row starts with the year and ends with the value
     expect(lines[1].startsWith('2020,')).toBe(true)
-    expect(lines[1].endsWith(',500000')).toBe(true)
+    expect(lines[1]).toContain('500000')
   })
 })
 
@@ -226,7 +278,6 @@ describe('buildCsvString — comma in field value', () => {
 
 describe('buildCsvString — double-quote in field value', () => {
   it('a model containing a double-quote has it escaped by doubling', () => {
-    // RFC 4180 §2.7: " inside a quoted field becomes ""
     const car = makeCar({ model: 'GT "Le Mans"' })
     const line = buildCsvString([car]).split('\r\n')[1]
     expect(line).toContain('"GT ""Le Mans"""')
@@ -266,13 +317,11 @@ describe('buildCsvString — injection sanitisation in full rows', () => {
 describe('buildCsvString — line endings', () => {
   it('rows are separated by \\r\\n (RFC 4180)', () => {
     const csv = buildCsvString([makeCar(), makeCar({ id: 2, make: 'Porsche' })])
-    // Must contain at least one \r\n between header and first row
     expect(csv).toContain('\r\n')
   })
 
   it('does not use bare \\n line endings', () => {
     const csv = buildCsvString([makeCar()])
-    // Every \n should be preceded by \r
     const bareNewlines = csv.match(/(?<!\r)\n/g)
     expect(bareNewlines).toBeNull()
   })
@@ -280,7 +329,7 @@ describe('buildCsvString — line endings', () => {
   it('two cars produce two \\r\\n-separated data rows after the header', () => {
     const csv = buildCsvString([makeCar({ id: 1 }), makeCar({ id: 2, make: 'BMW' })])
     const lines = csv.split('\r\n')
-    expect(lines).toHaveLength(3) // header + 2 data rows
+    expect(lines).toHaveLength(3)
   })
 })
 

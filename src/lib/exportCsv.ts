@@ -1,17 +1,22 @@
 import type { Car } from '@/types/car'
 
 export const CSV_HEADERS = [
-  'Year', 'Make', 'Model', 'Division', 'Class', 'PI', 'Country', 'Value (Cr)',
+  // Identity
+  'Year', 'Make', 'Model', 'Division', 'Class', 'PI', 'Country',
+  // Attributes
+  'Rarity', 'Source', 'Source Info', 'Drive', 'Engine Type', 'Engine CC', 'Cylinders', 'Body Style',
+  // Bar stats
+  'Speed', 'Handling', 'Accel', 'Launch', 'Braking', 'Offroad',
+  // Raw specs
+  'HP', 'Torque (ft-lb)', 'Weight (lb)', 'Front Weight (%)', 'Displacement (L)',
+  // Per-user stat overrides
+  'Speed Override', 'Handling Override', 'Accel Override', 'Launch Override',
+  'Braking Override', 'Offroad Override', 'HP Override', 'Torque Override',
+  'Weight Override', 'Front Weight Override', 'Displacement Override', 'Rarity Override',
+  // Garage metadata
+  'Value (Cr)', 'Pinned', 'Added At', 'Notes', 'Tags',
 ] as const
 
-/**
- * Formats a single CSV cell value:
- * - null / undefined → empty string
- * - Values starting with = + - @ are prefixed with ' to prevent spreadsheet
- *   formula injection (RFC 4180 + OWASP CSV injection guidance)
- * - Values containing commas, double-quotes, or newlines are wrapped in
- *   double-quotes with internal quotes doubled per RFC 4180
- */
 export function csvCell(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return ''
   const str = String(value)
@@ -19,15 +24,11 @@ export function csvCell(value: string | number | null | undefined): string {
   return /[,"\n]/.test(sanitised) ? `"${sanitised.replace(/"/g, '""')}"` : sanitised
 }
 
-/**
- * Builds the full CSV string for a garage export.
- * Returns header row + one row per car, joined with \r\n (RFC 4180).
- * An empty cars array returns headers only.
- */
 export function buildCsvString(cars: Car[]): string {
   const headerRow = CSV_HEADERS.join(',')
   const dataRows = cars.map((c) =>
     [
+      // Identity
       csvCell(c.year),
       csvCell(c.make),
       csvCell(c.model),
@@ -35,16 +36,52 @@ export function buildCsvString(cars: Car[]): string {
       csvCell(c.piClass),
       csvCell(c.piRating),
       csvCell(c.country),
-      csvCell(c.value ?? ''),
+      // Attributes
+      csvCell(c.rarity),
+      csvCell(c.source),
+      csvCell(c.sourceInfo),
+      csvCell(c.drivetrain),
+      csvCell(c.engineType),
+      csvCell(c.engineCC),
+      csvCell(c.cylinders),
+      csvCell(c.bodyStyle),
+      // Bar stats
+      csvCell(c.statSpeed),
+      csvCell(c.statHandling),
+      csvCell(c.statAcceleration),
+      csvCell(c.statLaunch),
+      csvCell(c.statBraking),
+      csvCell(c.statOffroad),
+      // Raw specs
+      csvCell(c.powerHp),
+      csvCell(c.torqueFtLb),
+      csvCell(c.weightLb),
+      csvCell(c.frontWeight),
+      csvCell(c.displacementL),
+      // Stat overrides
+      csvCell(c.statSpeedOverride ?? ''),
+      csvCell(c.statHandlingOverride ?? ''),
+      csvCell(c.statAccelerationOverride ?? ''),
+      csvCell(c.statLaunchOverride ?? ''),
+      csvCell(c.statBrakingOverride ?? ''),
+      csvCell(c.statOffroadOverride ?? ''),
+      csvCell(c.powerHpOverride ?? ''),
+      csvCell(c.torqueFtLbOverride ?? ''),
+      csvCell(c.weightLbOverride ?? ''),
+      csvCell(c.frontWeightOverride ?? ''),
+      csvCell(c.displacementLOverride ?? ''),
+      csvCell(c.rarityOverride ?? ''),
+      // Garage metadata
+      csvCell(c.value),
+      csvCell(c.pinned != null ? String(c.pinned) : ''),
+      csvCell(c.addedAt ?? ''),
+      csvCell(c.notes ?? ''),
+      csvCell(c.tags?.join('; ') ?? ''),
     ].join(',')
   )
   return [headerRow, ...dataRows].join('\r\n')
 }
 
-/**
- * Returns the export filename for a given date.
- * Defaults to today. Format: forza-garage-YYYY-MM-DD.csv
- */
 export function csvFilename(date: Date = new Date()): string {
   return `forza-garage-${date.toISOString().slice(0, 10)}.csv`
 }
