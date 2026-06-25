@@ -20,8 +20,8 @@
   --fh-panel2:      #EFE6D2;
   --fh-dark:        #1E1A14;
   --fh-dark2:       #32291C;
-  --fh-muted:       #7A6E5C;
-  --fh-muted2:      #A09080;
+  --fh-muted:       #6A5F4F;
+  --fh-muted2:      #766B5B;
   --fh-border:      rgba(30,26,20,0.12);
   --fh-border2:     rgba(30,26,20,0.07);
   --fh-border-strong: rgba(30,26,20,0.2);
@@ -44,14 +44,18 @@
   --fh-panel2:      #1C1C1F;
   --fh-dark:        #F0E8D8;
   --fh-dark2:       #D4C8B0;
-  --fh-muted:       #8A8070;
-  --fh-muted2:      #5C544A;
+  --fh-muted:       #9D9282;
+  --fh-muted2:      #897E6E;
   --fh-border:      rgba(240,232,216,0.1);
   --fh-border2:     rgba(240,232,216,0.06);
   --fh-border-strong: rgba(240,232,216,0.18);
   --fh-amber:       #D4920A;
   --fh-amber-pale:  rgba(212,146,10,0.1);
+  /* Brighter blue/purple for dark surfaces — the light-mode values (#1A5FA0,
+     #6600CC) drop to ~2.5:1 on the near-black panel. */
+  --fh-blue:        #5BA0E5;
   --fh-blue-pale:   rgba(26,95,160,0.1);
+  --fh-purple:      #A78BFA;
 }
 
 /* ── Base ───────────────────────────────────────────────────────────────────── */

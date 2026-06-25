@@ -585,7 +585,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                         <div className="flex flex-col gap-2.5">
                           {statCallouts.map((c) => (
                             <div key={c.id} className="rounded-lg border border-fh-red bg-fh-red-pale px-3 py-2.5">
-                              <div className="text-[10px] text-fh-red font-medium uppercase tracking-wide mb-1">
+                              <div className="text-[10px] font-medium uppercase tracking-wide mb-1" style={{ color: 'var(--fh-red-fg)' }}>
                                 {c.title}
                               </div>
                               <p className="text-xs text-fh-dark-2 leading-relaxed">{c.body}</p>
@@ -608,7 +608,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                               <ol className="space-y-1.5">
                                 {tuningGuide.priorities.map((p, i) => (
                                   <li key={i} className="flex items-start gap-2 text-xs text-fh-dark">
-                                    <span className="text-fh-red opacity-60 font-mono shrink-0 w-4">{i + 1}.</span>
+                                    <span className="opacity-60 font-mono shrink-0 w-4" style={{ color: 'var(--fh-red-fg)' }}>{i + 1}.</span>
                                     {p}
                                   </li>
                                 ))}
@@ -627,7 +627,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                               <ol className="space-y-1.5">
                                 {divisionFallback.priorities.map((p, i) => (
                                   <li key={i} className="flex items-start gap-2 text-xs text-fh-dark">
-                                    <span className="text-fh-red opacity-60 font-mono shrink-0 w-4">{i + 1}.</span>
+                                    <span className="opacity-60 font-mono shrink-0 w-4" style={{ color: 'var(--fh-red-fg)' }}>{i + 1}.</span>
                                     {p}
                                   </li>
                                 ))}
