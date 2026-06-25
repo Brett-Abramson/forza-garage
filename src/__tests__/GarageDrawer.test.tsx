@@ -62,6 +62,13 @@ function renderDrawer(
   )}
 }
 
+// The body is tabbed (Overview / Guide / Tags & Notes). Content other than the
+// header, division strip, and Overview lives behind a tab, so tests open the
+// relevant tab before asserting on its content.
+type U = ReturnType<typeof userEvent.setup>
+const openTab = (user: U, name: 'Overview' | 'Guide' | 'Tags & Notes') =>
+  user.click(screen.getByRole('button', { name }))
+
 beforeEach(() => {
   vi.clearAllMocks()
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) }))
@@ -84,6 +91,7 @@ describe('GarageDrawer — visibility', () => {
 })
 
 // ─── Car info ─────────────────────────────────────────────────────────────────
+// All of this lives in the always-visible header + division strip.
 
 describe('GarageDrawer — car info', () => {
   it('shows make, model, and year', () => {
@@ -165,31 +173,39 @@ describe('GarageDrawer — close', () => {
   })
 })
 
-// ─── Tag display ──────────────────────────────────────────────────────────────
+// ─── Tag display (Tags & Notes tab) ────────────────────────────────────────────
 
 describe('GarageDrawer — tag display', () => {
-  it('shows both auto and user tags', () => {
+  it('shows both auto and user tags', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Tags & Notes')
     expect(screen.getByText('asphalt')).toBeInTheDocument()       // auto
     expect(screen.getByText('street racing')).toBeInTheDocument() // auto
     expect(screen.getByText('long straights')).toBeInTheDocument() // user
     expect(screen.getByText('technical')).toBeInTheDocument()     // user
   })
 
-  it('both user and auto tags have remove buttons', () => {
+  it('both user and auto tags have remove buttons', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Tags & Notes')
     expect(screen.getByRole('button', { name: 'Remove long straights' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Remove asphalt' })).toBeInTheDocument()
   })
 
-  it('auto tag remove button has a descriptive title', () => {
+  it('auto tag remove button has a descriptive title', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Tags & Notes')
     const autoTagBtn = screen.getByRole('button', { name: 'Remove asphalt' })
     expect(autoTagBtn.closest('[title]')).toBeTruthy()
   })
 
-  it('shows "No tags yet" when tagDetails is empty', () => {
+  it('shows "No tags yet" when tagDetails is empty', async () => {
+    const user = userEvent.setup()
     renderDrawer({ ...baseCar, tags: [], tagDetails: [] })
+    await openTab(user, 'Tags & Notes')
     expect(screen.getByText(/No tags yet/i)).toBeInTheDocument()
   })
 
@@ -197,6 +213,7 @@ describe('GarageDrawer — tag display', () => {
     const user = userEvent.setup()
     const onTagDetailsChange = vi.fn()
     renderDrawer(baseCar, { onTagDetailsChange })
+    await openTab(user, 'Tags & Notes')
     await user.click(screen.getByRole('button', { name: 'Remove long straights' }))
     expect(onTagDetailsChange).toHaveBeenCalledWith(
       baseCar.id,
@@ -213,26 +230,32 @@ describe('GarageDrawer — tag display', () => {
   })
 })
 
-// ─── Add tags ─────────────────────────────────────────────────────────────────
+// ─── Add tags (Tags & Notes tab) ───────────────────────────────────────────────
 
 describe('GarageDrawer — add tags', () => {
-  it('shows tags not yet applied as addable', () => {
+  it('shows tags not yet applied as addable', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Tags & Notes')
     // 'dirt' is in neither auto nor user tags
     expect(screen.getByRole('button', { name: '+ dirt' })).toBeInTheDocument()
   })
 
-  it('does not offer already-applied tags (auto or user) as addable', () => {
+  it('does not offer already-applied tags (auto or user) as addable', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Tags & Notes')
     expect(screen.queryByRole('button', { name: '+ asphalt' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ street racing' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ long straights' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ technical' })).not.toBeInTheDocument()
   })
 
-  it('hides the add section when all tags are applied', () => {
+  it('hides the add section when all tags are applied', async () => {
+    const user = userEvent.setup()
     const allTagDetails = CAR_TAGS.map((tag) => ({ tag, source: 'user' }))
     renderDrawer({ ...baseCar, tags: [...CAR_TAGS], tagDetails: allTagDetails })
+    await openTab(user, 'Tags & Notes')
     expect(screen.queryByText('Add tags')).not.toBeInTheDocument()
   })
 
@@ -240,6 +263,7 @@ describe('GarageDrawer — add tags', () => {
     const user = userEvent.setup()
     const onTagDetailsChange = vi.fn()
     renderDrawer(baseCar, { onTagDetailsChange })
+    await openTab(user, 'Tags & Notes')
     await user.click(screen.getByRole('button', { name: '+ dirt' }))
     expect(onTagDetailsChange).toHaveBeenCalledWith(
       baseCar.id,
@@ -258,7 +282,7 @@ describe('GarageDrawer — add tags', () => {
   })
 })
 
-// ─── Race types ───────────────────────────────────────────────────────────────
+// ─── Race types (Overview tab — default) ────────────────────────────────────────
 
 describe('GarageDrawer — race types', () => {
   it('shows the Race types section when the car has matching tags', () => {
@@ -291,61 +315,78 @@ describe('GarageDrawer — race types', () => {
   })
 })
 
-// ─── Tuning guide ─────────────────────────────────────────────────────────────
+// ─── Tuning guide (Guide tab) ───────────────────────────────────────────────────
 
 describe('GarageDrawer — tuning guide', () => {
-  it('shows the Tuning guide section when a race type matches', () => {
+  it('shows the Tuning guide section when a race type matches', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Guide')
     expect(screen.getByText('Tuning guide')).toBeInTheDocument()
   })
 
-  it('shows the philosophy paragraph for a matched guide', () => {
+  it('shows the philosophy paragraph for a matched guide', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Guide')
     expect(screen.getByText(/most varied division for road racing/i)).toBeInTheDocument()
   })
 
-  it('shows the spectrum note', () => {
+  it('shows the spectrum note', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Guide')
     expect(screen.getByText(/lightweight naturally-aspirated RWD coupes/i)).toBeInTheDocument()
   })
 
-  it('shows numbered priorities', () => {
+  it('shows numbered priorities', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Guide')
     expect(screen.getByText(/Diagnose first/i)).toBeInTheDocument()
   })
 
-  it('shows the Watch out callout with its text', () => {
+  it('shows the Watch out callout with its text', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Guide')
     expect(screen.getByText(/Watch out/i)).toBeInTheDocument()
     expect(screen.getByText(/AWD conversion without checking PI cost/i)).toBeInTheDocument()
   })
 
-  it('shows division fallback guide when no race-type-specific guide exists', () => {
+  it('shows division fallback guide when no race-type-specific guide exists', async () => {
+    const user = userEvent.setup()
     // Modern Muscle has no tuning guide for Road Racing but has a division fallback
     const noGuideCar = { ...baseCar, division: 'Modern Muscle' }
     renderDrawer(noGuideCar)
+    await openTab(user, 'Guide')
     // Division fallback content should appear instead of "coming soon"
     expect(screen.queryByText(/coming soon/i)).not.toBeInTheDocument()
     expect(screen.getByText(/muscle cars are built around torque/i)).toBeInTheDocument()
   })
 })
 
-// ─── Notes ────────────────────────────────────────────────────────────────────
+// ─── Notes (Tags & Notes tab) ───────────────────────────────────────────────────
 
 describe('GarageDrawer — notes', () => {
-  it('renders a notes textarea', () => {
+  it('renders a notes textarea', async () => {
+    const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Tags & Notes')
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
-  it('pre-fills textarea with existing notes', () => {
+  it('pre-fills textarea with existing notes', async () => {
+    const user = userEvent.setup()
     renderDrawer({ ...baseCar, notes: 'Best grip car' })
+    await openTab(user, 'Tags & Notes')
     expect(screen.getByRole('textbox')).toHaveValue('Best grip car')
   })
 
   it('saves notes on blur after typing', async () => {
     const user = userEvent.setup()
     renderDrawer()
+    await openTab(user, 'Tags & Notes')
     const textarea = screen.getByRole('textbox')
     await user.click(textarea)
     await user.type(textarea, 'lap time notes')
@@ -356,6 +397,7 @@ describe('GarageDrawer — notes', () => {
   it('does not call fetch on blur when notes have not changed', async () => {
     const user = userEvent.setup()
     renderDrawer({ ...baseCar, notes: 'unchanged' })
+    await openTab(user, 'Tags & Notes')
     await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/cars/42'))
     vi.clearAllMocks()
     const textarea = screen.getByRole('textbox')
@@ -365,7 +407,7 @@ describe('GarageDrawer — notes', () => {
   })
 })
 
-// ─── Stat overrides ───────────────────────────────────────────────────────────
+// ─── Stat overrides (Overview tab — default) ────────────────────────────────────
 
 describe('GarageDrawer — stat overrides', () => {
   // Car where the user has set a speed override (as garage/page.tsx would resolve it:
@@ -515,38 +557,47 @@ describe('GarageDrawer — stat overrides', () => {
   })
 })
 
-// ─── Non-owned car ────────────────────────────────────────────────────────────
-
 // ─── Tag editing context gate ─────────────────────────────────────────────────
 
 describe('GarageDrawer — tag editing context gate', () => {
-  it('shows Tags and Add tags when onTagDetailsChange is provided (My Garage context)', () => {
+  it('shows Tags and Add tags when onTagDetailsChange is provided (My Garage context)', async () => {
+    const user = userEvent.setup()
     // renderDrawer always provides onTagDetailsChange — simulates My Garage
     renderDrawer()
+    await openTab(user, 'Tags & Notes')
     expect(screen.getByText('Tags')).toBeInTheDocument()
     expect(screen.getByText('Add tags')).toBeInTheDocument()
   })
 
-  it('hides Tags, Add tags, and Reset when onTagDetailsChange is absent (Car Database context)', () => {
+  it('hides Tags, Add tags, and Reset when onTagDetailsChange is absent (Car Database context)', async () => {
+    const user = userEvent.setup()
+    // Owned car (so the Tags & Notes tab still exists for notes), but no tag callbacks
     render(<GarageDrawer car={baseCar} onClose={vi.fn()} />)
+    await openTab(user, 'Tags & Notes')
     expect(screen.queryByText('Tags')).not.toBeInTheDocument()
     expect(screen.queryByText('Add tags')).not.toBeInTheDocument()
     expect(screen.queryByText(/Reset tags to defaults/i)).not.toBeInTheDocument()
   })
 
-  it('hides tag editing for an owned car opened from Car Database', () => {
+  it('hides tag editing for an owned car opened from Car Database', async () => {
+    const user = userEvent.setup()
     // Even though the car is owned, no onTagDetailsChange → no tag UI
     const ownedCar: Car = { ...baseCar, owned: true }
     render(<GarageDrawer car={ownedCar} onClose={vi.fn()} />)
+    await openTab(user, 'Tags & Notes')
     expect(screen.queryByText('Tags')).not.toBeInTheDocument()
     expect(screen.queryByText('Add tags')).not.toBeInTheDocument()
   })
 
-  it('still shows read-only content (race types, tuning guide) in Car Database context', () => {
+  it('still shows read-only content (race types, tuning guide) in Car Database context', async () => {
+    const user = userEvent.setup()
     render(<GarageDrawer car={baseCar} onClose={vi.fn()} />)
+    // Race types live on the Overview tab (default)
     expect(screen.getByText('Race types')).toBeInTheDocument()
-    expect(screen.getByText('Tuning guide')).toBeInTheDocument()
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
+    // Tuning guide lives on the Guide tab
+    await openTab(user, 'Guide')
+    expect(screen.getByText('Tuning guide')).toBeInTheDocument()
   })
 })
 
@@ -554,6 +605,11 @@ describe('GarageDrawer — tag editing context gate', () => {
 
 describe('GarageDrawer — non-owned car', () => {
   const unownedCar: Car = { ...baseCar, owned: false }
+
+  it('does not show a Tags & Notes tab for a non-owned car', () => {
+    renderDrawer(unownedCar)
+    expect(screen.queryByRole('button', { name: 'Tags & Notes' })).not.toBeInTheDocument()
+  })
 
   it('does not render the Tags section for a non-owned car', () => {
     renderDrawer(unownedCar)
