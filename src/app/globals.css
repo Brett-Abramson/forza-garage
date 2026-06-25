@@ -11,6 +11,7 @@
   --fh-red-dim:     #991000;
   --fh-red-pale:    rgba(204,0,0,0.07);
   --fh-red-border:  rgba(204,0,0,0.2);
+  --fh-red-fg:      #CC0000;
   --fh-pink:        #C45570;
   --fh-pink-pale:   rgba(196,85,112,0.08);
   --fh-bg:          #F0E8D8;
@@ -19,10 +20,11 @@
   --fh-panel2:      #EFE6D2;
   --fh-dark:        #1E1A14;
   --fh-dark2:       #32291C;
-  --fh-muted:       #7A6E5C;
-  --fh-muted2:      #A09080;
+  --fh-muted:       #6A5F4F;
+  --fh-muted2:      #766B5B;
   --fh-border:      rgba(30,26,20,0.12);
   --fh-border2:     rgba(30,26,20,0.07);
+  --fh-border-strong: rgba(30,26,20,0.2);
   --fh-amber:       #B87010;
   --fh-amber-pale:  rgba(184,112,16,0.08);
   --fh-blue:        #1A5FA0;
@@ -33,19 +35,27 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
+  /* Brand red (#CC0000) is too dark as small foreground text on the near-black
+     dark surfaces; lift it for chips/labels while bg-fh-red stays the brand fill. */
+  --fh-red-fg:      #F87171;
   --fh-bg:          #0E0E10;
   --fh-bg2:         #141416;
   --fh-panel:       #141416;
   --fh-panel2:      #1C1C1F;
   --fh-dark:        #F0E8D8;
   --fh-dark2:       #D4C8B0;
-  --fh-muted:       #8A8070;
-  --fh-muted2:      #5C544A;
+  --fh-muted:       #9D9282;
+  --fh-muted2:      #897E6E;
   --fh-border:      rgba(240,232,216,0.1);
   --fh-border2:     rgba(240,232,216,0.06);
+  --fh-border-strong: rgba(240,232,216,0.18);
   --fh-amber:       #D4920A;
   --fh-amber-pale:  rgba(212,146,10,0.1);
+  /* Brighter blue/purple for dark surfaces — the light-mode values (#1A5FA0,
+     #6600CC) drop to ~2.5:1 on the near-black panel. */
+  --fh-blue:        #5BA0E5;
   --fh-blue-pale:   rgba(26,95,160,0.1);
+  --fh-purple:      #A78BFA;
 }
 
 /* ── Base ───────────────────────────────────────────────────────────────────── */

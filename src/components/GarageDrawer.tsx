@@ -313,11 +313,11 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                 background: '#1E1A14',
                 padding: '20px 20px 18px',
                 borderLeft: `4px solid ${accent}`,
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                borderBottom: '1px solid rgba(255,255,255,0.14)',
               }}
             >
               <div className="min-w-0">
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', marginBottom: 5 }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.56)', marginBottom: 5 }}>
                   {displayCar.year} · {displayCar.make}
                 </div>
                 <h2
@@ -335,7 +335,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                   >
                     {displayCar.piClass}
                   </span>
-                  <span className="tabular-nums" style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: 700 }}>
+                  <span className="tabular-nums" style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: 700 }}>
                     {displayCar.piRating}
                   </span>
                   {displayCar.drivetrain && <GhostPill>{displayCar.drivetrain}</GhostPill>}
@@ -353,7 +353,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                     aria-label={displayCar.pinned ? 'Remove from favourites' : 'Add to favourites'}
                     title={displayCar.pinned ? 'Remove from favourites' : 'Add to favourites'}
                     className={`p-2 rounded-lg text-lg leading-none transition-colors ${
-                      displayCar.pinned ? 'text-amber-400 hover:text-amber-300' : 'text-white/35 hover:text-white/70'
+                      displayCar.pinned ? 'text-amber-400 hover:text-amber-300' : 'text-white/55 hover:text-white/80'
                     }`}
                   >
                     <span className="block leading-none">{displayCar.pinned ? '★' : '☆'}</span>
@@ -361,7 +361,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                 )}
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg text-white/30 hover:text-white/70 transition-colors"
+                  className="p-2 rounded-lg text-white/50 hover:text-white/80 transition-colors"
                   aria-label="Close"
                 >
                   <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
@@ -435,8 +435,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                     {/* Spec tiles grid */}
                     {hasAnySpec ? (
                       <div
-                        className="grid grid-cols-3 border border-fh-border rounded-[9px] overflow-hidden"
-                        style={{ marginTop: 14 }}
+                        className="grid grid-cols-3 rounded-[9px] overflow-hidden"
+                        style={{ marginTop: 14, border: '1px solid var(--fh-border-strong)' }}
                       >
                         {specTiles.map((t, i) => (
                           <div
@@ -444,8 +444,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                             className="bg-fh-panel"
                             style={{
                               padding: '11px 14px',
-                              borderRight: i % 3 !== 2 ? '1px solid var(--fh-border)' : undefined,
-                              borderBottom: i < 3 ? '1px solid var(--fh-border)' : undefined,
+                              borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
+                              borderBottom: i < 3 ? '1px solid var(--fh-border-strong)' : undefined,
                             }}
                           >
                             <div className="font-bold uppercase text-fh-muted" style={{ fontSize: 9, letterSpacing: '0.1em', marginBottom: 3 }}>
@@ -585,7 +585,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                         <div className="flex flex-col gap-2.5">
                           {statCallouts.map((c) => (
                             <div key={c.id} className="rounded-lg border border-fh-red bg-fh-red-pale px-3 py-2.5">
-                              <div className="text-[10px] text-fh-red font-medium uppercase tracking-wide mb-1">
+                              <div className="text-[10px] font-medium uppercase tracking-wide mb-1" style={{ color: 'var(--fh-red-fg)' }}>
                                 {c.title}
                               </div>
                               <p className="text-xs text-fh-dark-2 leading-relaxed">{c.body}</p>
@@ -608,7 +608,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                               <ol className="space-y-1.5">
                                 {tuningGuide.priorities.map((p, i) => (
                                   <li key={i} className="flex items-start gap-2 text-xs text-fh-dark">
-                                    <span className="text-fh-red opacity-60 font-mono shrink-0 w-4">{i + 1}.</span>
+                                    <span className="opacity-60 font-mono shrink-0 w-4" style={{ color: 'var(--fh-red-fg)' }}>{i + 1}.</span>
                                     {p}
                                   </li>
                                 ))}
@@ -627,7 +627,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                               <ol className="space-y-1.5">
                                 {divisionFallback.priorities.map((p, i) => (
                                   <li key={i} className="flex items-start gap-2 text-xs text-fh-dark">
-                                    <span className="text-fh-red opacity-60 font-mono shrink-0 w-4">{i + 1}.</span>
+                                    <span className="opacity-60 font-mono shrink-0 w-4" style={{ color: 'var(--fh-red-fg)' }}>{i + 1}.</span>
                                     {p}
                                   </li>
                                 ))}
@@ -664,7 +664,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                           {autoTags.map((tag) => (
                             <span
                               key={`auto-${tag}`}
-                              className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red opacity-60 hover:opacity-100 transition-opacity"
+                              className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-fh-red-pale border border-fh-red opacity-70 hover:opacity-100 transition-opacity"
+                              style={{ color: 'var(--fh-red-fg)' }}
                             >
                               {tag}
                               <button
@@ -681,7 +682,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                           {userTags.map((tag) => (
                             <span
                               key={`user-${tag}`}
-                              className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-fh-red-pale text-fh-red border border-fh-red"
+                              className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-fh-red-pale border border-fh-red"
+                              style={{ color: 'var(--fh-red-fg)' }}
                             >
                               {tag}
                               <button
@@ -814,7 +816,7 @@ function TabBtn({ label, active, onClick }: { label: string; active: boolean; on
   return (
     <button
       onClick={onClick}
-      className={`flex-1 transition-colors ${active ? 'text-fh-red' : 'text-fh-muted hover:text-fh-dark'}`}
+      className={`flex-1 transition-colors ${active ? 'text-fh-red bg-fh-red-pale' : 'text-fh-muted hover:text-fh-dark'}`}
       style={{
         padding: '10px 0',
         fontSize: 12,
@@ -832,8 +834,8 @@ function GhostPill({ children, color }: { children: React.ReactNode; color?: str
   return (
     <span
       style={{
-        background: 'rgba(255,255,255,0.09)',
-        color: color ?? 'rgba(255,255,255,0.6)',
+        background: 'rgba(255,255,255,0.13)',
+        color: color ?? 'rgba(255,255,255,0.78)',
         padding: '3px 9px',
         borderRadius: 6,
         fontSize: 11,
