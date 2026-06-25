@@ -11,7 +11,12 @@
  *   prisma/scraped_car_stats.csv → drivetrain, powerHp, torqueFtLb, weightLb,
  *                                   displacementL, frontWeight, statSpeed,
  *                                   statHandling, statAcceleration, statLaunch,
- *                                   statBraking, statOffroad
+ *                                   statBraking, statOffroad,
+ *                                   simZeroToSixty, simZeroToHundred,
+ *                                   simBraking60, simBraking100,
+ *                                   simLateralG60, simLateralG120,
+ *                                   simTopSpeed, simAeroEfficiency,
+ *                                   simMechBalance, simAeroBalance
  *
  * Both CSVs are joined on  year + make + model  before the DB is touched.
  *
@@ -141,6 +146,11 @@ const STAT_FIELDS = [
   'powerHp', 'torqueFtLb', 'weightLb', 'displacementL', 'frontWeight',
   'statSpeed', 'statHandling', 'statAcceleration',
   'statLaunch', 'statBraking', 'statOffroad',
+  // Simulation results (added with scraper v2)
+  'simZeroToSixty', 'simZeroToHundred',
+  'simBraking60', 'simBraking100',
+  'simLateralG60', 'simLateralG120',
+  'simTopSpeed', 'simAeroEfficiency', 'simMechBalance', 'simAeroBalance',
 ]
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -198,9 +208,17 @@ async function main() {
     const cols = statsRows[i]
     // Columns: Year, Make, Model, Drivetrain, Power, Torque, Weight,
     //          Displacement, Front %, Speed, Handling, Acceleration,
-    //          Launch, Braking, Offroad
-    const [yearStr, make, model, drivetrain, power, torque, weight,
-           displacement, frontPct, speed, handling, accel, launch, braking, offroad] = cols
+    //          Launch, Braking, Offroad,
+    //          Sim_0_60, Sim_0_100, Sim_Braking_60, Sim_Braking_100,
+    //          Sim_Lateral_G_60, Sim_Lateral_G_120, Sim_Top_Speed,
+    //          Sim_Aero_Efficiency, Sim_Mech_Balance, Sim_Aero_Balance
+    const [
+      yearStr, make, model, drivetrain, power, torque, weight,
+      displacement, frontPct, speed, handling, accel, launch, braking, offroad,
+      rawSim060, rawSim0100, rawSimBraking60, rawSimBraking100,
+      rawSimLatG60, rawSimLatG120, rawSimTopSpeed,
+      rawSimAeroEff, rawSimMechBal, rawSimAeroBal,
+    ] = cols
 
     const year = parseInt(yearStr)
     if (!year || !make || !model) {
@@ -215,12 +233,23 @@ async function main() {
       weightLb:         parseLbs(weight),
       displacementL:    parseDisplacement(displacement),
       frontWeight:      parseFrontPct(frontPct),
-      statSpeed:        parseStat(speed),
-      statHandling:     parseStat(handling),
-      statAcceleration: parseStat(accel),
-      statLaunch:       parseStat(launch),
-      statBraking:      parseStat(braking),
-      statOffroad:      parseStat(offroad),
+      statSpeed:          parseStat(speed),
+      statHandling:       parseStat(handling),
+      statAcceleration:   parseStat(accel),
+      statLaunch:         parseStat(launch),
+      statBraking:        parseStat(braking),
+      statOffroad:        parseStat(offroad),
+      // Simulation results — bare floats, units implied by field name
+      simZeroToSixty:     parseStat(rawSim060),
+      simZeroToHundred:   parseStat(rawSim0100),
+      simBraking60:       parseStat(rawSimBraking60),
+      simBraking100:      parseStat(rawSimBraking100),
+      simLateralG60:      parseStat(rawSimLatG60),
+      simLateralG120:     parseStat(rawSimLatG120),
+      simTopSpeed:        parseStat(rawSimTopSpeed),
+      simAeroEfficiency:  parseStat(rawSimAeroEff),
+      simMechBalance:     parseStat(rawSimMechBal),
+      simAeroBalance:     parseStat(rawSimAeroBal),
     })
   }
 
@@ -251,6 +280,11 @@ async function main() {
         displacementL: true, frontWeight: true,
         statSpeed: true, statHandling: true, statAcceleration: true,
         statLaunch: true, statBraking: true, statOffroad: true,
+        simZeroToSixty: true, simZeroToHundred: true,
+        simBraking60: true, simBraking100: true,
+        simLateralG60: true, simLateralG120: true,
+        simTopSpeed: true, simAeroEfficiency: true,
+        simMechBalance: true, simAeroBalance: true,
       },
     })
 
@@ -292,12 +326,22 @@ async function main() {
             weightLb:         stats.weightLb         ?? null,
             displacementL:    stats.displacementL    ?? null,
             frontWeight:      stats.frontWeight      ?? null,
-            statSpeed:        stats.statSpeed        ?? null,
-            statHandling:     stats.statHandling     ?? null,
-            statAcceleration: stats.statAcceleration ?? null,
-            statLaunch:       stats.statLaunch       ?? null,
-            statBraking:      stats.statBraking      ?? null,
-            statOffroad:      stats.statOffroad      ?? null,
+            statSpeed:          stats.statSpeed          ?? null,
+            statHandling:       stats.statHandling       ?? null,
+            statAcceleration:   stats.statAcceleration   ?? null,
+            statLaunch:         stats.statLaunch         ?? null,
+            statBraking:        stats.statBraking        ?? null,
+            statOffroad:        stats.statOffroad        ?? null,
+            simZeroToSixty:     stats.simZeroToSixty     ?? null,
+            simZeroToHundred:   stats.simZeroToHundred   ?? null,
+            simBraking60:       stats.simBraking60       ?? null,
+            simBraking100:      stats.simBraking100      ?? null,
+            simLateralG60:      stats.simLateralG60      ?? null,
+            simLateralG120:     stats.simLateralG120     ?? null,
+            simTopSpeed:        stats.simTopSpeed        ?? null,
+            simAeroEfficiency:  stats.simAeroEfficiency  ?? null,
+            simMechBalance:     stats.simMechBalance     ?? null,
+            simAeroBalance:     stats.simAeroBalance     ?? null,
           },
         })
         insertedCars.push({ year: csv.year, make: csv.make, model: csv.model })

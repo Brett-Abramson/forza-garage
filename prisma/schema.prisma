@@ -44,6 +44,18 @@ model Car {
   frontWeight   Int?    // weight distribution % — e.g. 40 means 40/60 F/R
   displacementL Float?
 
+  // Simulation results (from forza.labsgg.com/cars/{slug})
+  simZeroToSixty      Float?   // seconds  — 0-60 MPH
+  simZeroToHundred    Float?   // seconds  — 0-100 MPH
+  simBraking60        Float?   // feet     — 60-0 braking distance
+  simBraking100       Float?   // feet     — 100-0 braking distance
+  simLateralG60       Float?   // G-force  — lateral grip at 60 mph
+  simLateralG120      Float?   // G-force  — lateral grip at 120 mph
+  simTopSpeed         Float?   // mph      — simulated top speed
+  simAeroEfficiency   Float?   // ratio    — drag/downforce balance
+  simMechBalance      Float?   // ratio    — mechanical grip balance F/R
+  simAeroBalance      Float?   // ratio    — aerodynamic balance F/R
+
   // Identity
   value   Int?     // purchase price in credits
   rarity  String?  // Common | Rare | Legendary | Forza Edition
