@@ -76,7 +76,11 @@ export default function CarCard({ car, onToggleOwned, onCardClick, onTogglePin, 
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const accent = getDivisionAccent(car.division)
-  const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined)
+  const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined, {
+    statSpeed: car.statSpeed, statHandling: car.statHandling,
+    statAcceleration: car.statAcceleration, statLaunch: car.statLaunch,
+    statBraking: car.statBraking, statOffroad: car.statOffroad,
+  })
 
   return (
     <div

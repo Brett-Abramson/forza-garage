@@ -181,7 +181,11 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
 
   async function resetTagsToDefault() {
     if (!displayCar) return
-    const fresh = getAutoTags(displayCar.division, displayCar.drivetrain ?? undefined)
+    const fresh = getAutoTags(displayCar.division, displayCar.drivetrain ?? undefined, {
+      statSpeed: displayCar.statSpeed, statHandling: displayCar.statHandling,
+      statAcceleration: displayCar.statAcceleration, statLaunch: displayCar.statLaunch,
+      statBraking: displayCar.statBraking, statOffroad: displayCar.statOffroad,
+    })
     await patchTags(fresh, [])
     setConfirmResetTags(false)
   }
@@ -260,7 +264,12 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
     ? getRankedRaceTypes(
         displayCar.division,
         [...autoTags, ...userTags],
-        displayCar.drivetrain ?? undefined
+        displayCar.drivetrain ?? undefined,
+        {
+          statSpeed: displayCar.statSpeed, statHandling: displayCar.statHandling,
+          statAcceleration: displayCar.statAcceleration, statLaunch: displayCar.statLaunch,
+          statBraking: displayCar.statBraking, statOffroad: displayCar.statOffroad,
+        }
       )
     : []
 

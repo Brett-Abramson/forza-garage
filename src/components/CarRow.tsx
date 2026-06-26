@@ -32,7 +32,11 @@ interface Props {
 export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode, colVis }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
-  const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined)
+  const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined, {
+    statSpeed: car.statSpeed, statHandling: car.statHandling,
+    statAcceleration: car.statAcceleration, statLaunch: car.statLaunch,
+    statBraking: car.statBraking, statOffroad: car.statOffroad,
+  })
   const [confirmRemove, setConfirmRemove] = useState(false)
 
   // Sticky left offsets for stats mode — uses tighter STICKY_COL_STATS widths

@@ -16,9 +16,14 @@ async function main() {
   let totalInserted = 0
 
   for (const entry of entries) {
-    // Pass drivetrain so RWD→drift, AWD→dirt/offroad, FWD→tight/street racing
-    // tags are included alongside the division-based tags.
-    const autoTags = getAutoTags(entry.car.division, entry.car.drivetrain ?? undefined)
+    // v3: pass division, drivetrain, AND the car's stats so the stat-gated tags
+    // (offroad, dirt/mixed, technical, drag…) match the live app logic. entry.car
+    // is the full Car row (include: { car: true }), so the stats are in scope.
+    const autoTags = getAutoTags(entry.car.division, entry.car.drivetrain ?? undefined, {
+      statSpeed: entry.car.statSpeed, statHandling: entry.car.statHandling,
+      statAcceleration: entry.car.statAcceleration, statLaunch: entry.car.statLaunch,
+      statBraking: entry.car.statBraking, statOffroad: entry.car.statOffroad,
+    })
     const existingAuto = new Set(
       entry.tags.filter((t) => t.source === 'auto').map((t) => t.tag)
     )

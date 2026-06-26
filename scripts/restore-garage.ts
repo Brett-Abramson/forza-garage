@@ -105,7 +105,11 @@ async function main() {
     if (existing) {
       // Backfill missing auto-tags for already-owned cars
       if (fixTags && existing.tags.length === 0) {
-        const autoTags = getAutoTags(car.division, car.drivetrain ?? undefined)
+        const autoTags = getAutoTags(car.division, car.drivetrain ?? undefined, {
+          statSpeed: car.statSpeed, statHandling: car.statHandling,
+          statAcceleration: car.statAcceleration, statLaunch: car.statLaunch,
+          statBraking: car.statBraking, statOffroad: car.statOffroad,
+        })
         if (autoTags.length > 0) {
           await prisma.carTag.createMany({
             data: autoTags.map((tag) => ({ userGarageId: existing.id, tag, source: 'auto' })),
@@ -119,7 +123,11 @@ async function main() {
     }
 
     const entry = await prisma.userGarage.create({ data: { userId, carId: car.id } })
-    const autoTags = getAutoTags(car.division, car.drivetrain ?? undefined)
+    const autoTags = getAutoTags(car.division, car.drivetrain ?? undefined, {
+      statSpeed: car.statSpeed, statHandling: car.statHandling,
+      statAcceleration: car.statAcceleration, statLaunch: car.statLaunch,
+      statBraking: car.statBraking, statOffroad: car.statOffroad,
+    })
     if (autoTags.length > 0) {
       await prisma.carTag.createMany({
         data: autoTags.map((tag) => ({ userGarageId: entry.id, tag, source: 'auto' })),

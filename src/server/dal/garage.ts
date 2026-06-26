@@ -26,7 +26,11 @@ export async function ensureStarterCars(userId: string): Promise<void> {
 
   const cars = await prisma.car.findMany({
     where: { OR: STARTER_CARS.map(({ year, make, model }) => ({ year, make, model })) },
-    select: { id: true, division: true, drivetrain: true },
+    select: {
+      id: true, division: true, drivetrain: true,
+      statSpeed: true, statHandling: true, statAcceleration: true,
+      statLaunch: true, statBraking: true, statOffroad: true,
+    },
   })
   if (cars.length === 0) return
 
@@ -37,7 +41,11 @@ export async function ensureStarterCars(userId: string): Promise<void> {
           userId,
           carId: car.id,
           tags: {
-            create: getAutoTags(car.division, car.drivetrain ?? undefined)
+            create: getAutoTags(car.division, car.drivetrain ?? undefined, {
+              statSpeed: car.statSpeed, statHandling: car.statHandling,
+              statAcceleration: car.statAcceleration, statLaunch: car.statLaunch,
+              statBraking: car.statBraking, statOffroad: car.statOffroad,
+            })
               .map((tag) => ({ tag, source: 'auto' })),
           },
         },
@@ -122,7 +130,11 @@ export async function getGarageStats(userId: string) {
 /** Add a car to the garage (idempotent) with its auto-tags, atomically. */
 export async function markOwned(
   userId: string,
-  car: { id: number; division: string; drivetrain: string | null }
+  car: {
+    id: number; division: string; drivetrain: string | null
+    statSpeed: number | null; statHandling: number | null; statAcceleration: number | null
+    statLaunch: number | null; statBraking: number | null; statOffroad: number | null
+  }
 ): Promise<void> {
   await prisma.userGarage.upsert({
     where: { userId_carId: { userId, carId: car.id } },
@@ -131,7 +143,11 @@ export async function markOwned(
       userId,
       carId: car.id,
       tags: {
-        create: getAutoTags(car.division, car.drivetrain ?? undefined)
+        create: getAutoTags(car.division, car.drivetrain ?? undefined, {
+          statSpeed: car.statSpeed, statHandling: car.statHandling,
+          statAcceleration: car.statAcceleration, statLaunch: car.statLaunch,
+          statBraking: car.statBraking, statOffroad: car.statOffroad,
+        })
           .map((tag) => ({ tag, source: 'auto' })),
       },
     },

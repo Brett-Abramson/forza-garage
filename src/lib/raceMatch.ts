@@ -1,5 +1,5 @@
 import { RACE_TYPES, RaceType } from "./races"
-import { getAutoTags } from "./autotags"
+import { getAutoTags, type AutoTagStats } from "./autotags"
 
 function scoreRaceType(raceTags: string[], carTags: string[]): number {
   return raceTags.filter((t) => carTags.includes(t)).length
@@ -16,9 +16,10 @@ function scoreRaceType(raceTags: string[], carTags: string[]): number {
 export function getBestRaceType(
   division: string,
   allTags?: string[],
-  drivetrain?: string
+  drivetrain?: string | null,
+  stats?: AutoTagStats | null,
 ): RaceType | null {
-  const autoTags = getAutoTags(division, drivetrain)
+  const autoTags = getAutoTags(division, drivetrain, stats)
   const merged = [...new Set([...autoTags, ...(allTags ?? [])])]
 
   let best: RaceType | null = null
@@ -42,9 +43,10 @@ export function getBestRaceType(
 export function getRankedRaceTypes(
   division: string,
   allTags?: string[],
-  drivetrain?: string
+  drivetrain?: string | null,
+  stats?: AutoTagStats | null,
 ): { race: RaceType; score: number }[] {
-  const autoTags = getAutoTags(division, drivetrain)
+  const autoTags = getAutoTags(division, drivetrain, stats)
   const merged = [...new Set([...autoTags, ...(allTags ?? [])])]
 
   return RACE_TYPES

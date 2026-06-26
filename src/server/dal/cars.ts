@@ -76,7 +76,11 @@ export async function getCarsWithOwnership(userId: string | null): Promise<Car[]
         tagDetails: entry.tags.map((t) => ({ tag: t.tag, source: t.source })),
       } as Car
     }
-    const autoTags = getAutoTags(car.division, car.drivetrain ?? undefined)
+    const autoTags = getAutoTags(car.division, car.drivetrain ?? undefined, {
+      statSpeed: car.statSpeed, statHandling: car.statHandling,
+      statAcceleration: car.statAcceleration, statLaunch: car.statLaunch,
+      statBraking: car.statBraking, statOffroad: car.statOffroad,
+    })
     return {
       ...SPEC_DEFAULTS, ...car,
       owned: false,
