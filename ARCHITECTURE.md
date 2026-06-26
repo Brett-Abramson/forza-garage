@@ -63,27 +63,29 @@ prisma/
 
 ## Core data-flow patterns (the ones that shape design)
 
-1. **List vs. drawer projection split.** `getCarsWithOwnership()` selects `LIST_SELECT` — everything the table and Stats-mode sort need, but **omits** `engineType`/`engineCC`/`cylinders`/`bodyStyle` (filled with `null` via `SPEC_DEFAULTS`). When the drawer opens it fetches `GET /api/cars/:id` (full row) to fill those in. So those fields being null in the list is **intentional, not a bug**. `powerHp`/`torqueFtLb`/`weightLb`/`frontWeight`/`displacementL` ARE in the list (Stats mode sorts on them).
-2. **Ownership join in memory, no N+1.** One `car.findMany` + one `userGarage.findMany`, merged via a `Map`. Signed-out → pass `null`; all cars return `owned:false` with auto-tags derived from division/drivetrain.
-3. **Mutations = Server Actions only.** `src/server/actions/garage.ts` (`'use server'`): `setOwned`, `setTags`, `tuneCar`, `resetTuning`, `setNotes`, `setPinned`. Every one starts with `authorize()` = `requireUserId()` + `checkRateLimit(userId)`, validates input, calls the DAL, and returns a **discriminated result** `{ok:true,…} | {ok:false,error}` — it never throws across the network boundary. API routes are read-only; there is no REST write path.
-4. **Per-user overrides.** `tuneCar` maps canonical fields (`statSpeed`, `powerHp`…) to `UserGarage.*Override` columns via `STAT_OVERRIDE_MAP`; `null` clears one. `resolveEffectiveStats()` (lib/statUtils) merges override → base so the UI shows the effective value while the override column records the source. **Editing a car in the garage never mutates the shared Car catalog.**
-5. **Garage vs. database context in the UI.** Components detect "garage context" by the presence of the `onTagDetailsChange`/`onStatsChange` props (passed by `GarageShowcase`, not `GarageView`). That gates every editing affordance — the same `GarageDrawer` is read-only on `/cars` and editable in `/garage`.
-6. **Caching.** `getCarCount` via `unstable_cache` (24h, tag `car-count`) — the count only changes on import; a redeploy or the 24h revalidate clears it.
+1. **List vs. drawer projection split.** `getCarsWithOwnership()` selects `LIST_SELECT` — everything the table and Stats-mode sort need, but **omits** `engineType`/`engineCC`/`cylinders`/`bodyStyle` (filled with `null` via `SPEC_DEFAULTS`). When the drawer opens it fetches `GET /api/cars/:id` (full row) to fill those in. So those fields being null in the list is **intentional, not a bug**. `powerHp`/`torqueFtLb`/`weightLb`/`frontWeight`/`displacementL` ARE in the list (Stats mode sorts on them). The 7 rankable sim metrics ride LIST_SELECT too (via `LIST_SIM_SELECT` from metrics.ts).
+2. **Metrics registry.** `src/lib/metrics.ts` is the canonical source of truth for every rankable/displayable metric — 10 sim fields + power-to-weight. `sort.ts`, the Sim-view column set, the drawer's Simulation section, and CSV export all read from it. Metrics flag their direction (`lowerBetter`/`higherBetter`/`neutral`) and whether they must live in LIST_SELECT (`inList`). This eliminates duplicate metric definitions across the codebase.
+3. **Ownership join in memory, no N+1.** One `car.findMany` + one `userGarage.findMany`, merged via a `Map`. Signed-out → pass `null`; all cars return `owned:false` with auto-tags derived from division and car stats (v3: stat-gated tags, e.g. RWD drift is division+handling gated; dirt/offroad/technical/drag earned from stats).
+4. **Mutations = Server Actions only.** `src/server/actions/garage.ts` (`'use server'`): `setOwned`, `setTags`, `tuneCar`, `resetTuning`, `setNotes`, `setPinned`. Every one starts with `authorize()` = `requireUserId()` + `checkRateLimit(userId)`, validates input, calls the DAL, and returns a **discriminated result** `{ok:true,…} | {ok:false,error}` — it never throws across the network boundary. API routes are read-only; there is no REST write path.
+5. **Per-user overrides.** `tuneCar` maps canonical fields (`statSpeed`, `powerHp`…) to `UserGarage.*Override` columns via `STAT_OVERRIDE_MAP`; `null` clears one. `resolveEffectiveStats()` (lib/statUtils) merges override → base so the UI shows the effective value while the override column records the source. **Editing a car in the garage never mutates the shared Car catalog.**
+6. **Garage vs. database context in the UI.** Components detect "garage context" by the presence of the `onTagDetailsChange`/`onStatsChange` props (passed by `GarageShowcase`, not `GarageView`). That gates every editing affordance — the same `GarageDrawer` is read-only on `/cars` and editable in `/garage`.
+7. **Caching.** `getCarCount` via `unstable_cache` (24h, tag `car-count`) — the count only changes on import; a redeploy or the 24h revalidate clears it.
 
 ## Components (orientation)
 
 - `/cars`: `GarageView` → `GarageViewClient` (table/grid + `FilterSidebar` + `CarRow`/`CarCard` + `GarageDrawer`)
 - `/garage`: `GarageShowcase` → `GarageShowcaseClient` (same shell, editing enabled: pin/notes/tags/overrides)
-- Shared: `GarageDrawer` (tabbed — Overview / Guide / Tags & Notes), `StatBars` (bar stats; `variant` + `showSpecs` props), `table-ui`, `MetaCarousel(Lazy)`, `Nav`, `ThemeToggle`, `KeyboardNav`, skeletons.
+- Shared: `GarageDrawer` (tabbed — Overview / Guide / Tags & Notes; Overview includes Simulation section with 10 sim metrics), `StatBars` (bar stats; `variant` + `showSpecs` props), `table-ui` (3-way mode toggle: Standard / Stats / **Sim**), `MetaCarousel(Lazy)`, `Nav`, `ThemeToggle`, `KeyboardNav`, skeletons.
 - Reference pages: `RacesView`, `BuildsView`, `design/DesignSystem.client`.
 
 ## Domain logic (`src/lib/`)
 
+- `metrics.ts` — canonical metric registry (10 sim fields + power-to-weight); defines direction, unit, display precision, and LIST_SELECT membership; drives sort.ts, Sim-view, and drawer Simulation section.
 - `races.ts` — `RACE_TYPES` (demands / avoid / PI sweet spot / drivetrain notes); `raceMatch.ts` — scores a car's tags into ranked race types.
-- `autotags.ts` — division + drivetrain → default tags; `tags.ts` — the tag vocabulary.
+- `autotags.ts` — division base tags + stat-gated extensions (v3): RWD drift is division+handling gated (≥7.0); dirt/offroad/technical/drag earned from car stats (via thresholds in `T`). `getAutoTags()` takes optional `AutoTagStats` (nulls degrade gracefully). `tags.ts` — the tag vocabulary.
 - `tuningGuides.ts` / `buildGuides.ts` — static guide content per race-type / PI / division.
 - `statCallouts.ts` — stat analysis (e.g. "power exceeds handling") + division/class averages; `statUtils.ts` — override resolution, payload mapping, `StatFields`.
-- `filterCars.ts` / `sort.ts` — table filtering & sorting; plus `divisionGroups.ts`, `featuredCars.ts`, `exportCsv.ts`, `rateLimit.ts`.
+- `filterCars.ts` / `sort.ts` — table filtering & sorting; sort is metric-driven (from registry, direction-aware, nulls last). Plus `divisionGroups.ts`, `featuredCars.ts`, `exportCsv.ts`, `rateLimit.ts`.
 
 ## Theming & design tokens
 
