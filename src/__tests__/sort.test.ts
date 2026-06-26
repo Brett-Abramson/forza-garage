@@ -187,6 +187,34 @@ describe('compareRows — addedAt', () => {
   })
 })
 
+// ─── compareRows — value (nulls always last) ─────────────────────────────────
+
+describe('compareRows — value nulls-last', () => {
+  it('sorts lower value first (asc)', () => {
+    expect(compareRows(makeCar({ value: 10_000 }), makeCar({ value: 50_000 }), 'value', 'asc')).toBeLessThan(0)
+  })
+
+  it('sorts higher value first (desc)', () => {
+    expect(compareRows(makeCar({ value: 50_000 }), makeCar({ value: 10_000 }), 'value', 'desc')).toBeLessThan(0)
+  })
+
+  it('null value always sinks to bottom (asc) — null after non-null', () => {
+    expect(compareRows(makeCar({ value: null }), makeCar({ value: 10_000 }), 'value', 'asc')).toBeGreaterThan(0)
+  })
+
+  it('null value always sinks to bottom (desc) — null still after non-null', () => {
+    expect(compareRows(makeCar({ value: null }), makeCar({ value: 10_000 }), 'value', 'desc')).toBeGreaterThan(0)
+  })
+
+  it('non-null sorts before null (desc) — a null car does not top the list', () => {
+    expect(compareRows(makeCar({ value: 10_000 }), makeCar({ value: null }), 'value', 'desc')).toBeLessThan(0)
+  })
+
+  it('both null returns 0', () => {
+    expect(compareRows(makeCar({ value: null }), makeCar({ value: null }), 'value', 'asc')).toBe(0)
+  })
+})
+
 // ─── PIN_FLOAT_KEYS membership ───────────────────────────────────────────────
 
 describe('PIN_FLOAT_KEYS', () => {

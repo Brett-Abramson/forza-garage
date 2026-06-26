@@ -48,7 +48,13 @@ export function compareRows(a: Car, b: Car, key: SortKey, dir: SortDir): number 
   } else if (key === 'piRating' || key === 'year') {
     result = a[key] - b[key]
   } else if (key === 'value') {
-    result = (a.value ?? -1) - (b.value ?? -1)
+    // nulls (unknown price) always sink to the bottom regardless of direction
+    const av = a.value
+    const bv = b.value
+    if (av === null && bv === null) result = 0
+    else if (av === null) return 1   // a sinks regardless
+    else if (bv === null) return -1  // b sinks regardless
+    else result = av - bv
   } else if (key === 'addedAt') {
     // nulls always sink to the bottom regardless of direction
     const at = (a.addedAt ? new Date(a.addedAt).getTime() : null)
