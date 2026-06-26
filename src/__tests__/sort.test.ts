@@ -28,6 +28,7 @@ const makeCar = (overrides: Partial<Car> = {}): Car => ({
   weightLb: null,
   frontWeight: null,
   displacementL: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   value: null,
   rarity: null,
   source: 'Autoshow',
@@ -300,5 +301,72 @@ describe('formatAddedAt', () => {
     freeze('2026-06-20T12:00:00.000Z')
     const result = formatAddedAt('2026-06-01T12:00:00.000Z')
     expect(result).toMatch(/^Added \d+ \w+$/)
+  })
+})
+
+// ─── compareRows — registry metric sort (Sim view) ────────────────────────────
+
+describe('compareRows — lowerBetter metric (simZeroToSixty)', () => {
+  const fast = makeCar({ simZeroToSixty: 3.0 })
+  const slow = makeCar({ simZeroToSixty: 5.0 })
+
+  it('asc surfaces best-first: the quicker 0–60 sorts first', () => {
+    expect(compareRows(fast, slow, 'simZeroToSixty', 'asc')).toBeLessThan(0)
+  })
+
+  it('desc flips it: the slower 0–60 sorts first', () => {
+    expect(compareRows(fast, slow, 'simZeroToSixty', 'desc')).toBeGreaterThan(0)
+  })
+
+  it('returns 0 for equal values', () => {
+    expect(compareRows(fast, makeCar({ simZeroToSixty: 3.0 }), 'simZeroToSixty', 'asc')).toBe(0)
+  })
+})
+
+describe('compareRows — higherBetter metric (simTopSpeed)', () => {
+  const faster = makeCar({ simTopSpeed: 220 })
+  const slower = makeCar({ simTopSpeed: 150 })
+
+  it('asc surfaces best-first: the higher top speed sorts first', () => {
+    expect(compareRows(faster, slower, 'simTopSpeed', 'asc')).toBeLessThan(0)
+  })
+
+  it('desc flips it: the lower top speed sorts first', () => {
+    expect(compareRows(faster, slower, 'simTopSpeed', 'desc')).toBeGreaterThan(0)
+  })
+})
+
+describe('compareRows — metric nulls always sort last', () => {
+  const value = makeCar({ simBraking60: 110 })
+  const noScrape = makeCar({ simBraking60: null })
+
+  it('null sinks below a value (asc)', () => {
+    expect(compareRows(noScrape, value, 'simBraking60', 'asc')).toBeGreaterThan(0)
+    expect(compareRows(value, noScrape, 'simBraking60', 'asc')).toBeLessThan(0)
+  })
+
+  it('null still sinks below a value (desc) — a failed scrape never tops the list', () => {
+    expect(compareRows(noScrape, value, 'simBraking60', 'desc')).toBeGreaterThan(0)
+    expect(compareRows(value, noScrape, 'simBraking60', 'desc')).toBeLessThan(0)
+  })
+
+  it('two nulls are equal', () => {
+    expect(compareRows(noScrape, makeCar({ simBraking60: null }), 'simBraking60', 'asc')).toBe(0)
+  })
+})
+
+describe('compareRows — derived power-to-weight metric', () => {
+  // Computed from powerHp / weightLb via the registry accessor (higherBetter).
+  const strong = makeCar({ powerHp: 600, weightLb: 3000 }) // 0.20
+  const weak   = makeCar({ powerHp: 300, weightLb: 3000 }) // 0.10
+
+  it('asc surfaces best-first: the higher ratio sorts first', () => {
+    expect(compareRows(strong, weak, 'powerToWeight', 'asc')).toBeLessThan(0)
+  })
+
+  it('a car missing an input sorts last (null) regardless of direction', () => {
+    const unknown = makeCar({ powerHp: null, weightLb: 3000 })
+    expect(compareRows(unknown, weak, 'powerToWeight', 'asc')).toBeGreaterThan(0)
+    expect(compareRows(unknown, weak, 'powerToWeight', 'desc')).toBeGreaterThan(0)
   })
 })

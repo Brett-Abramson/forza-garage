@@ -8,6 +8,7 @@ import { Car, FilterState } from '@/types/car'
 import { setOwned } from '@/server/actions/garage'
 import { CAR_TAGS } from '@/lib/tags'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
+import { SIM_COLUMN_METRICS } from '@/lib/metrics'
 import { RACE_TYPES } from '@/lib/races'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
@@ -380,6 +381,12 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
   // Columns get dropped to fit below 1100px — surface the SortSelect (and rotate
   // hint) so the hidden columns stay reachable.
   const hasHiddenStandardCols = tableContainerWidth < 1100
+  // Virtual spacer-row colSpan must match the rendered column count per mode:
+  // Stats = 5 identity + 11 stat/spec; Sim = 5 identity + the registry columns.
+  const tableColSpan =
+    tableMode === 'stats' ? 16
+    : tableMode === 'sim' ? 5 + SIM_COLUMN_METRICS.length
+    : standardColCount
 
   // ── Grid virtual items ──────────────────────────────────────────────────────
   const gridItems    = gridVirtualizer.getVirtualItems()
@@ -549,7 +556,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
                       {colSourceValue  && <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} style={{ width: 90 }} />}
                       {isSignedIn && <SortTh label="Garage"   sortKey="owned"      sort={sort} onSort={handleSort} style={{ width: 90 }} />}
                     </>
-                  ) : (
+                  ) : tableMode === 'stats' ? (
                     <>
                       {/* Identity — sticky, compact widths */}
                       <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.class, minWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
@@ -570,13 +577,26 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
                       <SortTh label="F.WT"     sortKey="frontWeight"      sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
                       <SortTh label="Disp"     sortKey="displacementL"    sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
                     </>
+                  ) : (
+                    <>
+                      {/* Identity — sticky, compact widths (mirrors Stats mode) */}
+                      <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.class, minWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.pi,    minWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.year,  minWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.make,  minWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.model, minWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
+                      {/* Sim metric columns — registry-driven (7 rankable sim fields + P:W), not sticky */}
+                      {SIM_COLUMN_METRICS.map((m) => (
+                        <SortTh key={m.key} label={m.short} unit={m.unit} sortKey={m.key as SortKey} sort={sort} onSort={handleSort} style={{ minWidth: 78 }} />
+                      ))}
+                    </>
                   )}
                 </tr>
               </thead>
               <tbody>
                 {/* Top spacer */}
                 {tablePadTop > 0 && (
-                  <tr><td colSpan={tableMode === 'stats' ? 16 : standardColCount} style={{ height: tablePadTop, padding: 0 }} /></tr>
+                  <tr><td colSpan={tableColSpan} style={{ height: tablePadTop, padding: 0 }} /></tr>
                 )}
 
                 {tableItems.map((vItem) => {
@@ -589,6 +609,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
                       isPending={pendingIds.has(car.id)}
                       onCardClick={setDrawerCar}
                       statsMode={tableMode === 'stats'}
+                      simMode={tableMode === 'sim'}
                       hideGarage={!isSignedIn}
                       colVis={{ piYear: colPiYear, division: colDivision, driveCountry: colDriveCountry, sourceValue: colSourceValue }}
                     />
@@ -597,7 +618,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
 
                 {/* Bottom spacer */}
                 {tablePadBot > 0 && (
-                  <tr><td colSpan={tableMode === 'stats' ? 16 : standardColCount} style={{ height: tablePadBot, padding: 0 }} /></tr>
+                  <tr><td colSpan={tableColSpan} style={{ height: tablePadBot, padding: 0 }} /></tr>
                 )}
               </tbody>
             </table>

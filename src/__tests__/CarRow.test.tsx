@@ -21,6 +21,7 @@ const baseCar: Car = {
   statSpeed: null, statHandling: null, statAcceleration: null, statLaunch: null,
   statBraking: null, statOffroad: null, powerHp: null, torqueFtLb: null,
   weightLb: null, frontWeight: null, displacementL: null, value: null, rarity: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   source: 'Autoshow',
   sourceInfo: null,
   owned: false,
@@ -194,5 +195,39 @@ describe('CarRow — showAddedAt', () => {
   it('does not render the addedAt cell when showAddedAtColumn is false', () => {
     renderRow(carWithDate, { showAddedAtColumn: false, showAddedAt: true })
     expect(screen.queryByText(/Added/)).not.toBeInTheDocument()
+  })
+})
+
+// ─── Sim mode (registry-driven metric columns) ───────────────────────────────
+
+describe('CarRow — sim mode', () => {
+  const simCar: Car = {
+    ...baseCar,
+    simZeroToSixty: 3.2,           // 1 dp
+    simTopSpeed: 217,              // 0 dp
+    simBraking60: null,            // failed scrape → em dash
+    powerHp: 500, weightLb: 2500,  // power-to-weight = 0.200 (3 dp)
+  }
+
+  const renderSim = (car: Car) =>
+    render(<table><tbody><CarRow car={car} onToggleOwned={vi.fn()} simMode /></tbody></table>)
+
+  it('renders metric values rounded per the registry', () => {
+    renderSim(simCar)
+    expect(screen.getByText('3.2')).toBeInTheDocument()
+    expect(screen.getByText('217')).toBeInTheDocument()
+    expect(screen.getByText('0.200')).toBeInTheDocument()
+  })
+
+  it('renders the em dash for a null metric', () => {
+    renderSim(simCar)
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+  })
+
+  it('keeps the identity columns (make, model)', () => {
+    renderSim(simCar)
+    const row = screen.getByRole('row')
+    expect(within(row).getByText('Porsche')).toBeInTheDocument()
+    expect(within(row).getByText('911 GT3 RS')).toBeInTheDocument()
   })
 })

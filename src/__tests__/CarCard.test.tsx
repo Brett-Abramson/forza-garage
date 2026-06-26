@@ -21,6 +21,7 @@ const baseCar: Car = {
   statSpeed: null, statHandling: null, statAcceleration: null, statLaunch: null,
   statBraking: null, statOffroad: null, powerHp: null, torqueFtLb: null,
   weightLb: null, frontWeight: null, displacementL: null, value: null, rarity: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   source: 'Autoshow',
   sourceInfo: null,
   owned: false,

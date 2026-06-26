@@ -11,6 +11,7 @@ import { getRankedRaceTypes } from '@/lib/raceMatch'
 import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { getGroupForDivision } from '@/lib/divisionGroups'
 import StatBars from './StatBars'
+import { getMetric, getMetricValue, formatMetricValue, SIM_METRICS } from '@/lib/metrics'
 import { getStatCallouts } from '@/lib/statCallouts'
 import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS, resolveEffectiveStats, STAT_OVERRIDE_MAP, hasOverrides } from '@/lib/statUtils'
 import { setTags, setNotes as persistNotes, tuneCar, resetTuning } from '@/server/actions/garage'
@@ -258,6 +259,31 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
     { label: 'Drivetrain',   value: displayCar.drivetrain ?? null },
   ] : []
   const hasAnySpec = specTiles.some((t) => t.value != null)
+
+  // ── Simulation section (Overview) — catalog-only, read-only ─────────────────
+  // Sourced from the full-row fetch merged into displayCar; the 3 ratios are null
+  // in the list projection and populate only after that fetch. Never wired to
+  // STAT_OVERRIDE_MAP — sim figures are stock-spec and can't be recomputed.
+  const simFmt = (key: string): string => {
+    const m = getMetric(key)
+    return m && displayCar ? formatMetricValue(m, displayCar) : '—'
+  }
+  const simAllNull = !displayCar || SIM_METRICS.every((m) => getMetricValue(m, displayCar) == null)
+  // In garage context, sim figures can't reflect a power/weight tune — flag it.
+  const simStockNote = !!(displayCar && (displayCar.powerHpOverride != null || displayCar.weightLbOverride != null))
+  const simHeadline = [
+    { label: '0–60',        unit: 's',   value: simFmt('simZeroToSixty') },
+    { label: '0–100',       unit: 's',   value: simFmt('simZeroToHundred') },
+    { label: 'Top speed',   unit: 'mph', value: simFmt('simTopSpeed') },
+    { label: '60–0 brake',  unit: 'ft',  value: simFmt('simBraking60') },
+    { label: '100–0 brake', unit: 'ft',  value: simFmt('simBraking100') },
+    { label: 'Lateral G',   unit: 'g',   value: `${simFmt('simLateralG60')} / ${simFmt('simLateralG120')}` },
+  ]
+  const simRatios = [
+    { label: 'Aero eff', value: simFmt('simAeroEfficiency') },
+    { label: 'Mech bal', value: simFmt('simMechBalance') },
+    { label: 'Aero bal', value: simFmt('simAeroBalance') },
+  ]
 
   // Race type recommendations based on all tags (auto + user)
   const rankedRaces = displayCar
@@ -517,6 +543,62 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                       </div>
                     )}
                   </div>
+
+                  {/* ═══ SIMULATION — catalog-only, read-only ═══ */}
+                  {!simAllNull && (
+                    <div className="p-5 border-b border-fh-border">
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <div className="text-xs text-fh-muted uppercase tracking-wide">Simulation</div>
+                        <div className="text-[10px] text-fh-muted-2 italic">(stock spec)</div>
+                      </div>
+
+                      {/* Headline — bold sim figures */}
+                      <div
+                        className="grid grid-cols-3 rounded-[9px] overflow-hidden"
+                        style={{ border: '1px solid var(--fh-border-strong)' }}
+                      >
+                        {simHeadline.map((t, i) => (
+                          <div
+                            key={t.label}
+                            className="bg-fh-panel"
+                            style={{
+                              padding: '11px 14px',
+                              borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
+                              borderBottom: i < 3 ? '1px solid var(--fh-border-strong)' : undefined,
+                            }}
+                          >
+                            <div className="font-bold uppercase text-fh-muted flex items-baseline gap-1" style={{ fontSize: 9, letterSpacing: '0.08em', marginBottom: 3 }}>
+                              {t.label}
+                              <span className="text-fh-muted-2 lowercase" style={{ fontSize: 8 }}>{t.unit}</span>
+                            </div>
+                            <div className="font-bold tabular-nums text-fh-dark" style={{ fontSize: 15, letterSpacing: '-0.01em', lineHeight: 1 }}>
+                              {t.value}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Balance ratios — de-emphasized, divided off below */}
+                      <div className="grid grid-cols-3 mt-3 pt-3 border-t border-fh-border">
+                        {simRatios.map((t) => (
+                          <div key={t.label} className="px-1">
+                            <div className="font-medium uppercase text-fh-muted-2" style={{ fontSize: 9, letterSpacing: '0.08em', marginBottom: 3 }}>
+                              {t.label}
+                            </div>
+                            <div className="tabular-nums text-fh-muted" style={{ fontSize: 13, lineHeight: 1 }}>
+                              {t.value}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {simStockNote && (
+                        <p className="mt-3 text-[10px] text-fh-muted-2 italic leading-snug">
+                          Sim figures are stock-spec — your power/weight tune isn’t reflected here.
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Add to garage — only for non-owned cars */}
                   {onToggleOwned && !displayCar.owned && (

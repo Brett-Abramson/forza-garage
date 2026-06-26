@@ -1,4 +1,11 @@
 import type { Car } from '@/types/car'
+import { SIM_METRICS, getMetricValue } from '@/lib/metrics'
+
+// Stock-spec sim columns, derived from the metric registry so the field list
+// stays defined only in src/lib/metrics.ts. Header = label + unit (e.g.
+// "Sim 0–60 (s)"); ratios have no unit. The garage export sources the full row,
+// so all 10 sim fields (incl. the 3 balance ratios) are populated here.
+const SIM_HEADERS = SIM_METRICS.map((m) => (m.unit ? `${m.label} (${m.unit})` : m.label))
 
 export const CSV_HEADERS = [
   // Identity
@@ -9,6 +16,8 @@ export const CSV_HEADERS = [
   'Speed', 'Handling', 'Accel', 'Launch', 'Braking', 'Offroad',
   // Raw specs
   'HP', 'Torque (ft-lb)', 'Weight (lb)', 'Front Weight (%)', 'Displacement (L)',
+  // Simulation (stock-spec catalog data — derived from the metric registry)
+  ...SIM_HEADERS,
   // Per-user stat overrides
   'Speed Override', 'Handling Override', 'Accel Override', 'Launch Override',
   'Braking Override', 'Offroad Override', 'HP Override', 'Torque Override',
@@ -58,6 +67,8 @@ export function buildCsvString(cars: Car[]): string {
       csvCell(c.weightLb),
       csvCell(c.frontWeight),
       csvCell(c.displacementL),
+      // Simulation (stock-spec catalog data) — raw values, registry-ordered
+      ...SIM_METRICS.map((m) => csvCell(getMetricValue(m, c))),
       // Stat overrides
       csvCell(c.statSpeedOverride ?? ''),
       csvCell(c.statHandlingOverride ?? ''),

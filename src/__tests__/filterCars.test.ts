@@ -42,6 +42,7 @@ const PORSCHE: Car = {
   statLaunch: null, statBraking: null, statOffroad: null,
   powerHp: null, torqueFtLb: null, weightLb: null, frontWeight: null,
   displacementL: null, value: null, rarity: null, sourceInfo: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   tagDetails: [],
 }
 
@@ -55,6 +56,7 @@ const SUBARU_WRX: Car = {
   statLaunch: null, statBraking: null, statOffroad: null,
   powerHp: null, torqueFtLb: null, weightLb: null, frontWeight: null,
   displacementL: null, value: null, rarity: null, sourceInfo: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   tagDetails: [],
 }
 
@@ -68,6 +70,7 @@ const TOYOTA: Car = {
   statLaunch: null, statBraking: null, statOffroad: null,
   powerHp: null, torqueFtLb: null, weightLb: null, frontWeight: null,
   displacementL: null, value: null, rarity: null, sourceInfo: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   tagDetails: [],
 }
 
@@ -81,6 +84,7 @@ const BUGATTI: Car = {
   statLaunch: null, statBraking: null, statOffroad: null,
   powerHp: null, torqueFtLb: null, weightLb: null, frontWeight: null,
   displacementL: null, value: null, rarity: null, sourceInfo: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   tagDetails: [],
 }
 
@@ -94,6 +98,7 @@ const FORD_GT: Car = {
   statLaunch: null, statBraking: null, statOffroad: null,
   powerHp: null, torqueFtLb: null, weightLb: null, frontWeight: null,
   displacementL: null, value: null, rarity: null, sourceInfo: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   tagDetails: [],
 }
 
@@ -107,6 +112,7 @@ const NISSAN_SILVIA: Car = {
   statLaunch: null, statBraking: null, statOffroad: null,
   powerHp: null, torqueFtLb: null, weightLb: null, frontWeight: null,
   displacementL: null, value: null, rarity: null, sourceInfo: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   tagDetails: [],
 }
 
@@ -120,6 +126,7 @@ const GMC_JIMMY: Car = {
   statLaunch: null, statBraking: null, statOffroad: null,
   powerHp: null, torqueFtLb: null, weightLb: null, frontWeight: null,
   displacementL: null, value: null, rarity: null, sourceInfo: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   tagDetails: [],
 }
 
@@ -133,6 +140,7 @@ const FORD_FOCUS: Car = {
   statLaunch: null, statBraking: null, statOffroad: null,
   powerHp: null, torqueFtLb: null, weightLb: null, frontWeight: null,
   displacementL: null, value: null, rarity: null, sourceInfo: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   tagDetails: [],
 }
 

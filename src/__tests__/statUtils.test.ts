@@ -14,6 +14,7 @@ const base: Car = {
   statBraking: 7.0, statOffroad: 3.0,
   powerHp: 350, torqueFtLb: 295, weightLb: 3100, frontWeight: 45,
   displacementL: 3.0, rarity: 'Common',
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   value: null,
   owned: true,
 }

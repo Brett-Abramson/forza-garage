@@ -1,9 +1,11 @@
 import { Car, PI_CLASS_ORDER } from '@/types/car'
+import { getMetric, getMetricValue, type MetricKey } from '@/lib/metrics'
 
 export type SortKey =
   | 'piClass' | 'piRating' | 'year' | 'make' | 'model' | 'division' | 'drivetrain' | 'country' | 'source' | 'value' | 'addedAt' | 'owned'
   | 'statSpeed' | 'statHandling' | 'statAcceleration' | 'statLaunch' | 'statBraking' | 'statOffroad'
   | 'powerHp' | 'torqueFtLb' | 'weightLb' | 'frontWeight' | 'displacementL'
+  | MetricKey  // registry-driven Sim-view columns (7 rankable sim fields + powerToWeight)
 export type SortDir = 'asc' | 'desc'
 
 export const PI_CLASS_INDEX: Record<string, number> = Object.fromEntries(
@@ -20,6 +22,21 @@ export function compareRows(a: Car, b: Car, key: SortKey, dir: SortDir): number 
     const aPinned = a.pinned ? 1 : 0
     const bPinned = b.pinned ? 1 : 0
     if (aPinned !== bPinned) return bPinned - aPinned  // pinned first, direction-independent
+  }
+
+  // Registry-driven metric sort (Sim-view columns + derived power-to-weight).
+  // The first click ('asc') always surfaces best-first via metric.direction:
+  // lowerBetter ascends by value, higherBetter descends by value. Nulls always
+  // sink last, regardless of direction — a failed scrape never tops the list.
+  const metric = getMetric(key)
+  if (metric) {
+    const aVal = getMetricValue(metric, a)
+    const bVal = getMetricValue(metric, b)
+    if (aVal === null && bVal === null) return 0
+    if (aVal === null) return 1
+    if (bVal === null) return -1
+    const cmp = metric.direction === 'higherBetter' ? bVal - aVal : aVal - bVal
+    return dir === 'asc' ? cmp : -cmp
   }
 
   let result = 0
@@ -53,7 +70,11 @@ export function compareRows(a: Car, b: Car, key: SortKey, dir: SortDir): number 
     else if (bVal === null) return -1
     else result = aVal - bVal
   } else {
-    result = String(a[key]).localeCompare(String(b[key]))
+    // Residual string sorts (make, model, division, country, source, drivetrain).
+    // Metric keys are handled and returned above, so they never reach here.
+    const av = (a as unknown as Record<string, unknown>)[key]
+    const bv = (b as unknown as Record<string, unknown>)[key]
+    result = String(av).localeCompare(String(bv))
   }
   return dir === 'asc' ? result : -result
 }

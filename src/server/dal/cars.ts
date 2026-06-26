@@ -2,11 +2,14 @@ import 'server-only'
 import { unstable_cache } from 'next/cache'
 import { prisma } from '@/server/db'
 import { getAutoTags } from '@/lib/autotags'
+import { LIST_SIM_SELECT } from '@/lib/metrics'
 import type { Car } from '@/types/car'
 
-// Columns needed for list/table display + Stats-mode sorting. Spec-only fields
-// (engineType, engineCC, cylinders, bodyStyle) are intentionally omitted from
-// the 618-row list payload and fetched on demand when the drawer opens.
+// Columns needed for list/table display + Stats/Sim-mode sorting. Spec-only
+// fields (engineType, engineCC, cylinders, bodyStyle) and the 3 non-rankable sim
+// ratios are intentionally omitted from the 618-row list payload and fetched on
+// demand when the drawer opens. The rankable sim fields ride along via
+// LIST_SIM_SELECT (defined in src/lib/metrics.ts — the single sim field source).
 const LIST_SELECT = {
   id: true, make: true, model: true, year: true,
   piClass: true, piRating: true, division: true, drivetrain: true,
@@ -15,11 +18,15 @@ const LIST_SELECT = {
   statLaunch: true, statBraking: true, statOffroad: true,
   powerHp: true, torqueFtLb: true, weightLb: true,
   frontWeight: true, displacementL: true,
+  ...LIST_SIM_SELECT,
 } as const
 
-// Placeholder nulls for the spec fields excluded from LIST_SELECT.
+// Placeholder nulls for the fields excluded from LIST_SELECT: the spec-only
+// columns plus the 3 non-rankable sim ratios (populated only by the drawer's
+// full-row fetch). Keeps list rows type-complete against the Car interface.
 const SPEC_DEFAULTS = {
   engineType: null, engineCC: null, cylinders: null, bodyStyle: null,
+  simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
 } as const
 
 /**

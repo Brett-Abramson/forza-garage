@@ -29,6 +29,7 @@ const nullStatCar: Car = {
   weightLb: null,
   frontWeight: null,
   displacementL: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   value: null,
   rarity: null,
   source: 'Autoshow',

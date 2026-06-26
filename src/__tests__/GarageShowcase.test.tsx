@@ -47,6 +47,7 @@ const mockCars: Car[] = [
     statSpeed: null, statHandling: null, statAcceleration: null, statLaunch: null,
     statBraking: null, statOffroad: null, powerHp: null, torqueFtLb: null,
     weightLb: null, frontWeight: null, displacementL: null, value: null, rarity: null,
+    simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
     owned: true,
     // Modern Sports Cars v2 auto-tags: asphalt + street racing.
     // User adds long straights + technical so Road Racing wins the tie-break
@@ -67,6 +68,7 @@ const mockCars: Car[] = [
     statSpeed: null, statHandling: null, statAcceleration: null, statLaunch: null,
     statBraking: null, statOffroad: null, powerHp: null, torqueFtLb: null,
     weightLb: null, frontWeight: null, displacementL: null, value: null, rarity: null,
+    simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
     owned: true,
     tags: ['drift', 'asphalt'],
     tagDetails: [{ tag: 'drift', source: 'user' }, { tag: 'asphalt', source: 'auto' }],
@@ -79,6 +81,7 @@ const mockCars: Car[] = [
     statSpeed: null, statHandling: null, statAcceleration: null, statLaunch: null,
     statBraking: null, statOffroad: null, powerHp: null, torqueFtLb: null,
     weightLb: null, frontWeight: null, displacementL: null, value: null, rarity: null,
+    simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
     owned: true,
     tags: ['offroad', 'dirt'],
     tagDetails: [{ tag: 'offroad', source: 'auto' }, { tag: 'dirt', source: 'auto' }],

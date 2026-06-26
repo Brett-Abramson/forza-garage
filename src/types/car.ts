@@ -34,6 +34,19 @@ export interface Car {
   frontWeight: number | null  // weight distribution % — e.g. 40 means 40/60 F/R
   displacementL: number | null
 
+  // Simulation results — catalog-only, read-only (from forza.labsgg.com).
+  // Never overridden per-user; see src/lib/metrics.ts for the display registry.
+  simZeroToSixty: number | null    // seconds  — 0-60 MPH
+  simZeroToHundred: number | null  // seconds  — 0-100 MPH
+  simBraking60: number | null      // feet     — 60-0 braking distance
+  simBraking100: number | null     // feet     — 100-0 braking distance
+  simLateralG60: number | null     // G-force  — lateral grip at 60 mph
+  simLateralG120: number | null    // G-force  — lateral grip at 120 mph
+  simTopSpeed: number | null       // mph      — simulated top speed
+  simAeroEfficiency: number | null // ratio    — drag/downforce balance
+  simMechBalance: number | null    // ratio    — mechanical grip balance F/R
+  simAeroBalance: number | null    // ratio    — aerodynamic balance F/R
+
   // Identity
   value: number | null   // purchase price in credits
   rarity: string | null  // Common | Rare | Legendary | Forza Edition

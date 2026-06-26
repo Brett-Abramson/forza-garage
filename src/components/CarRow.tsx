@@ -6,6 +6,7 @@ import { getBestRaceType } from '@/lib/raceMatch'
 import { hasOverrides } from '@/lib/statUtils'
 import { RaceIcon } from '@/components/RaceIcons'
 import { formatAddedAt } from '@/lib/sort'
+import { SIM_COLUMN_METRICS, formatMetricValue } from '@/lib/metrics'
 import { STICKY_COL_STATS } from './table-ui'
 import TruncatedText from './TruncatedText'
 
@@ -25,11 +26,13 @@ interface Props {
   onTogglePin?: (id: number, pinned: boolean) => void
   /** Swap standard right-side columns for the 11 stat/spec columns with sticky identity cols */
   statsMode?: boolean
+  /** Swap standard right-side columns for the registry-driven Sim metric columns with sticky identity cols */
+  simMode?: boolean
   /** JS-driven column visibility (GarageView only). When omitted, falls back to CSS responsive classes. */
   colVis?: { piYear: boolean; division: boolean; driveCountry: boolean; sourceValue: boolean; addedAt?: boolean; star?: boolean }
 }
 
-export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode, colVis }: Props) {
+export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode, simMode, colVis }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined, {
@@ -59,7 +62,7 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
     ${isPending ? 'opacity-60 pointer-events-none' : ''}
   `
 
-  if (statsMode) {
+  if (statsMode || simMode) {
     return (
       <tr onClick={() => onCardClick?.(car)} className={trCls}>
         {onTogglePin && (
@@ -93,17 +96,25 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
             )}
           </div>
         </td>
-        <StatTd>{car.statSpeed        ?? '—'}</StatTd>
-        <StatTd>{car.statHandling     ?? '—'}</StatTd>
-        <StatTd>{car.statAcceleration ?? '—'}</StatTd>
-        <StatTd>{car.statLaunch       ?? '—'}</StatTd>
-        <StatTd>{car.statBraking      ?? '—'}</StatTd>
-        <StatTd>{car.statOffroad      ?? '—'}</StatTd>
-        <StatTd>{car.powerHp          ?? '—'}</StatTd>
-        <StatTd>{car.torqueFtLb       ?? '—'}</StatTd>
-        <StatTd>{car.weightLb         ?? '—'}</StatTd>
-        <StatTd>{car.frontWeight   != null ? `${car.frontWeight}%`            : '—'}</StatTd>
-        <StatTd>{car.displacementL != null ? car.displacementL.toFixed(1)     : '—'}</StatTd>
+        {simMode ? (
+          SIM_COLUMN_METRICS.map((m) => (
+            <StatTd key={m.key}>{formatMetricValue(m, car)}</StatTd>
+          ))
+        ) : (
+          <>
+            <StatTd>{car.statSpeed        ?? '—'}</StatTd>
+            <StatTd>{car.statHandling     ?? '—'}</StatTd>
+            <StatTd>{car.statAcceleration ?? '—'}</StatTd>
+            <StatTd>{car.statLaunch       ?? '—'}</StatTd>
+            <StatTd>{car.statBraking      ?? '—'}</StatTd>
+            <StatTd>{car.statOffroad      ?? '—'}</StatTd>
+            <StatTd>{car.powerHp          ?? '—'}</StatTd>
+            <StatTd>{car.torqueFtLb       ?? '—'}</StatTd>
+            <StatTd>{car.weightLb         ?? '—'}</StatTd>
+            <StatTd>{car.frontWeight   != null ? `${car.frontWeight}%`            : '—'}</StatTd>
+            <StatTd>{car.displacementL != null ? car.displacementL.toFixed(1)     : '—'}</StatTd>
+          </>
+        )}
       </tr>
     )
   }

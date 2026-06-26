@@ -5,6 +5,7 @@ import { useNavControls } from '@/context/NavControls'
 import { useSearchParams } from 'next/navigation'
 import { Car, FilterState } from '@/types/car'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
+import { SIM_COLUMN_METRICS } from '@/lib/metrics'
 import { buildCsvString, csvFilename } from '@/lib/exportCsv'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
@@ -686,7 +687,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                           {colSourceValue  && <SortTh label="Value"    sortKey="value"      sort={sort} onSort={handleSort} style={{ width: 90 }} />}
                           {colAdded        && <SortTh label="Added"    sortKey="addedAt"    sort={sort} onSort={handleSort} style={{ width: 96 }} />}
                         </>
-                      ) : (
+                      ) : tableMode === 'stats' ? (
                         <>
                           {/* Star — sticky */}
                           <th className="py-2.5 pl-3 pr-1 sticky bg-fh-panel z-[2]" style={{ left: SHL_S.star, minWidth: SS.star }} aria-label="Favourite" />
@@ -709,6 +710,21 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                           <SortTh label="F.WT"     sortKey="frontWeight"      sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
                           <SortTh label="Disp"     sortKey="displacementL"    sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
                         </>
+                      ) : (
+                        <>
+                          {/* Star — sticky */}
+                          <th className="py-2.5 pl-3 pr-1 sticky bg-fh-panel z-[2]" style={{ left: SHL_S.star, minWidth: SS.star }} aria-label="Favourite" />
+                          {/* Identity — sticky, compact widths (mirrors Stats mode) */}
+                          <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.class, minWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.pi,    minWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.year,  minWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.make,  minWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.model, minWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
+                          {/* Sim metric columns — registry-driven (7 rankable sim fields + P:W), not sticky */}
+                          {SIM_COLUMN_METRICS.map((m) => (
+                            <SortTh key={m.key} label={m.short} unit={m.unit} sortKey={m.key as SortKey} sort={sort} onSort={handleSort} style={{ minWidth: 78 }} />
+                          ))}
+                        </>
                       )}
                     </tr>
                   </thead>
@@ -726,6 +742,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                         showAddedAtColumn
                         hideGarage
                         statsMode={tableMode === 'stats'}
+                        simMode={tableMode === 'sim'}
                         colVis={{ star: colStar, piYear: colPiYear, division: colDivision, driveCountry: colDriveCountry, sourceValue: colSourceValue, addedAt: colAdded }}
                       />
                     ))}

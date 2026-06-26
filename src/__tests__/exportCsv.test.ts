@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { csvCell, buildCsvString, csvFilename, CSV_HEADERS } from '@/lib/exportCsv'
+import { SIM_METRICS } from '@/lib/metrics'
 import type { Car } from '@/types/car'
+
+// The CSV sim header is derived the same way the export builds it (label + unit),
+// so the test stays robust to the registry's exact label punctuation.
+const simHeader = (key: string) => {
+  const m = SIM_METRICS.find((x) => x.key === key)!
+  return m.unit ? `${m.label} (${m.unit})` : m.label
+}
 
 // ─── Minimal car factory ──────────────────────────────────────────────────────
 
@@ -20,6 +28,7 @@ function makeCar(overrides: Partial<Car> = {}): Car {
     statAcceleration: null, statLaunch: null, statBraking: null,
     statOffroad: null, powerHp: null, torqueFtLb: null, weightLb: null,
     frontWeight: null, displacementL: null, rarity: null,
+    simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
     source: 'Autoshow', sourceInfo: null, owned: true,
     ...overrides,
   }
@@ -237,6 +246,37 @@ describe('buildCsvString — garage metadata fields', () => {
   it('addedAt ISO string is preserved', () => {
     const cells = buildCsvString([makeCar({ addedAt: '2026-01-15T10:00:00.000Z' })]).split('\r\n')[1].split(',')
     expect(cells[col('Added At')]).toBe('2026-01-15T10:00:00.000Z')
+  })
+})
+
+// ─── buildCsvString — simulation columns ─────────────────────────────────────
+
+describe('buildCsvString — simulation columns', () => {
+  it('adds one header per sim metric (all 10, incl. the 3 ratios)', () => {
+    expect(CSV_HEADERS).toContain(simHeader('simZeroToSixty'))
+    expect(CSV_HEADERS).toContain(simHeader('simTopSpeed'))
+    expect(CSV_HEADERS).toContain(simHeader('simAeroBalance'))
+    expect(SIM_METRICS.filter((m) => CSV_HEADERS.includes(simHeader(m.key)))).toHaveLength(10)
+  })
+
+  it('writes raw sim values in their columns', () => {
+    const car = makeCar({ simZeroToSixty: 3.2, simTopSpeed: 217, simAeroBalance: 0.41 })
+    const headers = buildCsvString([car]).split('\r\n')[0].split(',')
+    const cells = buildCsvString([car]).split('\r\n')[1].split(',')
+    expect(cells[headers.indexOf(simHeader('simZeroToSixty'))]).toBe('3.2')
+    expect(cells[headers.indexOf(simHeader('simTopSpeed'))]).toBe('217')
+    expect(cells[headers.indexOf(simHeader('simAeroBalance'))]).toBe('0.41')
+  })
+
+  it('writes a blank cell for a null sim field', () => {
+    const car = makeCar({ simBraking60: null })
+    const headers = buildCsvString([car]).split('\r\n')[0].split(',')
+    const cells = buildCsvString([car]).split('\r\n')[1].split(',')
+    expect(cells[headers.indexOf(simHeader('simBraking60'))]).toBe('')
+  })
+
+  it('Tags remains the final column after the sim block', () => {
+    expect(CSV_HEADERS[CSV_HEADERS.length - 1]).toBe('Tags')
   })
 })
 

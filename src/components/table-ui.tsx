@@ -24,7 +24,7 @@ export const STICKY_COL_STATS = {
   model: 160,
 } as const
 
-export type TableMode = 'standard' | 'stats'
+export type TableMode = 'standard' | 'stats' | 'sim'
 
 interface SortState {
   key: SortKey | null
@@ -33,6 +33,7 @@ interface SortState {
 
 export function SortTh({
   label,
+  unit,
   sortKey,
   sort,
   onSort,
@@ -41,6 +42,8 @@ export function SortTh({
   style,
 }: {
   label: string
+  /** Optional muted unit subscript after the label (Sim-view metric columns). */
+  unit?: string | null
   sortKey: SortKey
   sort: SortState
   onSort: (key: SortKey) => void
@@ -62,6 +65,7 @@ export function SortTh({
         }`}
       >
         {label}
+        {unit && <span className="text-[9px] font-normal lowercase text-fh-muted-2 self-end mb-0.5">{unit}</span>}
         <span className="text-[10px] leading-none">
           {active ? (sort.dir === 'asc' ? '▲' : '▼') : <span className="opacity-0 group-hover:opacity-40">▲</span>}
         </span>
@@ -180,6 +184,12 @@ export function TableModeToggle({ mode, setMode }: { mode: TableMode; setMode: (
         className={`px-3 py-1.5 transition-colors ${mode === 'stats' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
       >
         Stats
+      </button>
+      <button
+        onClick={() => setMode('sim')}
+        className={`px-3 py-1.5 transition-colors ${mode === 'sim' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
+      >
+        Sim
       </button>
     </div>
   )

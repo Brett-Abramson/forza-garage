@@ -38,6 +38,7 @@ const baseCar: Car = {
   statSpeed: null, statHandling: null, statAcceleration: null, statLaunch: null,
   statBraking: null, statOffroad: null, powerHp: null, torqueFtLb: null,
   weightLb: null, frontWeight: null, displacementL: null, value: null, rarity: null,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simBraking100: null, simLateralG60: null, simLateralG120: null, simTopSpeed: null, simAeroEfficiency: null, simMechBalance: null, simAeroBalance: null,
   source: 'Autoshow',
   sourceInfo: null,
   owned: true,
@@ -630,5 +631,53 @@ describe('GarageDrawer — non-owned car', () => {
     renderDrawer(unownedCar)
     expect(screen.getByText('911 GT3')).toBeInTheDocument()
     expect(screen.getByText('S1')).toBeInTheDocument()
+  })
+})
+
+// ─── Simulation section (Overview tab — default) ────────────────────────────────
+
+describe('GarageDrawer — simulation section', () => {
+  const simCar: Car = {
+    ...baseCar,
+    simZeroToSixty: 3.4, simZeroToHundred: 7.1, simTopSpeed: 205,
+    simBraking60: 109, simBraking100: 305,
+    simLateralG60: 1.05, simLateralG120: 1.12,
+    simAeroEfficiency: 0.83, simMechBalance: 0.48, simAeroBalance: 0.41,
+  }
+
+  it('renders the Simulation section with the (stock spec) caption when sim data exists', () => {
+    renderDrawer(simCar)
+    expect(screen.getByText('Simulation')).toBeInTheDocument()
+    expect(screen.getByText('(stock spec)')).toBeInTheDocument()
+  })
+
+  it('shows headline figures rounded per the registry, with combined lateral G', () => {
+    renderDrawer(simCar)
+    expect(screen.getByText('3.4')).toBeInTheDocument()          // 0–60
+    expect(screen.getByText('205')).toBeInTheDocument()          // top speed
+    expect(screen.getByText('1.05 / 1.12')).toBeInTheDocument()  // lateral G (60 / 120)
+    expect(screen.getByText('0.83')).toBeInTheDocument()         // aero efficiency ratio
+  })
+
+  it('hides the section entirely when all 10 sim fields are null', () => {
+    renderDrawer(baseCar) // every sim field null
+    expect(screen.queryByText('Simulation')).not.toBeInTheDocument()
+  })
+
+  it('still shows the section with per-cell em dashes for partial sim data', () => {
+    renderDrawer({ ...baseCar, simTopSpeed: 200 })
+    expect(screen.getByText('Simulation')).toBeInTheDocument()
+    expect(screen.getByText('200')).toBeInTheDocument()
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+  })
+
+  it('shows the stock-spec note when the garage car has a power/weight override', () => {
+    renderDrawer({ ...simCar, powerHpOverride: 650 })
+    expect(screen.getByText(/power\/weight tune/i)).toBeInTheDocument()
+  })
+
+  it('does not show the stock-spec note without power/weight overrides', () => {
+    renderDrawer(simCar)
+    expect(screen.queryByText(/power\/weight tune/i)).not.toBeInTheDocument()
   })
 })
