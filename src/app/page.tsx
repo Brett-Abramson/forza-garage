@@ -8,6 +8,7 @@ import { PI_CLASS_COLORS } from '@/types/car'
 import { FujiSvg, BlossomSvg, ToriiSvg } from '@/components/JapanDecor'
 import type { MetaCarEntry } from '@/components/MetaCarousel'
 import { MetaCarouselLazy as MetaCarousel } from '@/components/MetaCarouselLazy'
+import { FeatureHighlights } from '@/components/FeatureHighlights'
 
 export const dynamic = 'force-dynamic'
 
@@ -271,12 +272,26 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── Scope note — honest callout about what's built vs in-progress ── */}
+      <div className="border-b border-fh-border">
+        <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-start gap-2.5">
+          <span className="text-fh-muted shrink-0 mt-px text-xs">ⓘ</span>
+          <p className="text-xs text-fh-muted leading-relaxed">
+            The <span className="text-fh-dark font-medium">Car Database</span> and <span className="text-fh-dark font-medium">My Garage</span> are the core of this app and fully built out.
+            {' '}Races, Builds, and Tunes are ambitious additions that are still taking shape — useful in places, incomplete in others.
+          </p>
+        </div>
+      </div>
+
       {/* ── Main content — streams in below the already-visible hero ──────── */}
       <div className="max-w-screen-2xl mx-auto px-4 py-10">
         <Suspense fallback={<DashboardSkeleton />}>
           <MainContent carCount={carCount} />
         </Suspense>
       </div>
+
+      {/* ── Features — below the fold, no data dependency ────────────────── */}
+      <FeatureHighlights />
     </div>
   )
 }
