@@ -1,7 +1,35 @@
+import Link from 'next/link'
+
+const NAV_LINKS = [
+  { label: 'Home',          href: '/' },
+  { label: 'Car Database',  href: '/cars' },
+  { label: 'My Garage',     href: '/garage' },
+  { label: 'Races',         href: '/races' },
+  { label: 'Builds',        href: '/builds' },
+]
+
 export default function Footer() {
   return (
-    <footer className="border-t border-fh-border mt-12 py-4 px-4">
-      <div className="max-w-screen-2xl mx-auto text-center space-y-0.5 text-[11px] text-fh-muted-2 leading-relaxed">
+    <footer className="border-t border-fh-border mt-12 py-6 px-4">
+      <div className="max-w-screen-2xl mx-auto flex flex-col items-center gap-4">
+
+        {/* Page links */}
+        <nav aria-label="Footer navigation">
+          <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            {NAV_LINKS.map(({ label, href }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className="text-xs text-fh-muted hover:text-fh-dark transition-colors"
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="text-center space-y-0.5 text-[11px] text-fh-muted-2 leading-relaxed">
         <p>
           Forza Garage is an unofficial fan project — not affiliated with Playground Games, Xbox Game Studios, or Microsoft.
         </p>
@@ -16,6 +44,8 @@ export default function Footer() {
           <a href="https://forzatune.app" target="_blank" rel="noopener noreferrer" className="hover:text-fh-muted underline underline-offset-2">ForzaTune</a>
           {', FH6 community'}
         </p>
+        </div>
+
       </div>
     </footer>
   )
