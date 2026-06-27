@@ -203,7 +203,7 @@ describe('CarRow — showAddedAt', () => {
 describe('CarRow — statsMode badge cells', () => {
   const statBadge = {
     kind: 'percentile' as const,
-    tier: 'soft' as const,
+    tier: 'top-soft' as const,
     label: 'top 10% speed · S1 (stock)',
     rank: 1,
     n: 10,
@@ -248,7 +248,7 @@ describe('CarRow — statsMode badge cells', () => {
 describe('CarRow — simMode badge cells', () => {
   const simBadge = {
     kind: 'percentile' as const,
-    tier: 'strong' as const,
+    tier: 'top-strong' as const,
     label: 'top 5% 0–60 · S1 (stock)',
     rank: 1,
     n: 20,

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GarageDrawer from '@/components/GarageDrawer'
-import type { Car } from '@/types/car'
+import type { Car, CarBadge } from "@/types/car"
 import { CAR_TAGS } from '@/lib/tags'
 import { setTags, setNotes, resetTuning } from '@/server/actions/garage'
 
@@ -685,7 +685,7 @@ describe('GarageDrawer — simulation section', () => {
 // ─── Stat-badge left-border accents in drawer sections ──────────────────────
 
 describe('GarageDrawer — badge border accents in Overview', () => {
-  const mkBadge = (label: string, tier: 'soft' | 'strong' = 'soft') => ({
+  const mkBadge = (label: string, tier: CarBadge['tier'] = 'top-soft') => ({
     kind: 'percentile' as const,
     tier,
     label,
@@ -711,9 +711,9 @@ describe('GarageDrawer — badge border accents in Overview', () => {
     simAeroBalance: 0.41,
     badges: {
       statSpeed:      mkBadge('top 10% speed · S1 (stock)'),
-      powerHp:        mkBadge('top 10% HP · S1 (stock)', 'strong'),
-      simZeroToSixty: mkBadge('top 5% 0–60 · S1 (stock)', 'strong'),
-      simLateralG60:  mkBadge('top 5% lateral G · S1 (stock)', 'strong'),
+      powerHp:        mkBadge('top 10% HP · S1 (stock)', 'top-strong'),
+      simZeroToSixty: mkBadge('top 5% 0–60 · S1 (stock)', 'top-strong'),
+      simLateralG60:  mkBadge('top 5% lateral G · S1 (stock)', 'top-strong'),
     },
   }
 
@@ -753,7 +753,7 @@ describe('GarageDrawer — badge border accents in Overview', () => {
   it('qualifying spec card has a background highlight in its inline style', () => {
     renderDrawer(badgedCar)
     const card = screen.getByTitle('top 10% HP · S1 (stock)')
-    expect(card.style.background).toContain('var(--fh-badge-tint-strong)')
+    expect(card.style.background).toContain('var(--fh-badge-top-strong)')
   })
 
   it('qualifying spec card title is on the card element', () => {
@@ -788,13 +788,13 @@ describe('GarageDrawer — badge border accents in Overview', () => {
   it('qualifying sim card has a background highlight in its inline style', () => {
     renderDrawer(badgedCar)
     const card = screen.getByTitle('top 5% 0–60 · S1 (stock)')
-    expect(card.style.background).toContain('var(--fh-badge-tint-strong)')
+    expect(card.style.background).toContain('var(--fh-badge-top-strong)')
   })
 
   it('Lateral G card gets highlight when simLateralG60 qualifies; both G values still render', () => {
     renderDrawer(badgedCar)
     const card = screen.getByTitle('top 5% lateral G · S1 (stock)')
-    expect(card.style.background).toContain('var(--fh-badge-tint-strong)')
+    expect(card.style.background).toContain('var(--fh-badge-top-strong)')
     // Both G60 and G120 remain visible in the same card
     expect(card.textContent).toContain('1.05')
     expect(card.textContent).toContain('1.12')

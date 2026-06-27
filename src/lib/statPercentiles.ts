@@ -3,10 +3,12 @@ import { getMetric } from '@/lib/metrics'
 import type { MetricDirection } from '@/lib/metrics'
 
 // ── Configurable thresholds ───────────────────────────────────────────────────
-export const BADGE_THRESHOLD_BARS = 0.10   // bar stats (0–10) + raw specs
-export const BADGE_THRESHOLD_SIM  = 0.05   // the 5 sim metrics
-export const MIN_RANK_COHORT      = 6      // minimum cohort size for rank fallback
-export const COVERAGE_FLOOR       = 0.70   // skip (class, metric) if < 70% non-null
+export const BAND_TOP_STRONG    = 0.10   // top 10%
+export const BAND_TOP_SOFT      = 0.20   // top 10–20%
+export const BAND_BOTTOM_SOFT   = 0.20   // bottom 10–20%
+export const BAND_BOTTOM_STRONG = 0.10   // bottom 10%
+export const MIN_RANK_COHORT    = 6      // minimum cohort size for rank fallback
+export const COVERAGE_FLOOR     = 0.70   // skip (class, metric) if < 70% non-null
 
 // ── Metric priority order ─────────────────────────────────────────────────────
 // Determines tiebreaker in getBestBadge: headline bars → specs → sim.
@@ -19,40 +21,30 @@ export const METRIC_PRIORITY = [
 export type BadgeMetricKey = typeof METRIC_PRIORITY[number]
 
 // ── Per-metric config ─────────────────────────────────────────────────────────
-// Direction for sim fields is pulled from the registry; bars/specs defined here.
-// Lower-better outliers among non-sim: only weightLb.
 interface MetricConfig {
   direction: MetricDirection
-  threshold: number
-  label: string   // display name used in badge label copy
-  isSim: boolean
+  label: string
 }
 
 function buildConfig(): Record<BadgeMetricKey, MetricConfig> {
-  // Pull direction from the metrics registry for sim fields
-  const simDir = (key: string): MetricDirection => getMetric(key)?.direction ?? 'higherBetter'
-  // Pull label from the metrics registry short name for sim fields
+  const simDir   = (key: string): MetricDirection => getMetric(key)?.direction ?? 'higherBetter'
   const simLabel = (key: string, fallback: string): string => getMetric(key)?.short ?? fallback
 
   return {
-    // 6 bar stats — all higher-better (10 = best)
-    statSpeed:        { direction: 'higherBetter', threshold: BADGE_THRESHOLD_BARS, label: 'speed',        isSim: false },
-    statHandling:     { direction: 'higherBetter', threshold: BADGE_THRESHOLD_BARS, label: 'handling',     isSim: false },
-    statAcceleration: { direction: 'higherBetter', threshold: BADGE_THRESHOLD_BARS, label: 'acceleration', isSim: false },
-    statLaunch:       { direction: 'higherBetter', threshold: BADGE_THRESHOLD_BARS, label: 'launch',       isSim: false },
-    statBraking:      { direction: 'higherBetter', threshold: BADGE_THRESHOLD_BARS, label: 'braking',      isSim: false },
-    statOffroad:      { direction: 'higherBetter', threshold: BADGE_THRESHOLD_BARS, label: 'offroad',      isSim: false },
-    // 3 raw specs — powerHp and torqueFtLb higher-better; weightLb lower-better
-    powerHp:          { direction: 'higherBetter', threshold: BADGE_THRESHOLD_BARS, label: 'HP',           isSim: false },
-    torqueFtLb:       { direction: 'higherBetter', threshold: BADGE_THRESHOLD_BARS, label: 'torque',       isSim: false },
-    weightLb:         { direction: 'lowerBetter',  threshold: BADGE_THRESHOLD_BARS, label: 'weight',       isSim: false },
-    // 5 sim metrics — direction pulled from registry to avoid drift
-    // Note: '60–0 braking' (sim, feet, lower-better) differs from 'braking' (bar, 0-10, higher-better)
-    simZeroToSixty:   { direction: simDir('simZeroToSixty'),   threshold: BADGE_THRESHOLD_SIM, label: simLabel('simZeroToSixty',   '0–60'),        isSim: true },
-    simZeroToHundred: { direction: simDir('simZeroToHundred'), threshold: BADGE_THRESHOLD_SIM, label: simLabel('simZeroToHundred', '0–100'),       isSim: true },
-    simBraking60:     { direction: simDir('simBraking60'),     threshold: BADGE_THRESHOLD_SIM, label: '60–0 braking',                              isSim: true },
-    simLateralG60:    { direction: simDir('simLateralG60'),    threshold: BADGE_THRESHOLD_SIM, label: simLabel('simLateralG60',    'lateral G'),    isSim: true },
-    simTopSpeed:      { direction: simDir('simTopSpeed'),      threshold: BADGE_THRESHOLD_SIM, label: simLabel('simTopSpeed',      'top speed'),    isSim: true },
+    statSpeed:        { direction: 'higherBetter', label: 'speed'        },
+    statHandling:     { direction: 'higherBetter', label: 'handling'     },
+    statAcceleration: { direction: 'higherBetter', label: 'acceleration' },
+    statLaunch:       { direction: 'higherBetter', label: 'launch'       },
+    statBraking:      { direction: 'higherBetter', label: 'braking'      },
+    statOffroad:      { direction: 'higherBetter', label: 'offroad'      },
+    powerHp:          { direction: 'higherBetter', label: 'HP'           },
+    torqueFtLb:       { direction: 'higherBetter', label: 'torque'       },
+    weightLb:         { direction: 'lowerBetter',  label: 'weight'       },
+    simZeroToSixty:   { direction: simDir('simZeroToSixty'),   label: simLabel('simZeroToSixty',   '0–60')      },
+    simZeroToHundred: { direction: simDir('simZeroToHundred'), label: simLabel('simZeroToHundred', '0–100')     },
+    simBraking60:     { direction: simDir('simBraking60'),     label: '60–0 braking'                           },
+    simLateralG60:    { direction: simDir('simLateralG60'),    label: simLabel('simLateralG60',    'lateral G') },
+    simTopSpeed:      { direction: simDir('simTopSpeed'),      label: simLabel('simTopSpeed',      'top speed') },
   }
 }
 
@@ -65,7 +57,6 @@ function competitionRank(values: (number | null)[], direction: MetricDirection):
   const indexed = values.map((v, i) => ({ v, i }))
   const valid = indexed.filter((x) => x.v != null)
 
-  // Sort valid entries: lowerBetter → ascending; higherBetter → descending
   valid.sort((a, b) => direction === 'lowerBetter' ? a.v! - b.v! : b.v! - a.v!)
 
   const ranks = new Array<number>(values.length).fill(Infinity)
@@ -73,9 +64,8 @@ function competitionRank(values: (number | null)[], direction: MetricDirection):
   while (pos < valid.length) {
     const val = valid[pos].v!
     let end = pos
-    // Find the full run of equal values
     while (end + 1 < valid.length && valid[end + 1].v! === val) end++
-    const rank = pos + 1  // competition rank = 1-indexed position of first in run
+    const rank = pos + 1
     for (let j = pos; j <= end; j++) ranks[valid[j].i] = rank
     pos = end + 1
   }
@@ -92,17 +82,15 @@ type BadgeRow = Pick<Car,
 >
 
 /**
- * Compute the badge matrix for a full catalog.
+ * Compute the five-band badge matrix for a full catalog.
  *
- * Cohort = all cars by piClass (never filtered, never override-adjusted).
- * Returns a plain Record (JSON-serializable for unstable_cache).
+ * Bands: top-strong (top 10%), top-soft (10–20%), neutral, bottom-soft (80–90%), bottom-strong (bottom 10%).
+ * Cohort = all cars by piClass. Returns a plain Record (JSON-serializable for unstable_cache).
  */
 export function computeBadgeMatrix(cars: BadgeRow[]): Record<number, CarBadgeMap> {
-  // Initialize every car with an empty badge map
   const result: Record<number, CarBadgeMap> = {}
   for (const car of cars) result[car.id] = {}
 
-  // Group by piClass
   const byClass = new Map<string, BadgeRow[]>()
   for (const car of cars) {
     const cls = car.piClass
@@ -116,48 +104,57 @@ export function computeBadgeMatrix(cars: BadgeRow[]): Record<number, CarBadgeMap
     for (const metricKey of METRIC_PRIORITY) {
       const cfg = METRIC_CONFIG[metricKey]
 
-      // Extract raw numeric values (null when missing)
       const values = classCars.map((c) => {
         const v = (c as Record<string, unknown>)[metricKey]
         return typeof v === 'number' ? v : null
       })
 
-      // Coverage guard: too many nulls → no badge for this (class, metric)
       const nonNullCount = values.filter((v) => v != null).length
       if (nonNullCount / classSize < COVERAGE_FLOOR) continue
 
       const n = nonNullCount
-      const k = Math.floor(cfg.threshold * n)
+      const k_top = Math.floor(BAND_TOP_STRONG * n)
       const ranks = competitionRank(values, cfg.direction)
 
       for (let i = 0; i < classCars.length; i++) {
         const rank = ranks[i]
-        if (rank === Infinity) continue  // null value — no badge
+        if (rank === Infinity) continue
 
         let badge: CarBadge | null = null
-        const pct = cfg.isSim ? 5 : 10
 
-        if (k >= 1) {
-          // Percentile mode: strict cut — rank must be ≤ k
-          if (rank <= k) {
-            badge = {
-              kind: 'percentile',
-              tier: cfg.isSim ? 'strong' : 'soft',
-              label: `top ${pct}% ${cfg.label} · ${piClass} (stock)`,
-              rank,
-              n,
-            }
-          }
-        } else {
-          // k == 0 → rank fallback (only when cohort ≥ MIN_RANK_COHORT)
+        if (k_top === 0) {
+          // Rank fallback — positive side only, requires MIN_RANK_COHORT
           if (n >= MIN_RANK_COHORT && rank <= 3) {
             badge = {
               kind: 'rank',
-              tier: rank === 1 ? 'strong' : 'soft',
+              tier: rank === 1 ? 'top-strong' : 'top-soft',
               label: `#${rank} ${cfg.label} · ${piClass} (stock)`,
               rank,
               n,
             }
+          }
+          // Bottom bands still use p_bottom formula even when k_top=0
+          if (!badge) {
+            const pBottom = (n - rank + 1) / n
+            if (pBottom <= BAND_BOTTOM_STRONG) {
+              badge = { kind: 'percentile', tier: 'bottom-strong', label: `bottom 10% ${cfg.label} · ${piClass} (stock)`, rank, n }
+            } else if (pBottom <= BAND_BOTTOM_SOFT) {
+              badge = { kind: 'percentile', tier: 'bottom-soft', label: `bottom 20% ${cfg.label} · ${piClass} (stock)`, rank, n }
+            }
+          }
+        } else {
+          // Percentile mode
+          const pTop    = rank / n
+          const pBottom = (n - rank + 1) / n
+
+          if (pTop <= BAND_TOP_STRONG) {
+            badge = { kind: 'percentile', tier: 'top-strong', label: `top 10% ${cfg.label} · ${piClass} (stock)`, rank, n }
+          } else if (pTop <= BAND_TOP_SOFT) {
+            badge = { kind: 'percentile', tier: 'top-soft', label: `top 20% ${cfg.label} · ${piClass} (stock)`, rank, n }
+          } else if (pBottom <= BAND_BOTTOM_STRONG) {
+            badge = { kind: 'percentile', tier: 'bottom-strong', label: `bottom 10% ${cfg.label} · ${piClass} (stock)`, rank, n }
+          } else if (pBottom <= BAND_BOTTOM_SOFT) {
+            badge = { kind: 'percentile', tier: 'bottom-soft', label: `bottom 20% ${cfg.label} · ${piClass} (stock)`, rank, n }
           }
         }
 
@@ -172,21 +169,28 @@ export function computeBadgeMatrix(cars: BadgeRow[]): Record<number, CarBadgeMap
 }
 
 // ── Single-best-badge helper ──────────────────────────────────────────────────
-// Used by the drawer pill. Returns the single most impressive badge:
-//   1. strong before soft
-//   2. lowest normalised rank (rank / n)
-//   3. METRIC_PRIORITY tiebreaker (headline bars first, then specs, then sim)
+// Preference order: top-strong > top-soft > bottom-strong > bottom-soft.
+// Within a tier: lowest normalised rank (rank / n), then METRIC_PRIORITY index.
+
+const TIER_PRIORITY: Record<CarBadge['tier'], number> = {
+  'top-strong':    0,
+  'top-soft':      1,
+  'bottom-strong': 2,
+  'bottom-soft':   3,
+  'neutral':       4,
+}
 
 const PRIORITY_INDEX = Object.fromEntries(METRIC_PRIORITY.map((k, i) => [k, i]))
 
 export function getBestBadge(badges: CarBadgeMap | undefined): CarBadge | null {
   if (!badges) return null
   const entries = (Object.entries(badges) as [string, CarBadge][])
-    .filter(([, b]) => b != null)
+    .filter(([, b]) => b != null && b.tier !== 'neutral')
   if (entries.length === 0) return null
 
   return entries.sort(([ak, ab], [bk, bb]) => {
-    if (ab.tier !== bb.tier) return ab.tier === 'strong' ? -1 : 1
+    const tierDiff = (TIER_PRIORITY[ab.tier] ?? 99) - (TIER_PRIORITY[bb.tier] ?? 99)
+    if (tierDiff !== 0) return tierDiff
     const normA = ab.rank / ab.n
     const normB = bb.rank / bb.n
     if (normA !== normB) return normA - normB

@@ -173,7 +173,7 @@ describe('StatBars — specs row', () => {
 describe('StatBars — badge pip accents', () => {
   const speedBadge = {
     kind: 'percentile' as const,
-    tier: 'soft' as const,
+    tier: 'top-soft' as const,
     label: 'top 10% speed · S1 (stock)',
     rank: 1,
     n: 10,

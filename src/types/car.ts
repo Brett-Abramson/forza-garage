@@ -79,7 +79,7 @@ export interface Car {
 // needs to carry badges and statPercentiles.ts imports Car.
 export interface CarBadge {
   kind: 'percentile' | 'rank'
-  tier: 'soft' | 'strong'
+  tier: 'top-strong' | 'top-soft' | 'neutral' | 'bottom-soft' | 'bottom-strong'
   label: string   // e.g. "top 10% braking · B (stock)" or "#2 braking · R (stock)"
   rank: number    // competition rank within the cohort (for single-best selection)
   n: number       // cohort size with non-null values

@@ -499,7 +499,7 @@ export default function FilterSidebar({
             }`}
           >
             <span aria-hidden="true">★</span>
-            <span>Has a top badge</span>
+            <span>Has stat highlights</span>
           </button>
         </div>
 

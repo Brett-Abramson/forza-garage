@@ -95,7 +95,7 @@ export default function StatBars({ car, variant = 'default', showSpecs = true, b
             key={key}
             className="relative group flex items-center gap-2"
             title={badge?.label}
-            style={badge ? { background: `var(--fh-badge-tint-${badge.tier})`, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: -4, marginRight: -4 } : undefined}
+            style={badge ? { background: `var(--fh-badge-${badge.tier})`, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: -4, marginRight: -4 } : undefined}
           >
             {badge && <span aria-hidden="true" style={{ display: 'none' }} />}
             <div className={`${labelText} text-fh-muted ${labelW} shrink-0 text-right`}>{label}</div>

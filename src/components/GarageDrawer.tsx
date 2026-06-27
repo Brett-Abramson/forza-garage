@@ -486,7 +486,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                                 padding: '11px 14px',
                                 borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
                                 borderBottom: i < 3 ? '1px solid var(--fh-border-strong)' : undefined,
-                                background: badge ? `var(--fh-badge-tint-${badge.tier})` : undefined,
+                                background: badge ? `var(--fh-badge-${badge.tier})` : undefined,
                               }}
                             >
                               <div className="font-bold uppercase text-fh-muted" style={{ fontSize: 9, letterSpacing: '0.1em', marginBottom: 3 }}>
@@ -578,7 +578,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                                 padding: '11px 14px',
                                 borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
                                 borderBottom: i < 3 ? '1px solid var(--fh-border-strong)' : undefined,
-                                background: badge ? `var(--fh-badge-tint-${badge.tier})` : undefined,
+                                background: badge ? `var(--fh-badge-${badge.tier})` : undefined,
                               }}
                             >
                               <div className="font-bold uppercase text-fh-muted flex items-baseline gap-1" style={{ fontSize: 9, letterSpacing: '0.08em', marginBottom: 3 }}>

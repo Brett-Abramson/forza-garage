@@ -237,11 +237,11 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
 }
 
 function StatTd({ children, badge }: { children: ReactNode; badge?: CarBadge | null }) {
-  if (badge) {
+  if (badge && badge.tier !== 'neutral') {
     return (
       <td
         className="py-2.5 px-3 tabular-nums text-fh-dark-2 text-right whitespace-nowrap font-bold"
-        style={{ minWidth: 72, background: `var(--fh-badge-tint-${badge.tier})` }}
+        style={{ minWidth: 72, background: `var(--fh-badge-${badge.tier})` }}
         title={badge.label}
       >
         {children}
