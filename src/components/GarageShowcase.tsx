@@ -102,6 +102,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
   // merge — what's in the DB is what's shown.
   const [cars, setCars] = useState<Car[]>(initialCars)
   const [filters, setFilters] = useState<FilterState>({
+    ...DEFAULT_FILTERS,
     search: searchParams.get('q') ?? '',
     piClass: (searchParams.get('class') ?? '').split(',').filter(Boolean),
     division: (searchParams.get('div') ?? '').split(',').filter(Boolean),

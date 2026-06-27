@@ -27,6 +27,8 @@ interface FilterSidebarProps {
   toggleRace: (raceId: string) => void
   // Garage-only
   pinnedCount?: number
+  /** Pass true if any car in the current result set has at least one non-null sim value. */
+  hasSimData?: boolean
 }
 
 function SvgChevron({ open }: { open: boolean }) {
@@ -140,6 +142,66 @@ function YearRange({
   )
 }
 
+// ── Sim metric range — numeric min/max committed on blur or Enter ──────────────
+function SimRange({
+  label,
+  unit,
+  step,
+  minVal,
+  maxVal,
+  onChange,
+}: {
+  label: string
+  unit: string
+  step: number
+  minVal: number | null
+  maxVal: number | null
+  onChange: (next: { min: number | null; max: number | null }) => void
+}) {
+  const [from, setFrom] = useState(minVal != null ? String(minVal) : '')
+  const [to,   setTo]   = useState(maxVal != null ? String(maxVal) : '')
+
+  useEffect(() => { setFrom(minVal != null ? String(minVal) : '') }, [minVal])
+  useEffect(() => { setTo(maxVal != null ? String(maxVal) : '') },   [maxVal])
+
+  function commit(rawFrom: string, rawTo: string) {
+    const parse = (raw: string): number | null => {
+      if (raw.trim() === '') return null
+      const n = parseFloat(raw)
+      return isNaN(n) ? null : n
+    }
+    onChange({ min: parse(rawFrom), max: parse(rawTo) })
+  }
+
+  const inputCls =
+    'w-full bg-fh-panel border border-fh-border rounded-lg px-2.5 py-1.5 text-xs text-fh-dark focus:outline-none focus:border-fh-red tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="text-[10px] font-medium text-fh-muted-2">{label} <span className="lowercase">{unit}</span></div>
+      <div className="flex items-center gap-2">
+        <input
+          type="number" inputMode="decimal" step={step} aria-label={`${label} min`}
+          placeholder="Min" value={from}
+          onChange={(e) => setFrom(e.target.value)}
+          onBlur={() => commit(from, to)}
+          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+          className={inputCls}
+        />
+        <span className="text-fh-muted text-xs shrink-0">–</span>
+        <input
+          type="number" inputMode="decimal" step={step} aria-label={`${label} max`}
+          placeholder="Max" value={to}
+          onChange={(e) => setTo(e.target.value)}
+          onBlur={() => commit(from, to)}
+          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+          className={inputCls}
+        />
+      </div>
+    </div>
+  )
+}
+
 export default function FilterSidebar({
   isOpen,
   onClose,
@@ -159,8 +221,10 @@ export default function FilterSidebar({
   toggleTag,
   toggleRace,
   pinnedCount = 0,
+  hasSimData = true,
 }: FilterSidebarProps) {
   const [moreOpen, setMoreOpen] = useState(false)
+  const [simOpen,  setSimOpen]  = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -178,10 +242,24 @@ export default function FilterSidebar({
     (filters.source ? 1 : 0) +
     selectedTags.size
 
+  // Count active sim filters
+  const simActiveCount = [
+    filters.simZeroToSixtyMin,  filters.simZeroToSixtyMax,
+    filters.simZeroToHundredMin, filters.simZeroToHundredMax,
+    filters.simBraking60Min,    filters.simBraking60Max,
+    filters.simLateralG60Min,   filters.simLateralG60Max,
+    filters.simTopSpeedMin,     filters.simTopSpeedMax,
+  ].filter((v) => v != null).length
+
   // Auto-open More filters if any more-filter is active
   useEffect(() => {
     if (moreCount > 0) setMoreOpen(true)
   }, [moreCount])
+
+  // Auto-open Sim Metrics section if any sim filter is active
+  useEffect(() => {
+    if (simActiveCount > 0) setSimOpen(true)
+  }, [simActiveCount])
 
   const selectedGroups = DIVISION_GROUPS.filter((g) => selectedGroupIds.includes(g.id))
 
@@ -406,6 +484,59 @@ export default function FilterSidebar({
               <span>Show only favourites</span>
               <span className="ml-auto tabular-nums">{pinnedCount}</span>
             </button>
+          </div>
+        )}
+
+        {/* Sim Metrics disclosure — only shown when result set has sim data */}
+        {hasSimData && (
+          <div>
+            <button
+              onClick={() => setSimOpen((v) => !v)}
+              className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-[9px] text-xs font-medium border border-fh-border bg-fh-panel-2 transition-colors hover:border-fh-border hover:text-fh-dark-2 ${simOpen ? 'text-fh-dark' : 'text-fh-muted'}`}
+            >
+              <SvgChevron open={simOpen} />
+              Sim Metrics
+              {simActiveCount > 0 && (
+                <span className="ml-0.5 min-w-[16px] h-4 px-1 rounded-full bg-fh-red/10 text-fh-red text-[9px] font-bold flex items-center justify-center leading-none">
+                  {simActiveCount}
+                </span>
+              )}
+            </button>
+
+            {simOpen && (
+              <div className="flex flex-col gap-3 mt-4 pl-1">
+                <SimRange
+                  label="0–60" unit="s" step={0.1}
+                  minVal={filters.simZeroToSixtyMin}
+                  maxVal={filters.simZeroToSixtyMax}
+                  onChange={({ min, max }) => setFilters((f) => ({ ...f, simZeroToSixtyMin: min, simZeroToSixtyMax: max }))}
+                />
+                <SimRange
+                  label="0–100" unit="s" step={0.1}
+                  minVal={filters.simZeroToHundredMin}
+                  maxVal={filters.simZeroToHundredMax}
+                  onChange={({ min, max }) => setFilters((f) => ({ ...f, simZeroToHundredMin: min, simZeroToHundredMax: max }))}
+                />
+                <SimRange
+                  label="Braking 60–0" unit="ft" step={1}
+                  minVal={filters.simBraking60Min}
+                  maxVal={filters.simBraking60Max}
+                  onChange={({ min, max }) => setFilters((f) => ({ ...f, simBraking60Min: min, simBraking60Max: max }))}
+                />
+                <SimRange
+                  label="Lateral G (60)" unit="G" step={0.01}
+                  minVal={filters.simLateralG60Min}
+                  maxVal={filters.simLateralG60Max}
+                  onChange={({ min, max }) => setFilters((f) => ({ ...f, simLateralG60Min: min, simLateralG60Max: max }))}
+                />
+                <SimRange
+                  label="Top Speed" unit="mph" step={1}
+                  minVal={filters.simTopSpeedMin}
+                  maxVal={filters.simTopSpeedMax}
+                  onChange={({ min, max }) => setFilters((f) => ({ ...f, simTopSpeedMin: min, simTopSpeedMax: max }))}
+                />
+              </div>
+            )}
           </div>
         )}
 

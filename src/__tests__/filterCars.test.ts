@@ -829,3 +829,113 @@ describe('filterCars — year range', () => {
     expect(ids(result)).toEqual([6])
   })
 })
+
+// ─── Sim metric range filters ─────────────────────────────────────────────────
+// Sim data is sparse in the base fixtures (all null). We build a small
+// dedicated fixture set so we can test each filter axis in isolation.
+
+const SIM_A: Car = {
+  ...PORSCHE, id: 101,
+  simZeroToSixty: 3.2, simZeroToHundred: 7.0, simBraking60: 100, simLateralG60: 1.10, simTopSpeed: 200,
+}
+const SIM_B: Car = {
+  ...SUBARU_WRX, id: 102,
+  simZeroToSixty: 4.5, simZeroToHundred: 9.5, simBraking60: 130, simLateralG60: 0.90, simTopSpeed: 170,
+}
+const SIM_NULL: Car = {
+  ...TOYOTA, id: 103,
+  simZeroToSixty: null, simZeroToHundred: null, simBraking60: null, simLateralG60: null, simTopSpeed: null,
+}
+const SIM_CARS = [SIM_A, SIM_B, SIM_NULL]
+
+describe('filterCars — sim range filters', () => {
+  it('null bounds are a no-op — all cars pass including null-sim cars', () => {
+    expect(filterCars(SIM_CARS, { filters: f() })).toHaveLength(3)
+  })
+
+  // ── 0–60 ──────────────────────────────────────────────────────────────────
+  it('simZeroToSixtyMax: keeps cars at or below the bound', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simZeroToSixtyMax: 4.0 }) })
+    expect(ids(result)).toEqual([SIM_A.id])
+  })
+
+  it('simZeroToSixtyMin: keeps cars at or above the bound', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simZeroToSixtyMin: 4.0 }) })
+    expect(ids(result)).toEqual([SIM_B.id])
+  })
+
+  it('simZeroToSixty range: both bounds exclude cars outside the window', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simZeroToSixtyMin: 3.0, simZeroToSixtyMax: 4.0 }) })
+    expect(ids(result)).toEqual([SIM_A.id])
+  })
+
+  it('null sim value is excluded when simZeroToSixtyMax is set', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simZeroToSixtyMax: 9.9 }) })
+    expect(ids(result)).not.toContain(SIM_NULL.id)
+  })
+
+  it('null sim value is excluded when simZeroToSixtyMin is set', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simZeroToSixtyMin: 0.1 }) })
+    expect(ids(result)).not.toContain(SIM_NULL.id)
+  })
+
+  // ── 0–100 ─────────────────────────────────────────────────────────────────
+  it('simZeroToHundredMax: keeps cars at or below bound', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simZeroToHundredMax: 8.0 }) })
+    expect(ids(result)).toEqual([SIM_A.id])
+  })
+
+  it('simZeroToHundredMin: excludes null-sim cars', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simZeroToHundredMin: 1.0 }) })
+    expect(ids(result)).not.toContain(SIM_NULL.id)
+  })
+
+  // ── Braking 60–0 ──────────────────────────────────────────────────────────
+  it('simBraking60Max: keeps cars with braking distance at or below bound', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simBraking60Max: 110 }) })
+    expect(ids(result)).toEqual([SIM_A.id])
+  })
+
+  it('simBraking60Min: excludes cars shorter than bound', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simBraking60Min: 120 }) })
+    expect(ids(result)).toEqual([SIM_B.id])
+  })
+
+  // ── Lateral G ─────────────────────────────────────────────────────────────
+  it('simLateralG60Min: keeps cars at or above bound', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simLateralG60Min: 1.0 }) })
+    expect(ids(result)).toEqual([SIM_A.id])
+  })
+
+  it('simLateralG60Max: keeps cars at or below bound', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simLateralG60Max: 1.0 }) })
+    expect(ids(result)).toEqual([SIM_B.id])
+  })
+
+  // ── Top Speed ─────────────────────────────────────────────────────────────
+  it('simTopSpeedMin: keeps cars at or above bound', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simTopSpeedMin: 190 }) })
+    expect(ids(result)).toEqual([SIM_A.id])
+  })
+
+  it('simTopSpeedMax: keeps cars at or below bound', () => {
+    const result = filterCars(SIM_CARS, { filters: f({ simTopSpeedMax: 180 }) })
+    expect(ids(result)).toEqual([SIM_B.id])
+  })
+
+  // ── Cross-filter combination ───────────────────────────────────────────────
+  it('combining two sim range filters applies AND logic', () => {
+    // SIM_A: 0–60=3.2, top=200; SIM_B: 0–60=4.5, top=170
+    // Filter: 0-60 ≤ 4.0 AND top ≥ 190 → only SIM_A
+    const result = filterCars(SIM_CARS, { filters: f({ simZeroToSixtyMax: 4.0, simTopSpeedMin: 190 }) })
+    expect(ids(result)).toEqual([SIM_A.id])
+  })
+
+  it('sim range filter combines with piClass filter', () => {
+    // SIM_A is S1, SIM_B is A — filtering S1 + top speed min 190
+    const result = filterCars(SIM_CARS, {
+      filters: f({ piClass: ['S1'], simTopSpeedMin: 190 }),
+    })
+    expect(ids(result)).toEqual([SIM_A.id])
+  })
+})

@@ -26,6 +26,16 @@ export const DEFAULT_FILTERS: FilterState = {
   pinned: false,
   yearMin: null,
   yearMax: null,
+  simZeroToSixtyMin: null,
+  simZeroToSixtyMax: null,
+  simZeroToHundredMin: null,
+  simZeroToHundredMax: null,
+  simBraking60Min: null,
+  simBraking60Max: null,
+  simLateralG60Min: null,
+  simLateralG60Max: null,
+  simTopSpeedMin: null,
+  simTopSpeedMax: null,
 }
 
 /**
@@ -101,6 +111,19 @@ export function filterCars(
     // ── Pinned / favourites filter ────────────────────────────────────────────
     // Garage-only. When active, only pinned cars pass.
     if (filters.pinned && !car.pinned) return false
+
+    // ── Sim metric range filters ──────────────────────────────────────────────
+    // Cars with null sim values are excluded whenever a bound is active.
+    if (filters.simZeroToSixtyMin != null && (car.simZeroToSixty == null || car.simZeroToSixty < filters.simZeroToSixtyMin)) return false
+    if (filters.simZeroToSixtyMax != null && (car.simZeroToSixty == null || car.simZeroToSixty > filters.simZeroToSixtyMax)) return false
+    if (filters.simZeroToHundredMin != null && (car.simZeroToHundred == null || car.simZeroToHundred < filters.simZeroToHundredMin)) return false
+    if (filters.simZeroToHundredMax != null && (car.simZeroToHundred == null || car.simZeroToHundred > filters.simZeroToHundredMax)) return false
+    if (filters.simBraking60Min != null && (car.simBraking60 == null || car.simBraking60 < filters.simBraking60Min)) return false
+    if (filters.simBraking60Max != null && (car.simBraking60 == null || car.simBraking60 > filters.simBraking60Max)) return false
+    if (filters.simLateralG60Min != null && (car.simLateralG60 == null || car.simLateralG60 < filters.simLateralG60Min)) return false
+    if (filters.simLateralG60Max != null && (car.simLateralG60 == null || car.simLateralG60 > filters.simLateralG60Max)) return false
+    if (filters.simTopSpeedMin != null && (car.simTopSpeed == null || car.simTopSpeed < filters.simTopSpeedMin)) return false
+    if (filters.simTopSpeedMax != null && (car.simTopSpeed == null || car.simTopSpeed > filters.simTopSpeedMax)) return false
 
     // ── Race-type filter (OR across races, OR within each race's tags) ───────
     // Car passes if it matches at least one tag from at least one selected race.

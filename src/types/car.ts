@@ -85,6 +85,17 @@ export interface FilterState {
   pinned: boolean  // garage only — true = show only pinned/favourite cars
   yearMin: number | null  // inclusive lower bound; null = no lower bound
   yearMax: number | null  // inclusive upper bound; null = no upper bound
+  // Sim metric range filters — null = no bound; cars with null sim values are excluded when a bound is active
+  simZeroToSixtyMin: number | null
+  simZeroToSixtyMax: number | null
+  simZeroToHundredMin: number | null
+  simZeroToHundredMax: number | null
+  simBraking60Min: number | null
+  simBraking60Max: number | null
+  simLateralG60Min: number | null
+  simLateralG60Max: number | null
+  simTopSpeedMin: number | null
+  simTopSpeedMax: number | null
 }
 
 // Broad acquisition-method categories used for source chips

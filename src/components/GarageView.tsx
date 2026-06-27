@@ -84,6 +84,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
 
   const [cars, setCars]       = useState<Car[]>(initialCars)
   const [filters, setFilters] = useState<FilterState>({
+    ...DEFAULT_FILTERS,
     search:    searchParams.get('q')      ?? '',
     piClass:   (searchParams.get('class') ?? '').split(',').filter(Boolean),
     division:  (searchParams.get('div') ?? '').split(',').filter(Boolean),
@@ -178,6 +179,11 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
     filters.yearMin !== null || filters.yearMax !== null,
     selectedTags.size > 0,
     selectedRaceIds.length > 0,
+    filters.simZeroToSixtyMin != null || filters.simZeroToSixtyMax != null ||
+    filters.simZeroToHundredMin != null || filters.simZeroToHundredMax != null ||
+    filters.simBraking60Min != null || filters.simBraking60Max != null ||
+    filters.simLateralG60Min != null || filters.simLateralG60Max != null ||
+    filters.simTopSpeedMin != null || filters.simTopSpeedMax != null,
   ].filter(Boolean).length
 
   // ── Register search + view + sidebar controls with the navbar ───────────────
@@ -246,6 +252,14 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
   const filteredCars = useMemo(
     () => filterCars(cars, { filters, selectedGroupIds, selectedTags, activeRaces }),
     [cars, filters, selectedGroupIds, selectedTags, activeRaces]
+  )
+
+  const hasSimData = useMemo(
+    () => filteredCars.some((c) =>
+      c.simZeroToSixty != null || c.simZeroToHundred != null || c.simBraking60 != null ||
+      c.simLateralG60 != null || c.simTopSpeed != null
+    ),
+    [filteredCars]
   )
 
   const sortedCars = useMemo(() => {
@@ -421,6 +435,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
         handleDivisionChange={handleDivisionChange}
         toggleTag={toggleTag}
         toggleRace={toggleRace}
+        hasSimData={hasSimData}
       />
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
