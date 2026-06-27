@@ -350,6 +350,21 @@ export default function FilterSidebar({
           )}
         </div>
 
+        {/* Stat highlights toggle */}
+        <label className="flex items-center gap-2 cursor-pointer select-none group">
+          <div className="relative">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={filters.showStatHighlights}
+              onChange={() => setFilters((f) => ({ ...f, showStatHighlights: !f.showStatHighlights }))}
+            />
+            <div className="w-7 h-4 rounded-full border border-fh-border bg-fh-panel-2 peer-checked:bg-green-600 peer-checked:border-green-600 transition-colors" />
+            <div className="absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-fh-muted peer-checked:bg-white peer-checked:translate-x-3 transition-all" />
+          </div>
+          <span className="text-xs text-fh-muted group-hover:text-fh-dark transition-colors">Stat highlights</span>
+        </label>
+
         {/* Year */}
         <div className="flex flex-col gap-2">
           <div className="text-[10px] font-semibold text-fh-muted uppercase tracking-wider">Year</div>

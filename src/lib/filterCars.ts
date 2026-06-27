@@ -27,6 +27,7 @@ export const DEFAULT_FILTERS: FilterState = {
   yearMin: null,
   yearMax: null,
   hasTopBadge: false,
+  showStatHighlights: true,
   simZeroToSixtyMin: null,
   simZeroToSixtyMax: null,
   simZeroToHundredMin: null,

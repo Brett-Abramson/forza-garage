@@ -28,11 +28,13 @@ interface Props {
   statsMode?: boolean
   /** Swap standard right-side columns for the registry-driven Sim metric columns with sticky identity cols */
   simMode?: boolean
+  /** When false, suppresses green/red badge background tints in stats/sim table cells */
+  showStatHighlights?: boolean
   /** JS-driven column visibility (GarageView only). When omitted, falls back to CSS responsive classes. */
   colVis?: { piYear: boolean; division: boolean; driveCountry: boolean; sourceValue: boolean; addedAt?: boolean; star?: boolean }
 }
 
-export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode, simMode, colVis }: Props) {
+export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode, simMode, showStatHighlights = true, colVis }: Props) {
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined, {
@@ -98,21 +100,21 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
         </td>
         {simMode ? (
           SIM_COLUMN_METRICS.map((m) => (
-            <StatTd key={m.key} badge={car.badges?.[m.key]}>{formatMetricValue(m, car)}</StatTd>
+            <StatTd key={m.key} badge={showStatHighlights ? car.badges?.[m.key] : null}>{formatMetricValue(m, car)}</StatTd>
           ))
         ) : (
           <>
-            <StatTd badge={car.badges?.['statSpeed']}       >{car.statSpeed        ?? '—'}</StatTd>
-            <StatTd badge={car.badges?.['statHandling']}    >{car.statHandling     ?? '—'}</StatTd>
-            <StatTd badge={car.badges?.['statAcceleration']}>{car.statAcceleration ?? '—'}</StatTd>
-            <StatTd badge={car.badges?.['statLaunch']}      >{car.statLaunch       ?? '—'}</StatTd>
-            <StatTd badge={car.badges?.['statBraking']}     >{car.statBraking      ?? '—'}</StatTd>
-            <StatTd badge={car.badges?.['statOffroad']}     >{car.statOffroad      ?? '—'}</StatTd>
-            <StatTd badge={car.badges?.['powerHp']}         >{car.powerHp          ?? '—'}</StatTd>
-            <StatTd badge={car.badges?.['torqueFtLb']}      >{car.torqueFtLb       ?? '—'}</StatTd>
-            <StatTd badge={car.badges?.['weightLb']}        >{car.weightLb         ?? '—'}</StatTd>
-            <StatTd>{car.frontWeight   != null ? `${car.frontWeight}%`            : '—'}</StatTd>
-            <StatTd>{car.displacementL != null ? car.displacementL.toFixed(1)     : '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['statSpeed']        : null}>{car.statSpeed        ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['statHandling']     : null}>{car.statHandling     ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['statAcceleration'] : null}>{car.statAcceleration ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['statLaunch']       : null}>{car.statLaunch       ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['statBraking']      : null}>{car.statBraking      ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['statOffroad']      : null}>{car.statOffroad      ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['powerHp']          : null}>{car.powerHp          ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['torqueFtLb']       : null}>{car.torqueFtLb       ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['weightLb']         : null}>{car.weightLb         ?? '—'}</StatTd>
+            <StatTd>{car.frontWeight   != null ? `${car.frontWeight}%`        : '—'}</StatTd>
+            <StatTd>{car.displacementL != null ? car.displacementL.toFixed(1) : '—'}</StatTd>
           </>
         )}
       </tr>

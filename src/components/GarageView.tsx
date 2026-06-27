@@ -626,6 +626,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
                       onCardClick={setDrawerCar}
                       statsMode={tableMode === 'stats'}
                       simMode={tableMode === 'sim'}
+                      showStatHighlights={filters.showStatHighlights}
                       hideGarage={!isSignedIn}
                       colVis={{ piYear: colPiYear, division: colDivision, driveCountry: colDriveCountry, sourceValue: colSourceValue }}
                     />

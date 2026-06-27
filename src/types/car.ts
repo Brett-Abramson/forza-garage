@@ -98,7 +98,8 @@ export interface FilterState {
   pinned: boolean  // garage only — true = show only pinned/favourite cars
   yearMin: number | null  // inclusive lower bound; null = no lower bound
   yearMax: number | null  // inclusive upper bound; null = no upper bound
-  hasTopBadge: boolean    // when true, show only cars that hold at least one percentile/rank badge
+  hasTopBadge: boolean       // when true, show only cars that hold at least one percentile/rank badge
+  showStatHighlights: boolean  // when false, suppress green/red badge backgrounds in table view
   // Sim metric range filters — null = no bound; cars with null sim values are excluded when a bound is active
   simZeroToSixtyMin: number | null
   simZeroToSixtyMax: number | null

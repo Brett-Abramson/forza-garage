@@ -745,6 +745,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                         hideGarage
                         statsMode={tableMode === 'stats'}
                         simMode={tableMode === 'sim'}
+                        showStatHighlights={filters.showStatHighlights}
                         colVis={{ star: colStar, piYear: colPiYear, division: colDivision, driveCountry: colDriveCountry, sourceValue: colSourceValue, addedAt: colAdded }}
                       />
                     ))}
