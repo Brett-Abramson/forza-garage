@@ -250,13 +250,13 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
   const ownsCar = !!displayCar?.owned
 
   // Spec tiles for the Overview grid (effective values; '—' when null)
-  const specTiles = displayCar ? [
-    { label: 'HP',           value: displayCar.powerHp       != null ? String(displayCar.powerHp)            : null },
-    { label: 'Torque ft-lb', value: displayCar.torqueFtLb    != null ? String(displayCar.torqueFtLb)         : null },
-    { label: 'Weight lb',    value: displayCar.weightLb      != null ? displayCar.weightLb.toLocaleString()  : null },
-    { label: 'Front weight', value: displayCar.frontWeight   != null ? `${displayCar.frontWeight}%`          : null },
-    { label: 'Displacement', value: displayCar.displacementL != null ? `${displayCar.displacementL} L`       : null },
-    { label: 'Drivetrain',   value: displayCar.drivetrain ?? null },
+  const specTiles: { label: string; value: string | null; badgeKey: string | null }[] = displayCar ? [
+    { label: 'HP',           badgeKey: 'powerHp',    value: displayCar.powerHp    != null ? String(displayCar.powerHp)           : null },
+    { label: 'Torque ft-lb', badgeKey: 'torqueFtLb', value: displayCar.torqueFtLb != null ? String(displayCar.torqueFtLb)        : null },
+    { label: 'Weight lb',    badgeKey: 'weightLb',   value: displayCar.weightLb   != null ? displayCar.weightLb.toLocaleString() : null },
+    { label: 'Front weight', badgeKey: null,          value: displayCar.frontWeight   != null ? `${displayCar.frontWeight}%`     : null },
+    { label: 'Displacement', badgeKey: null,          value: displayCar.displacementL != null ? `${displayCar.displacementL} L`  : null },
+    { label: 'Drivetrain',   badgeKey: null,          value: displayCar.drivetrain ?? null },
   ] : []
   const hasAnySpec = specTiles.some((t) => t.value != null)
 
@@ -271,13 +271,15 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
   const simAllNull = !displayCar || SIM_METRICS.every((m) => getMetricValue(m, displayCar) == null)
   // In garage context, sim figures can't reflect a power/weight tune — flag it.
   const simStockNote = !!(displayCar && (displayCar.powerHpOverride != null || displayCar.weightLbOverride != null))
-  const simHeadline = [
-    { label: '0–60',        unit: 's',   value: simFmt('simZeroToSixty') },
-    { label: '0–100',       unit: 's',   value: simFmt('simZeroToHundred') },
-    { label: 'Top speed',   unit: 'mph', value: simFmt('simTopSpeed') },
-    { label: '60–0 brake',  unit: 'ft',  value: simFmt('simBraking60') },
-    { label: '100–0 brake', unit: 'ft',  value: simFmt('simBraking100') },
-    { label: 'Lateral G',   unit: 'g',   value: `${simFmt('simLateralG60')} / ${simFmt('simLateralG120')}` },
+  // badgeKey = eligible sim metric key (5 out of 7 headline items); null = never eligible.
+  // Lateral G splits into value (G60, eligible) and value2 (G120, not eligible).
+  const simHeadline: { label: string; unit: string; value: string; badgeKey: string | null; value2?: string }[] = [
+    { label: '0–60',        unit: 's',   value: simFmt('simZeroToSixty'),   badgeKey: 'simZeroToSixty'   },
+    { label: '0–100',       unit: 's',   value: simFmt('simZeroToHundred'), badgeKey: 'simZeroToHundred' },
+    { label: 'Top speed',   unit: 'mph', value: simFmt('simTopSpeed'),      badgeKey: 'simTopSpeed'      },
+    { label: '60–0 brake',  unit: 'ft',  value: simFmt('simBraking60'),     badgeKey: 'simBraking60'     },
+    { label: '100–0 brake', unit: 'ft',  value: simFmt('simBraking100'),    badgeKey: null               },
+    { label: 'Lateral G',   unit: 'g',   value: simFmt('simLateralG60'),    badgeKey: 'simLateralG60',   value2: simFmt('simLateralG120') },
   ]
   const simRatios = [
     { label: 'Aero eff', value: simFmt('simAeroEfficiency') },
@@ -465,7 +467,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                       )}
                     </div>
 
-                    <StatBars car={displayCar} variant="large" showSpecs={false} />
+                    <StatBars car={displayCar} variant="large" showSpecs={false} badges={displayCar.badges} />
 
                     {/* Spec tiles grid */}
                     {hasAnySpec ? (
@@ -473,24 +475,32 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                         className="grid grid-cols-3 rounded-[9px] overflow-hidden"
                         style={{ marginTop: 14, border: '1px solid var(--fh-border-strong)' }}
                       >
-                        {specTiles.map((t, i) => (
-                          <div
-                            key={t.label}
-                            className="bg-fh-panel"
-                            style={{
-                              padding: '11px 14px',
-                              borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
-                              borderBottom: i < 3 ? '1px solid var(--fh-border-strong)' : undefined,
-                            }}
-                          >
-                            <div className="font-bold uppercase text-fh-muted" style={{ fontSize: 9, letterSpacing: '0.1em', marginBottom: 3 }}>
-                              {t.label}
+                        {specTiles.map((t, i) => {
+                          const badge = t.badgeKey ? displayCar.badges?.[t.badgeKey] : undefined
+                          return (
+                            <div
+                              key={t.label}
+                              className="bg-fh-panel"
+                              title={badge?.label}
+                              style={{
+                                padding: '11px 14px',
+                                borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
+                                borderBottom: i < 3 ? '1px solid var(--fh-border-strong)' : undefined,
+                                background: badge ? `var(--fh-badge-tint-${badge.tier})` : undefined,
+                              }}
+                            >
+                              <div className="font-bold uppercase text-fh-muted" style={{ fontSize: 9, letterSpacing: '0.1em', marginBottom: 3 }}>
+                                {t.label}
+                              </div>
+                              <div
+                                className={`tabular-nums text-fh-dark-2 ${badge ? 'font-bold' : 'font-semibold'}`}
+                                style={{ fontSize: 15, letterSpacing: '-0.01em', lineHeight: 1 }}
+                              >
+                                {t.value ?? '—'}
+                              </div>
                             </div>
-                            <div className="font-semibold tabular-nums text-fh-dark-2" style={{ fontSize: 15, letterSpacing: '-0.01em', lineHeight: 1 }}>
-                              {t.value ?? '—'}
-                            </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     ) : canEditTags ? (
                       <p className="mt-3 text-xs text-fh-muted italic">No spec data yet — use “Edit manually” to add it.</p>
@@ -557,25 +567,30 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                         className="grid grid-cols-3 rounded-[9px] overflow-hidden"
                         style={{ border: '1px solid var(--fh-border-strong)' }}
                       >
-                        {simHeadline.map((t, i) => (
-                          <div
-                            key={t.label}
-                            className="bg-fh-panel"
-                            style={{
-                              padding: '11px 14px',
-                              borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
-                              borderBottom: i < 3 ? '1px solid var(--fh-border-strong)' : undefined,
-                            }}
-                          >
-                            <div className="font-bold uppercase text-fh-muted flex items-baseline gap-1" style={{ fontSize: 9, letterSpacing: '0.08em', marginBottom: 3 }}>
-                              {t.label}
-                              <span className="text-fh-muted-2 lowercase" style={{ fontSize: 8 }}>{t.unit}</span>
+                        {simHeadline.map((t, i) => {
+                          const badge = t.badgeKey ? displayCar.badges?.[t.badgeKey] : undefined
+                          return (
+                            <div
+                              key={t.label}
+                              className="bg-fh-panel"
+                              title={badge?.label}
+                              style={{
+                                padding: '11px 14px',
+                                borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
+                                borderBottom: i < 3 ? '1px solid var(--fh-border-strong)' : undefined,
+                                background: badge ? `var(--fh-badge-tint-${badge.tier})` : undefined,
+                              }}
+                            >
+                              <div className="font-bold uppercase text-fh-muted flex items-baseline gap-1" style={{ fontSize: 9, letterSpacing: '0.08em', marginBottom: 3 }}>
+                                {t.label}
+                                <span className="text-fh-muted-2 lowercase" style={{ fontSize: 8 }}>{t.unit}</span>
+                              </div>
+                              <div className="font-bold tabular-nums text-fh-dark" style={{ fontSize: 15, letterSpacing: '-0.01em', lineHeight: 1 }}>
+                                {t.value2 !== undefined ? `${t.value} / ${t.value2}` : t.value}
+                              </div>
                             </div>
-                            <div className="font-bold tabular-nums text-fh-dark" style={{ fontSize: 15, letterSpacing: '-0.01em', lineHeight: 1 }}>
-                              {t.value}
-                            </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
 
                       {/* Balance ratios — de-emphasized, divided off below */}

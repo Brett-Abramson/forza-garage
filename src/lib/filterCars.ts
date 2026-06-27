@@ -26,6 +26,7 @@ export const DEFAULT_FILTERS: FilterState = {
   pinned: false,
   yearMin: null,
   yearMax: null,
+  hasTopBadge: false,
   simZeroToSixtyMin: null,
   simZeroToSixtyMax: null,
   simZeroToHundredMin: null,
@@ -111,6 +112,10 @@ export function filterCars(
     // ── Pinned / favourites filter ────────────────────────────────────────────
     // Garage-only. When active, only pinned cars pass.
     if (filters.pinned && !car.pinned) return false
+
+    // ── Top badge filter ──────────────────────────────────────────────────────
+    // Car must hold at least one percentile/rank badge across any metric.
+    if (filters.hasTopBadge && (!car.badges || Object.keys(car.badges).length === 0)) return false
 
     // ── Sim metric range filters ──────────────────────────────────────────────
     // Cars with null sim values are excluded whenever a bound is active.

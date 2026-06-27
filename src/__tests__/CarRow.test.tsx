@@ -198,6 +198,90 @@ describe('CarRow — showAddedAt', () => {
   })
 })
 
+// ─── statsMode badge cells ────────────────────────────────────────────────────
+
+describe('CarRow — statsMode badge cells', () => {
+  const statBadge = {
+    kind: 'percentile' as const,
+    tier: 'soft' as const,
+    label: 'top 10% speed · S1 (stock)',
+    rank: 1,
+    n: 10,
+  }
+  const badgedCar: Car = {
+    ...baseCar,
+    statSpeed: 9.5,
+    badges: { statSpeed: statBadge },
+  }
+
+  const renderStats = (car: Car) =>
+    render(<table><tbody><CarRow car={car} onToggleOwned={vi.fn()} statsMode /></tbody></table>)
+
+  it('does not render ★ in a badged stat cell', () => {
+    renderStats(badgedCar)
+    expect(screen.queryByText(/★/)).not.toBeInTheDocument()
+  })
+
+  it('badged cell carries a title with the badge label', () => {
+    renderStats(badgedCar)
+    const cell = screen.getByTitle('top 10% speed · S1 (stock)')
+    expect(cell).toBeInTheDocument()
+  })
+
+  it('badged cell has font-bold class', () => {
+    renderStats(badgedCar)
+    const cell = screen.getByTitle('top 10% speed · S1 (stock)')
+    expect(cell.className).toContain('font-bold')
+  })
+
+  it('non-badged cell does not carry a title', () => {
+    renderStats(badgedCar)
+    // Only the speed cell is badged; query all cells with title text containing "speed"
+    const titled = document.querySelectorAll('[title]')
+    // Only one titled cell — for statSpeed badge
+    expect(titled).toHaveLength(1)
+  })
+})
+
+// ─── simMode badge cells ───────────────────────────────────────────────────────
+
+describe('CarRow — simMode badge cells', () => {
+  const simBadge = {
+    kind: 'percentile' as const,
+    tier: 'strong' as const,
+    label: 'top 5% 0–60 · S1 (stock)',
+    rank: 1,
+    n: 20,
+  }
+  const badgedSimCar: Car = {
+    ...baseCar,
+    simZeroToSixty: 3.2,
+    simTopSpeed: 217,
+    badges: { simZeroToSixty: simBadge },
+  }
+
+  const renderSim = (car: Car) =>
+    render(<table><tbody><CarRow car={car} onToggleOwned={vi.fn()} simMode /></tbody></table>)
+
+  it('does not render ★ in a badged sim cell', () => {
+    renderSim(badgedSimCar)
+    expect(screen.queryByText(/★/)).not.toBeInTheDocument()
+  })
+
+  it('badged sim cell carries a title with the badge label', () => {
+    renderSim(badgedSimCar)
+    const cell = screen.getByTitle('top 5% 0–60 · S1 (stock)')
+    expect(cell).toBeInTheDocument()
+  })
+
+  it('non-badged sim cells do not have a title', () => {
+    renderSim(badgedSimCar)
+    // Only simZeroToSixty is badged; top-speed cell should have no title
+    const titled = document.querySelectorAll('[title]')
+    expect(titled).toHaveLength(1)
+  })
+})
+
 // ─── Sim mode (registry-driven metric columns) ───────────────────────────────
 
 describe('CarRow — sim mode', () => {

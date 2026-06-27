@@ -2,6 +2,7 @@ import 'server-only'
 import { prisma } from '@/server/db'
 import { getAutoTags } from '@/lib/autotags'
 import { resolveEffectiveStats, STAT_OVERRIDE_MAP } from '@/lib/statUtils'
+import { getBadgeMatrix } from '@/server/dal/cars'
 import type { Car } from '@/types/car'
 
 // Cars the game gives every player at the start.
@@ -59,11 +60,14 @@ export async function ensureStarterCars(userId: string): Promise<void> {
  * Single query (car + tags via include); no per-row round-trips.
  */
 export async function getGarageCars(userId: string): Promise<Car[]> {
-  const entries = await prisma.userGarage.findMany({
-    where: { userId },
-    include: { car: true, tags: true },
-    orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
-  })
+  const [entries, badgeMatrix] = await Promise.all([
+    prisma.userGarage.findMany({
+      where: { userId },
+      include: { car: true, tags: true },
+      orderBy: [{ car: { make: 'asc' } }, { car: { model: 'asc' } }],
+    }),
+    getBadgeMatrix(),
+  ])
 
   return entries.map((e) => {
     const overrides = {
@@ -78,6 +82,7 @@ export async function getGarageCars(userId: string): Promise<Car[]> {
       ...e.car,
       ...overrides,
       owned: true,
+      badges: badgeMatrix[e.car.id],
       pinned: e.pinned,
       addedAt: e.addedAt?.toISOString() ?? null,
       tags: [...new Set(e.tags.map((t) => t.tag))],

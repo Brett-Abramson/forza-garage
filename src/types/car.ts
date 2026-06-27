@@ -52,6 +52,7 @@ export interface Car {
   rarity: string | null  // Common | Rare | Legendary | Forza Edition
 
   owned: boolean
+  badges?: CarBadgeMap      // catalog-level percentile/rank badges, merged at the server boundary
   pinned?: boolean          // garage only — mirrors UserGarage.pinned
   addedAt?: string | null   // ISO string from UserGarage.addedAt (garage only)
   tags?: string[]
@@ -73,6 +74,18 @@ export interface Car {
   rarityOverride?: string | null
 }
 
+// ── Stat-percentile badge types ───────────────────────────────────────────────
+// Defined here (not in statPercentiles.ts) to avoid a circular import; Car
+// needs to carry badges and statPercentiles.ts imports Car.
+export interface CarBadge {
+  kind: 'percentile' | 'rank'
+  tier: 'soft' | 'strong'
+  label: string   // e.g. "top 10% braking · B (stock)" or "#2 braking · R (stock)"
+  rank: number    // competition rank within the cohort (for single-best selection)
+  n: number       // cohort size with non-null values
+}
+export type CarBadgeMap = Partial<Record<string, CarBadge>>
+
 export interface FilterState {
   search: string
   piClass: string[]
@@ -85,6 +98,7 @@ export interface FilterState {
   pinned: boolean  // garage only — true = show only pinned/favourite cars
   yearMin: number | null  // inclusive lower bound; null = no lower bound
   yearMax: number | null  // inclusive upper bound; null = no upper bound
+  hasTopBadge: boolean    // when true, show only cars that hold at least one percentile/rank badge
   // Sim metric range filters — null = no bound; cars with null sim values are excluded when a bound is active
   simZeroToSixtyMin: number | null
   simZeroToSixtyMax: number | null

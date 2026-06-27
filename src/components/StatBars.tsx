@@ -1,4 +1,4 @@
-import type { Car } from '@/types/car'
+import type { Car, CarBadgeMap } from '@/types/car'
 import { DIVISION_CLASS_AVERAGES, getStatColor } from '@/lib/statCallouts'
 import type { StatAvg } from '@/lib/statCallouts'
 
@@ -8,6 +8,8 @@ interface Props {
   variant?: 'default' | 'large'
   /** When false, the bottom specs row is omitted (the drawer renders its own spec tile grid instead). */
   showSpecs?: boolean
+  /** Per-car badge map for tinting qualifying bar values. Only statSpeed…statOffroad are eligible. */
+  badges?: CarBadgeMap
 }
 
 const BARS: { key: keyof Car; label: string; avgKey: keyof StatAvg; description: string }[] = [
@@ -45,7 +47,7 @@ const COLOR_LABELS: Record<string, string> = {
   'bg-red-500':   'Well below average',
 }
 
-export default function StatBars({ car, variant = 'default', showSpecs = true }: Props) {
+export default function StatBars({ car, variant = 'default', showSpecs = true, badges }: Props) {
   const hasAnyBarStat = BARS.some(({ key }) => car[key] != null)
   const divAvg = DIVISION_CLASS_AVERAGES[car.division]?.[car.piClass] ?? null
 
@@ -86,8 +88,16 @@ export default function StatBars({ car, variant = 'default', showSpecs = true }:
             ? `No comparison data available for ${car.division} in ${car.piClass} class`
             : null
 
+        const badge = badges?.[key as string] ?? null
+
         return (
-          <div key={key} className="relative group flex items-center gap-2">
+          <div
+            key={key}
+            className="relative group flex items-center gap-2"
+            title={badge?.label}
+            style={badge ? { background: `var(--fh-badge-tint-${badge.tier})`, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: -4, marginRight: -4 } : undefined}
+          >
+            {badge && <span aria-hidden="true" style={{ display: 'none' }} />}
             <div className={`${labelText} text-fh-muted ${labelW} shrink-0 text-right`}>{label}</div>
             <div className={`flex-1 ${barTrack} bg-fh-panel-2 rounded-full overflow-hidden`}>
               {value != null && (
@@ -97,7 +107,7 @@ export default function StatBars({ car, variant = 'default', showSpecs = true }:
                 />
               )}
             </div>
-            <div className={`${valueText} text-fh-muted tabular-nums ${valueW} shrink-0`}>
+            <div className={`${badge ? 'font-bold text-fh-dark-2' : `${valueText} text-fh-muted`} tabular-nums ${valueW} shrink-0`}>
               {value != null ? value.toFixed(1) : '—'}
             </div>
 

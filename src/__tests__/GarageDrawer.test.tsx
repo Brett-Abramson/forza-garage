@@ -681,3 +681,142 @@ describe('GarageDrawer — simulation section', () => {
     expect(screen.queryByText(/power\/weight tune/i)).not.toBeInTheDocument()
   })
 })
+
+// ─── Stat-badge left-border accents in drawer sections ──────────────────────
+
+describe('GarageDrawer — badge border accents in Overview', () => {
+  const mkBadge = (label: string, tier: 'soft' | 'strong' = 'soft') => ({
+    kind: 'percentile' as const,
+    tier,
+    label,
+    rank: 1,
+    n: 10,
+  })
+
+  const badgedCar: Car = {
+    ...baseCar,
+    statSpeed: 9.5,
+    powerHp: 450,
+    frontWeight: 42,
+    displacementL: 3.0,
+    simZeroToSixty: 3.4,
+    simZeroToHundred: 7.1,
+    simTopSpeed: 205,
+    simBraking60: 109,
+    simBraking100: 305,
+    simLateralG60: 1.05,
+    simLateralG120: 1.12,
+    simAeroEfficiency: 0.83,
+    simMechBalance: 0.48,
+    simAeroBalance: 0.41,
+    badges: {
+      statSpeed:      mkBadge('top 10% speed · S1 (stock)'),
+      powerHp:        mkBadge('top 10% HP · S1 (stock)', 'strong'),
+      simZeroToSixty: mkBadge('top 5% 0–60 · S1 (stock)', 'strong'),
+      simLateralG60:  mkBadge('top 5% lateral G · S1 (stock)', 'strong'),
+    },
+  }
+
+  // ── Performance bars ────────────────────────────────────────────────────────
+
+  it('qualifying bar row carries the badge label as its title', () => {
+    renderDrawer(badgedCar)
+    expect(screen.getByTitle('top 10% speed · S1 (stock)')).toBeInTheDocument()
+  })
+
+  it('qualifying bar row contains the badge pip (aria-hidden span)', () => {
+    renderDrawer(badgedCar)
+    const row = screen.getByTitle('top 10% speed · S1 (stock)')
+    const pip = row.querySelector('[aria-hidden="true"]')
+    expect(pip).not.toBeNull()
+  })
+
+  it('qualifying bar row value text is bold', () => {
+    renderDrawer(badgedCar)
+    const row = screen.getByTitle('top 10% speed · S1 (stock)')
+    // The value div is inside the row and has font-bold class
+    const boldEl = row.querySelector('.font-bold')
+    expect(boldEl).not.toBeNull()
+  })
+
+  it('non-qualifying bar rows have no title', () => {
+    renderDrawer(badgedCar)
+    // statHandling is not in badges; it should have no title on its row
+    // The bar label "Handling" is inside the row; find it and check the parent row
+    const handlingLabel = screen.getByText('Handling')
+    const row = handlingLabel.closest('.relative')
+    expect(row?.getAttribute('title')).toBeFalsy()
+  })
+
+  // ── Spec tiles ──────────────────────────────────────────────────────────────
+
+  it('qualifying spec card has a background highlight in its inline style', () => {
+    renderDrawer(badgedCar)
+    const card = screen.getByTitle('top 10% HP · S1 (stock)')
+    expect(card.style.background).toContain('var(--fh-badge-tint-strong)')
+  })
+
+  it('qualifying spec card title is on the card element', () => {
+    renderDrawer(badgedCar)
+    expect(screen.getByTitle('top 10% HP · S1 (stock)')).toBeInTheDocument()
+  })
+
+  it('qualifying spec card value is bold', () => {
+    renderDrawer(badgedCar)
+    const card = screen.getByTitle('top 10% HP · S1 (stock)')
+    const valueEl = card.querySelector('.font-bold')
+    expect(valueEl).not.toBeNull()
+  })
+
+  it('front-weight card has no background highlight (ineligible)', () => {
+    renderDrawer(badgedCar)
+    const el = screen.getByText('42%')
+    const card = el.closest('[class*="bg-fh-panel"]') as HTMLElement | null
+    expect(card?.style.background).toBeFalsy()
+    expect(card?.getAttribute('title')).toBeFalsy()
+  })
+
+  it('displacement card has no background highlight (ineligible)', () => {
+    renderDrawer(badgedCar)
+    const el = screen.getByText('3 L')
+    const card = el.closest('[class*="bg-fh-panel"]') as HTMLElement | null
+    expect(card?.style.background).toBeFalsy()
+  })
+
+  // ── Sim cards ───────────────────────────────────────────────────────────────
+
+  it('qualifying sim card has a background highlight in its inline style', () => {
+    renderDrawer(badgedCar)
+    const card = screen.getByTitle('top 5% 0–60 · S1 (stock)')
+    expect(card.style.background).toContain('var(--fh-badge-tint-strong)')
+  })
+
+  it('Lateral G card gets highlight when simLateralG60 qualifies; both G values still render', () => {
+    renderDrawer(badgedCar)
+    const card = screen.getByTitle('top 5% lateral G · S1 (stock)')
+    expect(card.style.background).toContain('var(--fh-badge-tint-strong)')
+    // Both G60 and G120 remain visible in the same card
+    expect(card.textContent).toContain('1.05')
+    expect(card.textContent).toContain('1.12')
+  })
+
+  it('100–0 brake card has no background highlight (ineligible)', () => {
+    renderDrawer(badgedCar)
+    const el = screen.getByText('305')
+    const card = el.closest('[class*="bg-fh-panel"]') as HTMLElement | null
+    expect(card?.style.background).toBeFalsy()
+    expect(card?.getAttribute('title')).toBeFalsy()
+  })
+
+  it('balance ratio values have no badge highlight (ineligible)', () => {
+    renderDrawer(badgedCar)
+    const el = screen.getByText('0.83')
+    expect(el.closest('[title]')).toBeNull()
+    expect((el as HTMLElement).style?.background).toBeFalsy()
+  })
+
+  it('no badge label text appears as visible text in the header pill row', () => {
+    renderDrawer(badgedCar)
+    expect(screen.queryByText('top 10% speed · S1 (stock)')).not.toBeInTheDocument()
+  })
+})

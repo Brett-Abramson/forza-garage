@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
-import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
+import { Car, PI_CLASS_COLORS, getSourceColor, type CarBadge } from '@/types/car'
 import { getBestRaceType } from '@/lib/raceMatch'
 import { hasOverrides } from '@/lib/statUtils'
 import { RaceIcon } from '@/components/RaceIcons'
@@ -98,19 +98,19 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
         </td>
         {simMode ? (
           SIM_COLUMN_METRICS.map((m) => (
-            <StatTd key={m.key}>{formatMetricValue(m, car)}</StatTd>
+            <StatTd key={m.key} badge={car.badges?.[m.key]}>{formatMetricValue(m, car)}</StatTd>
           ))
         ) : (
           <>
-            <StatTd>{car.statSpeed        ?? '—'}</StatTd>
-            <StatTd>{car.statHandling     ?? '—'}</StatTd>
-            <StatTd>{car.statAcceleration ?? '—'}</StatTd>
-            <StatTd>{car.statLaunch       ?? '—'}</StatTd>
-            <StatTd>{car.statBraking      ?? '—'}</StatTd>
-            <StatTd>{car.statOffroad      ?? '—'}</StatTd>
-            <StatTd>{car.powerHp          ?? '—'}</StatTd>
-            <StatTd>{car.torqueFtLb       ?? '—'}</StatTd>
-            <StatTd>{car.weightLb         ?? '—'}</StatTd>
+            <StatTd badge={car.badges?.['statSpeed']}       >{car.statSpeed        ?? '—'}</StatTd>
+            <StatTd badge={car.badges?.['statHandling']}    >{car.statHandling     ?? '—'}</StatTd>
+            <StatTd badge={car.badges?.['statAcceleration']}>{car.statAcceleration ?? '—'}</StatTd>
+            <StatTd badge={car.badges?.['statLaunch']}      >{car.statLaunch       ?? '—'}</StatTd>
+            <StatTd badge={car.badges?.['statBraking']}     >{car.statBraking      ?? '—'}</StatTd>
+            <StatTd badge={car.badges?.['statOffroad']}     >{car.statOffroad      ?? '—'}</StatTd>
+            <StatTd badge={car.badges?.['powerHp']}         >{car.powerHp          ?? '—'}</StatTd>
+            <StatTd badge={car.badges?.['torqueFtLb']}      >{car.torqueFtLb       ?? '—'}</StatTd>
+            <StatTd badge={car.badges?.['weightLb']}        >{car.weightLb         ?? '—'}</StatTd>
             <StatTd>{car.frontWeight   != null ? `${car.frontWeight}%`            : '—'}</StatTd>
             <StatTd>{car.displacementL != null ? car.displacementL.toFixed(1)     : '—'}</StatTd>
           </>
@@ -236,7 +236,18 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
   )
 }
 
-function StatTd({ children }: { children: ReactNode }) {
+function StatTd({ children, badge }: { children: ReactNode; badge?: CarBadge | null }) {
+  if (badge) {
+    return (
+      <td
+        className="py-2.5 px-3 tabular-nums text-fh-dark-2 text-right whitespace-nowrap font-bold"
+        style={{ minWidth: 72, background: `var(--fh-badge-tint-${badge.tier})` }}
+        title={badge.label}
+      >
+        {children}
+      </td>
+    )
+  }
   return (
     <td className="py-2.5 px-3 tabular-nums text-fh-dark-2 text-right whitespace-nowrap" style={{ minWidth: 72 }}>
       {children}

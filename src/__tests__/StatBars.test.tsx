@@ -168,6 +168,51 @@ describe('StatBars — specs row', () => {
 
 // ─── variant + showSpecs props ──────────────────────────────────────────────
 
+// ─── Badge pip accents ────────────────────────────────────────────────────────
+
+describe('StatBars — badge pip accents', () => {
+  const speedBadge = {
+    kind: 'percentile' as const,
+    tier: 'soft' as const,
+    label: 'top 10% speed · S1 (stock)',
+    rank: 1,
+    n: 10,
+  }
+
+  it('qualifying row carries the badge label as its title', () => {
+    render(<StatBars car={barStatCar} badges={{ statSpeed: speedBadge }} />)
+    expect(screen.getByTitle('top 10% speed · S1 (stock)')).toBeInTheDocument()
+  })
+
+  it('qualifying row contains an aria-hidden pip span', () => {
+    render(<StatBars car={barStatCar} badges={{ statSpeed: speedBadge }} />)
+    const row = screen.getByTitle('top 10% speed · S1 (stock)')
+    const pip = row.querySelector('[aria-hidden="true"]')
+    expect(pip).not.toBeNull()
+  })
+
+  it('qualifying row value text is bold', () => {
+    render(<StatBars car={barStatCar} badges={{ statSpeed: speedBadge }} />)
+    const row = screen.getByTitle('top 10% speed · S1 (stock)')
+    const boldEl = row.querySelector('.font-bold')
+    expect(boldEl).not.toBeNull()
+    expect(boldEl?.textContent).toBe('7.5')
+  })
+
+  it('non-qualifying bar rows have no title', () => {
+    render(<StatBars car={barStatCar} badges={{ statSpeed: speedBadge }} />)
+    // Only statSpeed is badged; all other rows must have no title
+    const titledEls = document.querySelectorAll('[title]')
+    expect(titledEls).toHaveLength(1)
+  })
+
+  it('no badges prop renders no titled elements and no pip', () => {
+    render(<StatBars car={barStatCar} />)
+    expect(document.querySelectorAll('[title]')).toHaveLength(0)
+    expect(document.querySelectorAll('[aria-hidden="true"]')).toHaveLength(0)
+  })
+})
+
 describe('StatBars — variant + showSpecs props', () => {
   it('renders all six bars in the large variant', () => {
     render(<StatBars car={barStatCar} variant="large" />)

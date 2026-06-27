@@ -487,6 +487,22 @@ export default function FilterSidebar({
           </div>
         )}
 
+        {/* Top badge filter */}
+        <div className="flex flex-col gap-2">
+          <div className="text-[10px] font-semibold text-fh-muted uppercase tracking-wider">Badges</div>
+          <button
+            onClick={() => setFilters((f) => ({ ...f, hasTopBadge: !f.hasTopBadge }))}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border transition-colors w-full ${
+              filters.hasTopBadge
+                ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                : 'bg-fh-panel text-fh-muted border-fh-border hover:text-amber-400'
+            }`}
+          >
+            <span aria-hidden="true">★</span>
+            <span>Has a top badge</span>
+          </button>
+        </div>
+
         {/* Sim Metrics disclosure — only shown when result set has sim data */}
         {hasSimData && (
           <div>

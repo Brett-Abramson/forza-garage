@@ -179,6 +179,7 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
     filters.yearMin !== null || filters.yearMax !== null,
     selectedTags.size > 0,
     selectedRaceIds.length > 0,
+    filters.hasTopBadge,
     filters.simZeroToSixtyMin != null || filters.simZeroToSixtyMax != null ||
     filters.simZeroToHundredMin != null || filters.simZeroToHundredMax != null ||
     filters.simBraking60Min != null || filters.simBraking60Max != null ||

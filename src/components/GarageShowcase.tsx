@@ -222,6 +222,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
     filters.source !== '',
     filters.pinned,
     filters.yearMin !== null || filters.yearMax !== null,
+    filters.hasTopBadge,
     selectedTags.size > 0,
     selectedRaceIds.length > 0,
   ].filter(Boolean).length
