@@ -20,7 +20,7 @@ export const STICKY_COL_STATS = {
   class: 40,   // dot only, no class text
   pi:    44,
   year:  52,
-  make:  80,
+  make:  108,
   model: 160,
 } as const
 

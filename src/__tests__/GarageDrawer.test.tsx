@@ -655,7 +655,10 @@ describe('GarageDrawer — simulation section', () => {
     renderDrawer(simCar)
     expect(screen.getByText('3.4')).toBeInTheDocument()          // 0–60
     expect(screen.getByText('205')).toBeInTheDocument()          // top speed
-    expect(screen.getByText('1.05 / 1.12')).toBeInTheDocument()  // lateral G (60 / 120)
+    // Lateral G values are split across labelled spans — check the cell container
+    const lateralCell = screen.getByText('Lateral G').closest('.bg-fh-panel')
+    expect(lateralCell?.textContent).toContain('1.05')
+    expect(lateralCell?.textContent).toContain('1.12')
     expect(screen.getByText('0.83')).toBeInTheDocument()         // aero efficiency ratio
   })
 

@@ -58,9 +58,9 @@ describe('METRICS registry shape', () => {
     expect(METRICS.filter((m) => m.group === 'derived')).toHaveLength(1)
   })
 
-  it('exposes 7 inList sim fields and 8 sortable columns', () => {
+  it('exposes 7 inList sim fields and 7 sortable columns', () => {
     expect(METRICS.filter((m) => m.inList)).toHaveLength(7)
-    expect(SIM_COLUMN_METRICS).toHaveLength(8)
+    expect(SIM_COLUMN_METRICS).toHaveLength(7)
   })
 
   it('the 3 balance ratios are neither inList nor columns', () => {

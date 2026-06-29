@@ -4,8 +4,8 @@ import { getMetric, getMetricValue, type MetricKey } from '@/lib/metrics'
 export type SortKey =
   | 'piClass' | 'piRating' | 'year' | 'make' | 'model' | 'division' | 'drivetrain' | 'country' | 'source' | 'value' | 'addedAt' | 'owned'
   | 'statSpeed' | 'statHandling' | 'statAcceleration' | 'statLaunch' | 'statBraking' | 'statOffroad'
-  | 'powerHp' | 'torqueFtLb' | 'weightLb' | 'frontWeight' | 'displacementL'
-  | MetricKey  // registry-driven Sim-view columns (7 rankable sim fields + powerToWeight)
+  | 'powerHp' | 'torqueFtLb' | 'weightLb' | 'frontWeight' | 'displacementL' | 'powerToWeight'
+  | MetricKey  // registry-driven Sim-view columns
 export type SortDir = 'asc' | 'desc'
 
 export const PI_CLASS_INDEX: Record<string, number> = Object.fromEntries(

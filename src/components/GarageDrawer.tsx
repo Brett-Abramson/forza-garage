@@ -586,7 +586,15 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                                 <span className="text-fh-muted-2 lowercase" style={{ fontSize: 8 }}>{t.unit}</span>
                               </div>
                               <div className="font-bold tabular-nums text-fh-dark" style={{ fontSize: 15, letterSpacing: '-0.01em', lineHeight: 1 }}>
-                                {t.value2 !== undefined ? `${t.value} / ${t.value2}` : t.value}
+                                {t.value2 !== undefined ? (
+                                  <span className="inline-flex items-baseline gap-0.5">
+                                    {t.value}
+                                    <span className="font-normal text-fh-muted-2 leading-none" style={{ fontSize: 8 }}>60</span>
+                                    <span className="font-normal text-fh-muted mx-0.5" style={{ fontSize: 11 }}>/</span>
+                                    {t.value2}
+                                    <span className="font-normal text-fh-muted-2 leading-none" style={{ fontSize: 8 }}>120</span>
+                                  </span>
+                                ) : t.value}
                               </div>
                             </div>
                           )

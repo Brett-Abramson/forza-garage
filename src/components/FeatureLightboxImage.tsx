@@ -6,10 +6,12 @@ export function FeatureLightboxImage({
   src,
   alt,
   slot,
+  contain = false,
 }: {
   src: string
   alt: string
   slot: number
+  contain?: boolean
 }) {
   const [open, setOpen] = useState(false)
 
@@ -39,7 +41,7 @@ export function FeatureLightboxImage({
         <img
           src={src}
           alt={alt}
-          className="w-full min-h-[220px] max-h-[380px] object-cover object-top transition-transform duration-300 group-hover:scale-[1.02]"
+          className={`w-full min-h-[220px] max-h-[380px] transition-transform duration-300 group-hover:scale-[1.02] ${contain ? 'object-contain bg-fh-panel' : 'object-cover object-top'}`}
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
           <div className="rounded-full bg-white/10 backdrop-blur-sm p-3 border border-white/20">

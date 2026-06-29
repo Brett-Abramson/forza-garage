@@ -488,8 +488,16 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
 
         /* ── Grid view (virtual, lanes) ──────────────────────────────────── */
         <>
-          <div className="text-xs text-fh-muted tabular-nums mb-1">
-            Showing {sortedCars.length} of {cars.length} cars
+          <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+            <div className="text-xs text-fh-muted tabular-nums">
+              Showing {sortedCars.length} of {cars.length} cars
+            </div>
+            <SortSelect
+              columns={STANDARD_SORT_COLUMNS}
+              sort={sort}
+              onSelect={handleSortSelect}
+              onToggleDir={toggleSortDir}
+            />
           </div>
           {/* Total-height placeholder; items positioned absolutely inside */}
           <div style={{ height: gridTotal, position: 'relative' }}>
@@ -575,11 +583,11 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
                   ) : tableMode === 'stats' ? (
                     <>
                       {/* Identity — sticky, compact widths */}
-                      <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.class, minWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
-                      <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.pi,    minWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
-                      <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.year,  minWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
-                      <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.make,  minWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
-                      <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.model, minWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.class, width: SS.class, minWidth: SS.class, maxWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.pi,    width: SS.pi,    minWidth: SS.pi,    maxWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.year,  width: SS.year,  minWidth: SS.year,  maxWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.make,  width: SS.make,  minWidth: SS.make,  maxWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.model, width: SS.model, minWidth: SS.model, maxWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
                       {/* Stat columns — not sticky */}
                       <SortTh label="Speed"    sortKey="statSpeed"        sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
                       <SortTh label="Handling" sortKey="statHandling"     sort={sort} onSort={handleSort} style={{ minWidth: 80 }} />
@@ -590,17 +598,18 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
                       <SortTh label="HP"       sortKey="powerHp"          sort={sort} onSort={handleSort} style={{ minWidth: 60 }} />
                       <SortTh label="Torque"   sortKey="torqueFtLb"       sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
                       <SortTh label="Weight"   sortKey="weightLb"         sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                      <SortTh label="P:W"      unit="hp/lb" sortKey="powerToWeight"    sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
                       <SortTh label="F.WT"     sortKey="frontWeight"      sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
                       <SortTh label="Disp"     sortKey="displacementL"    sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
                     </>
                   ) : (
                     <>
                       {/* Identity — sticky, compact widths (mirrors Stats mode) */}
-                      <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.class, minWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
-                      <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.pi,    minWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
-                      <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.year,  minWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
-                      <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.make,  minWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
-                      <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.model, minWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.class, width: SS.class, minWidth: SS.class, maxWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.pi,    width: SS.pi,    minWidth: SS.pi,    maxWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.year,  width: SS.year,  minWidth: SS.year,  maxWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.make,  width: SS.make,  minWidth: SS.make,  maxWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
+                      <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel-2 z-[2]" style={{ left: VHL_S.model, width: SS.model, minWidth: SS.model, maxWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
                       {/* Sim metric columns — registry-driven (7 rankable sim fields + P:W), not sticky */}
                       {SIM_COLUMN_METRICS.map((m) => (
                         <SortTh key={m.key} label={m.short} unit={m.unit} sortKey={m.key as SortKey} sort={sort} onSort={handleSort} style={{ minWidth: 78 }} />

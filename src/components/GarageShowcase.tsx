@@ -582,33 +582,15 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
       )}
 
 
-      {/* Sort pills (grid mode — table mode uses column headers) */}
+      {/* Sort dropdown (grid mode — table mode uses column headers) */}
       {view === 'grid' && sortedCars.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 items-center">
-          <span className="text-xs text-fh-muted mr-1">Sort:</span>
-          {(
-            [
-              { key: 'addedAt', label: 'Recently Added' },
-              { key: 'piRating', label: 'PI' },
-              { key: 'make', label: 'Make' },
-              { key: 'value', label: 'Value' },
-            ] as { key: SortKey; label: string }[]
-          ).map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => handleSort(key)}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                sort.key === key
-                  ? 'bg-fh-red-pale text-fh-red border-fh-red'
-                  : 'bg-fh-panel text-fh-muted border-fh-border hover:text-fh-dark'
-              }`}
-            >
-              {label}
-              {sort.key === key && (
-                <span className="ml-1 opacity-60">{sort.dir === 'desc' ? '↓' : '↑'}</span>
-              )}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <SortSelect
+            columns={GARAGE_SORT_COLUMNS}
+            sort={sort}
+            onSelect={handleSortSelect}
+            onToggleDir={toggleSortDir}
+          />
         </div>
       )}
 
@@ -694,11 +676,11 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                           {/* Star — sticky */}
                           <th className="py-2.5 pl-3 pr-1 sticky bg-fh-panel z-[2]" style={{ left: SHL_S.star, minWidth: SS.star }} aria-label="Favourite" />
                           {/* Identity — sticky, compact widths */}
-                          <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.class, minWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
-                          <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.pi,    minWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
-                          <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.year,  minWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
-                          <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.make,  minWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
-                          <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.model, minWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.class, width: SS.class, minWidth: SS.class, maxWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.pi,    width: SS.pi,    minWidth: SS.pi,    maxWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.year,  width: SS.year,  minWidth: SS.year,  maxWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.make,  width: SS.make,  minWidth: SS.make,  maxWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.model, width: SS.model, minWidth: SS.model, maxWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
                           {/* Stat columns — not sticky */}
                           <SortTh label="Speed"    sortKey="statSpeed"        sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
                           <SortTh label="Handling" sortKey="statHandling"     sort={sort} onSort={handleSort} style={{ minWidth: 80 }} />
@@ -709,6 +691,7 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                           <SortTh label="HP"       sortKey="powerHp"          sort={sort} onSort={handleSort} style={{ minWidth: 60 }} />
                           <SortTh label="Torque"   sortKey="torqueFtLb"       sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
                           <SortTh label="Weight"   sortKey="weightLb"         sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                          <SortTh label="P:W"      unit="hp/lb" sortKey="powerToWeight"    sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
                           <SortTh label="F.WT"     sortKey="frontWeight"      sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
                           <SortTh label="Disp"     sortKey="displacementL"    sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
                         </>
@@ -717,11 +700,11 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                           {/* Star — sticky */}
                           <th className="py-2.5 pl-3 pr-1 sticky bg-fh-panel z-[2]" style={{ left: SHL_S.star, minWidth: SS.star }} aria-label="Favourite" />
                           {/* Identity — sticky, compact widths (mirrors Stats mode) */}
-                          <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.class, minWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
-                          <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.pi,    minWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
-                          <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.year,  minWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
-                          <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.make,  minWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
-                          <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.model, minWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Cls"   sortKey="piClass"  sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.class, width: SS.class, minWidth: SS.class, maxWidth: SS.class, paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="PI"    sortKey="piRating" sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.pi,    width: SS.pi,    minWidth: SS.pi,    maxWidth: SS.pi,    paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Year"  sortKey="year"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.year,  width: SS.year,  minWidth: SS.year,  maxWidth: SS.year,  paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.make,  width: SS.make,  minWidth: SS.make,  maxWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
+                          <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.model, width: SS.model, minWidth: SS.model, maxWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
                           {/* Sim metric columns — registry-driven (7 rankable sim fields + P:W), not sticky */}
                           {SIM_COLUMN_METRICS.map((m) => (
                             <SortTh key={m.key} label={m.short} unit={m.unit} sortKey={m.key as SortKey} sort={sort} onSort={handleSort} style={{ minWidth: 78 }} />

@@ -33,7 +33,7 @@ export const METRICS = [
   { key: 'simAeroEfficiency', label: 'Sim aero efficiency', short: 'aero eff', unit: null,  group: 'sim',     direction: 'neutral',      inList: false, column: false, decimals: 2 },
   { key: 'simMechBalance',   label: 'Sim mech balance',  short: 'mech bal', unit: null,    group: 'sim',     direction: 'neutral',      inList: false, column: false, decimals: 2 },
   { key: 'simAeroBalance',   label: 'Sim aero balance',  short: 'aero bal', unit: null,    group: 'sim',     direction: 'neutral',      inList: false, column: false, decimals: 2 },
-  { key: 'powerToWeight',    label: 'Power-to-weight',   short: 'P:W',      unit: 'hp/lb', group: 'derived', direction: 'higherBetter', inList: false, column: true,  decimals: 3,
+  { key: 'powerToWeight',    label: 'Power-to-weight',   short: 'P:W',      unit: 'hp/lb', group: 'derived', direction: 'higherBetter', inList: false, column: false, decimals: 3,
     accessor: (c: Car) => (c.powerHp != null && c.weightLb ? c.powerHp / c.weightLb : null) },
 ] as const satisfies readonly Metric[]
 

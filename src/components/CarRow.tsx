@@ -78,19 +78,19 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
             </button>
           </td>
         )}
-        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] text-center" style={{ left: classLeft, minWidth: SS.class }}>
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] text-center" style={{ left: classLeft, width: SS.class, minWidth: SS.class, maxWidth: SS.class }}>
           <span className={`inline-block w-3 h-3 rounded-sm ${classBadge}`} />
         </td>
-        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] tabular-nums text-fh-dark-2 overflow-hidden" style={{ left: piLeft, minWidth: SS.pi }}>
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] tabular-nums text-fh-dark-2 overflow-hidden" style={{ left: piLeft, width: SS.pi, minWidth: SS.pi, maxWidth: SS.pi }}>
           {car.piRating}
         </td>
-        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] text-fh-dark-2 overflow-hidden" style={{ left: yearLeft, minWidth: SS.year }}>
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] text-fh-dark-2 overflow-hidden" style={{ left: yearLeft, width: SS.year, minWidth: SS.year, maxWidth: SS.year }}>
           {car.year}
         </td>
-        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] font-medium overflow-hidden whitespace-nowrap text-ellipsis" style={{ left: makeLeft, minWidth: SS.make }}>
-          {car.make}
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] font-medium overflow-hidden" style={{ left: makeLeft, width: SS.make, minWidth: SS.make, maxWidth: SS.make }}>
+          <TruncatedText text={car.make} />
         </td>
-        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1]" style={{ left: modelLeft, minWidth: SS.model }}>
+        <td className="py-2.5 px-2 bg-fh-bg sticky z-[1] overflow-hidden" style={{ left: modelLeft, width: SS.model, minWidth: SS.model, maxWidth: SS.model }}>
           <div className="flex items-center gap-1 overflow-hidden" style={{ maxWidth: SS.model - 16 }}>
             <TruncatedText text={car.model} className="flex-1 min-w-0" />
             {hasOverrides(car) && (
@@ -113,6 +113,9 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
             <StatTd badge={showStatHighlights ? car.badges?.['powerHp']          : null}>{car.powerHp          ?? '—'}</StatTd>
             <StatTd badge={showStatHighlights ? car.badges?.['torqueFtLb']       : null}>{car.torqueFtLb       ?? '—'}</StatTd>
             <StatTd badge={showStatHighlights ? car.badges?.['weightLb']         : null}>{car.weightLb         ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['powerToWeight']    : null}>
+              {car.powerHp != null && car.weightLb ? (car.powerHp / car.weightLb).toFixed(3) : '—'}
+            </StatTd>
             <StatTd>{car.frontWeight   != null ? `${car.frontWeight}%`        : '—'}</StatTd>
             <StatTd>{car.displacementL != null ? car.displacementL.toFixed(1) : '—'}</StatTd>
           </>

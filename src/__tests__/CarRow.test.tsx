@@ -290,7 +290,7 @@ describe('CarRow — sim mode', () => {
     simZeroToSixty: 3.2,           // 1 dp
     simTopSpeed: 217,              // 0 dp
     simBraking60: null,            // failed scrape → em dash
-    powerHp: 500, weightLb: 2500,  // power-to-weight = 0.200 (3 dp)
+    powerHp: 500, weightLb: 2500,
   }
 
   const renderSim = (car: Car) =>
@@ -300,7 +300,6 @@ describe('CarRow — sim mode', () => {
     renderSim(simCar)
     expect(screen.getByText('3.2')).toBeInTheDocument()
     expect(screen.getByText('217')).toBeInTheDocument()
-    expect(screen.getByText('0.200')).toBeInTheDocument()
   })
 
   it('renders the em dash for a null metric', () => {

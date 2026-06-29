@@ -6,28 +6,34 @@ interface Feature {
   badge?: string
   imageSrc?: string
   imageAlt?: string
+  imageContain?: boolean
 }
 
 const FEATURES: Feature[] = [
   {
     title: "Browse the full car list",
     body: "Every car in Forza Horizon 6 is here — over 600 of them — filterable by class, PI, division, country, and drivetrain. The Stats view surfaces the raw numbers: power, torque, weight, and the in-game performance bars, all sortable. Use it to compare cars before you buy, or to find out what you're actually looking at when something shows up in a wheelspin.",
-    imageSrc: "/features/car-database.webp",
-    imageAlt: "Car Database — Stats view with green/red highlights and filter sidebar",
+    imageSrc: "/features/car-database-cards.jpg",
+    imageAlt: "Car Database — card grid view showing owned cars with PI class, drivetrain, and race type badges",
   },
   {
     title: "Track what you own",
     body: "Add cars to your garage to keep a running record of your collection. Pin the ones you reach for most, jot notes on builds or tunes you've tried, and tag cars by how you use them. The garage shows you how far through the full list you are and sorts by when you added things, so recently acquired cars are always at the top.",
+    imageSrc: "/features/my-garage.png",
+    imageAlt: "My Garage — table view showing owned cars with stats, sorted by PI",
   },
   {
     title: "Find the right car for a race",
     body: "Each race discipline has different demands — road racing rewards braking and handling, cross country punishes anything without offroad and launch, drag racing is almost entirely about launch and weight. The Races section breaks down what each type actually needs, what to avoid, and which PI range is competitive. Open a race type while browsing your garage and the list filters instantly to your matching cars.",
+    imageSrc: "/features/car-database.webp",
+    imageAlt: "Car Database — Stats view with filter sidebar open, showing sortable performance columns",
   },
   {
     title: "Understand a car's strengths and weaknesses",
     body: "The car drawer shows where each stat sits relative to other cars in the same PI class — green means a genuine strength to build on, red means something to tune around or a race type to avoid. This is stock data, so treat it as a starting point for build decisions rather than a final verdict.",
-    imageSrc: "/features/car-drawer.webp",
-    imageAlt: "Car drawer for the Mazda Furai — stat bars with green/red class-rank badges and sim metrics",
+    imageSrc: "/features/car-drawer-stats.png",
+    imageAlt: "Car drawer — performance stat bars with green/red class-rank highlights and simulation metrics",
+    imageContain: true,
   },
   {
     title: "Build and tune guides",
@@ -71,6 +77,7 @@ export function FeatureHighlights({ alternateImages = true }: { alternateImages?
                       src={feature.imageSrc}
                       alt={feature.imageAlt ?? feature.title}
                       slot={i}
+                      contain={feature.imageContain}
                     />
                   ) : (
                     <div
