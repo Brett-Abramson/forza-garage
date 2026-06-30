@@ -12,6 +12,8 @@ import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { getGroupForDivision } from '@/lib/divisionGroups'
 import StatBars from './StatBars'
 import { getMetric, getMetricValue, formatMetricValue, SIM_METRICS } from '@/lib/metrics'
+import { useUnitPreferences } from '@/components/UnitPreferencesContext'
+import { convertPower, convertTorque, convertWeight, convertSpeed, convertBraking, accelLabel, getUnitLabels } from '@/lib/unitConversions'
 import { getStatCallouts } from '@/lib/statCallouts'
 import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS, resolveEffectiveStats, STAT_OVERRIDE_MAP, hasOverrides } from '@/lib/statUtils'
 import { setTags, setNotes as persistNotes, tuneCar, resetTuning } from '@/server/actions/garage'
@@ -42,6 +44,8 @@ interface Props {
 }
 
 export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStatsChange, onToggleOwned, onTogglePin, isSignedIn = true }: Props) {
+  const { prefs } = useUnitPreferences()
+  const labels = getUnitLabels(prefs)
   // Keep a stale copy so the drawer content doesn't vanish during slide-out
   const [displayCar, setDisplayCar] = useState<Car | null>(car)
   useEffect(() => {
@@ -251,12 +255,24 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
 
   // Spec tiles for the Overview grid (effective values; '—' when null)
   const specTiles: { label: string; value: string | null; badgeKey: string | null }[] = displayCar ? [
-    { label: 'HP',           badgeKey: 'powerHp',    value: displayCar.powerHp    != null ? String(displayCar.powerHp)           : null },
-    { label: 'Torque ft-lb', badgeKey: 'torqueFtLb', value: displayCar.torqueFtLb != null ? String(displayCar.torqueFtLb)        : null },
-    { label: 'Weight lb',    badgeKey: 'weightLb',   value: displayCar.weightLb   != null ? displayCar.weightLb.toLocaleString() : null },
-    { label: 'Front weight', badgeKey: null,          value: displayCar.frontWeight   != null ? `${displayCar.frontWeight}%`     : null },
-    { label: 'Displacement', badgeKey: null,          value: displayCar.displacementL != null ? `${displayCar.displacementL} L`  : null },
-    { label: 'Drivetrain',   badgeKey: null,          value: displayCar.drivetrain ?? null },
+    {
+      label:    prefs.powerUnits.toUpperCase(),
+      badgeKey: 'powerHp',
+      value:    displayCar.powerHp    != null ? String(convertPower(displayCar.powerHp, prefs.powerUnits).value)                          : null,
+    },
+    {
+      label:    `Torque ${labels.torque}`,
+      badgeKey: 'torqueFtLb',
+      value:    displayCar.torqueFtLb != null ? String(convertTorque(displayCar.torqueFtLb, prefs.units).value)                           : null,
+    },
+    {
+      label:    `Weight ${labels.weight}`,
+      badgeKey: 'weightLb',
+      value:    displayCar.weightLb   != null ? (convertWeight(displayCar.weightLb, prefs.units).value?.toLocaleString() ?? null)         : null,
+    },
+    { label: 'Front weight', badgeKey: null, value: displayCar.frontWeight   != null ? `${displayCar.frontWeight}%`    : null },
+    { label: 'Displacement', badgeKey: null, value: displayCar.displacementL != null ? `${displayCar.displacementL} L` : null },
+    { label: 'Drivetrain',   badgeKey: null, value: displayCar.drivetrain ?? null },
   ] : []
   const hasAnySpec = specTiles.some((t) => t.value != null)
 
@@ -273,13 +289,18 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
   const simStockNote = !!(displayCar && (displayCar.powerHpOverride != null || displayCar.weightLbOverride != null))
   // badgeKey = eligible sim metric key (5 out of 7 headline items); null = never eligible.
   // Lateral G splits into value (G60, eligible) and value2 (G120, not eligible).
+  const speedUnit   = prefs.units === 'Metric' ? 'km/h' : 'mph'
+  const distUnit    = prefs.units === 'Metric' ? 'm'    : 'ft'
+  const fmtSpeed    = (v: number | null | undefined) => convertSpeed(v ?? null,   prefs.units).value?.toString() ?? '—'
+  const fmtBraking  = (v: number | null | undefined) => convertBraking(v ?? null, prefs.units).value?.toString() ?? '—'
+
   const simHeadline: { label: string; unit: string; value: string; badgeKey: string | null; value2?: string }[] = [
-    { label: '0–60',        unit: 's',   value: simFmt('simZeroToSixty'),   badgeKey: 'simZeroToSixty'   },
-    { label: '0–100',       unit: 's',   value: simFmt('simZeroToHundred'), badgeKey: 'simZeroToHundred' },
-    { label: 'Top speed',   unit: 'mph', value: simFmt('simTopSpeed'),      badgeKey: 'simTopSpeed'      },
-    { label: '60–0 brake',  unit: 'ft',  value: simFmt('simBraking60'),     badgeKey: 'simBraking60'     },
-    { label: '100–0 brake', unit: 'ft',  value: simFmt('simBraking100'),    badgeKey: null               },
-    { label: 'Lateral G',   unit: 'g',   value: simFmt('simLateralG60'),    badgeKey: 'simLateralG60',   value2: simFmt('simLateralG120') },
+    { label: accelLabel(60,  prefs.units), unit: 's',        value: simFmt('simZeroToSixty'),                           badgeKey: 'simZeroToSixty'   },
+    { label: accelLabel(100, prefs.units), unit: 's',        value: simFmt('simZeroToHundred'),                         badgeKey: 'simZeroToHundred' },
+    { label: 'Top speed',                  unit: speedUnit,  value: fmtSpeed(displayCar?.simTopSpeed),                  badgeKey: 'simTopSpeed'      },
+    { label: '60–0 brake',                 unit: distUnit,   value: fmtBraking(displayCar?.simBraking60),               badgeKey: 'simBraking60'     },
+    { label: '100–0 brake',                unit: distUnit,   value: fmtBraking(displayCar?.simBraking100),              badgeKey: null               },
+    { label: 'Lateral G',                  unit: 'g',        value: simFmt('simLateralG60'), badgeKey: 'simLateralG60', value2: simFmt('simLateralG120') },
   ]
   const simRatios = [
     { label: 'Aero eff', value: simFmt('simAeroEfficiency') },

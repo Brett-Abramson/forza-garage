@@ -10,6 +10,8 @@ import { buildCsvString, csvFilename } from '@/lib/exportCsv'
 import CarCard from './CarCard'
 import CarRow from './CarRow'
 import { SortTh, GridIcon, TableIcon, TableModeToggle, SortSelect, GARAGE_SORT_COLUMNS, STICKY_COL, STICKY_COL_STATS, type TableMode } from './table-ui'
+import { useUnitPreferences } from '@/components/UnitPreferencesContext'
+import { getUnitLabels } from '@/lib/unitConversions'
 
 // Cumulative left offsets for stats-mode sticky header cells (Showcase has a star col)
 const SC = STICKY_COL
@@ -86,6 +88,8 @@ type TagDetail = { tag: string; source: string }
 export default function GarageShowcase({ initialCars, totalCars }: Props) {
   const searchParams = useSearchParams()
   const searchRef = useRef<HTMLInputElement>(null)
+  const { prefs } = useUnitPreferences()
+  const labels = getUnitLabels(prefs)
 
   const [exportPending, setExportPending] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
@@ -688,10 +692,10 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                           <SortTh label="Launch"   sortKey="statLaunch"       sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
                           <SortTh label="Braking"  sortKey="statBraking"      sort={sort} onSort={handleSort} style={{ minWidth: 76 }} />
                           <SortTh label="Offroad"  sortKey="statOffroad"      sort={sort} onSort={handleSort} style={{ minWidth: 76 }} />
-                          <SortTh label="HP"       sortKey="powerHp"          sort={sort} onSort={handleSort} style={{ minWidth: 60 }} />
-                          <SortTh label="Torque"   sortKey="torqueFtLb"       sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
-                          <SortTh label="Weight"   sortKey="weightLb"         sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
-                          <SortTh label="P:W"      unit="hp/lb" sortKey="powerToWeight"    sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                          <SortTh label="Power"  unit={labels.power}  sortKey="powerHp"       sort={sort} onSort={handleSort} style={{ minWidth: 60 }} />
+                          <SortTh label="Torque" unit={labels.torque} sortKey="torqueFtLb"    sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                          <SortTh label="Weight" unit={labels.weight} sortKey="weightLb"      sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
+                          <SortTh label="P:W"    unit={labels.ratio}  sortKey="powerToWeight" sort={sort} onSort={handleSort} style={{ minWidth: 72 }} />
                           <SortTh label="F.WT"     sortKey="frontWeight"      sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
                           <SortTh label="Disp"     sortKey="displacementL"    sort={sort} onSort={handleSort} style={{ minWidth: 64 }} />
                         </>
@@ -706,9 +710,17 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
                           <SortTh label="Make"  sortKey="make"     sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.make,  width: SS.make,  minWidth: SS.make,  maxWidth: SS.make,  paddingLeft: 8, paddingRight: 8 }} />
                           <SortTh label="Model" sortKey="model"    sort={sort} onSort={handleSort} className="sticky bg-fh-panel z-[2]" style={{ left: SHL_S.model, width: SS.model, minWidth: SS.model, maxWidth: SS.model, paddingLeft: 8, paddingRight: 8 }} />
                           {/* Sim metric columns — registry-driven (7 rankable sim fields + P:W), not sticky */}
-                          {SIM_COLUMN_METRICS.map((m) => (
-                            <SortTh key={m.key} label={m.short} unit={m.unit} sortKey={m.key as SortKey} sort={sort} onSort={handleSort} style={{ minWidth: 78 }} />
-                          ))}
+                          {SIM_COLUMN_METRICS.map((m) => {
+                            let unit: string | null = m.unit
+                            if (m.key === 'simBraking60' || m.key === 'simBraking100') {
+                              unit = labels.braking
+                            } else if (m.key === 'simTopSpeed') {
+                              unit = labels.speed
+                            }
+                            return (
+                              <SortTh key={m.key} label={m.short} unit={unit} sortKey={m.key as SortKey} sort={sort} onSort={handleSort} style={{ minWidth: 78 }} />
+                            )
+                          })}
                         </>
                       )}
                     </tr>

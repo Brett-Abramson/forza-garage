@@ -130,3 +130,12 @@ model CarTag {
   // Every tag read (include) and tag edit (deleteMany) filters on this FK.
   @@index([userGarageId])
 }
+
+model UserPreferences {
+  id          Int      @id @default(autoincrement())
+  userId      String   @unique                // Clerk user ID
+  units       String   @default("English")   // "English" | "Metric"
+  powerUnits  String   @default("hp")        // "hp" | "PS" | "kW"
+  springUnits String   @default("N/mm")      // "N/mm" | "lb/in" | "kgf/mm"
+  updatedAt   DateTime @updatedAt
+}

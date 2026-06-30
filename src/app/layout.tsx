@@ -1,12 +1,15 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import KeyboardNav from '@/components/KeyboardNav'
 import { NavControlsProvider } from '@/context/NavControls'
+import { UnitPreferencesProvider } from '@/components/UnitPreferencesContext'
+import { getUserPreferences } from '@/server/dal/preferences'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -16,7 +19,10 @@ export const metadata: Metadata = {
   description: 'Track your Forza Horizon car collection',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { userId } = await auth()
+  const serverPrefs = userId ? await getUserPreferences(userId) : null
+
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
@@ -29,12 +35,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </head>
         <body className={`${inter.className} min-h-screen`}>
-          <NavControlsProvider>
-            <Nav />
-            <KeyboardNav />
-            {children}
-            <Footer />
-          </NavControlsProvider>
+          <UnitPreferencesProvider serverPrefs={serverPrefs} isAuthenticated={!!userId}>
+            <NavControlsProvider>
+              <Nav />
+              <KeyboardNav />
+              {children}
+              <Footer />
+            </NavControlsProvider>
+          </UnitPreferencesProvider>
           <SpeedInsights />
           <Analytics />
         </body>

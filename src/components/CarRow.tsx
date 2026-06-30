@@ -9,6 +9,8 @@ import { formatAddedAt } from '@/lib/sort'
 import { SIM_COLUMN_METRICS, formatMetricValue } from '@/lib/metrics'
 import { STICKY_COL_STATS } from './table-ui'
 import TruncatedText from './TruncatedText'
+import { useUnitPreferences } from '@/components/UnitPreferencesContext'
+import { convertPower, convertTorque, convertWeight, convertBraking, convertSpeed } from '@/lib/unitConversions'
 
 interface Props {
   car: Car
@@ -35,6 +37,7 @@ interface Props {
 }
 
 export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isExpanded, showAddedAt, showAddedAtColumn, hideGarage, onTogglePin, statsMode, simMode, showStatHighlights = true, colVis }: Props) {
+  const { prefs } = useUnitPreferences()
   const classBadge = PI_CLASS_COLORS[car.piClass] ?? 'bg-gray-600 text-white'
   const sourceColor = getSourceColor(car.source)
   const bestRace = getBestRaceType(car.division, car.tags ?? [], car.drivetrain ?? undefined, {
@@ -99,9 +102,22 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
           </div>
         </td>
         {simMode ? (
-          SIM_COLUMN_METRICS.map((m) => (
-            <StatTd key={m.key} badge={showStatHighlights ? car.badges?.[m.key] : null}>{formatMetricValue(m, car)}</StatTd>
-          ))
+          SIM_COLUMN_METRICS.map((m) => {
+            let display: string
+            const rawVal = (car as unknown as Record<string, number | null>)[m.key]
+            if (m.key === 'simBraking60' || m.key === 'simBraking100') {
+              const conv = convertBraking(rawVal ?? null, prefs.units)
+              display = conv.value != null ? conv.value.toFixed(m.decimals) : '—'
+            } else if (m.key === 'simTopSpeed') {
+              const conv = convertSpeed(rawVal ?? null, prefs.units)
+              display = conv.value != null ? conv.value.toFixed(m.decimals) : '—'
+            } else {
+              display = formatMetricValue(m, car)
+            }
+            return (
+              <StatTd key={m.key} badge={showStatHighlights ? car.badges?.[m.key] : null}>{display}</StatTd>
+            )
+          })
         ) : (
           <>
             <StatTd badge={showStatHighlights ? car.badges?.['statSpeed']        : null}>{car.statSpeed        ?? '—'}</StatTd>
@@ -110,9 +126,9 @@ export default function CarRow({ car, onToggleOwned, isPending, onCardClick, isE
             <StatTd badge={showStatHighlights ? car.badges?.['statLaunch']       : null}>{car.statLaunch       ?? '—'}</StatTd>
             <StatTd badge={showStatHighlights ? car.badges?.['statBraking']      : null}>{car.statBraking      ?? '—'}</StatTd>
             <StatTd badge={showStatHighlights ? car.badges?.['statOffroad']      : null}>{car.statOffroad      ?? '—'}</StatTd>
-            <StatTd badge={showStatHighlights ? car.badges?.['powerHp']          : null}>{car.powerHp          ?? '—'}</StatTd>
-            <StatTd badge={showStatHighlights ? car.badges?.['torqueFtLb']       : null}>{car.torqueFtLb       ?? '—'}</StatTd>
-            <StatTd badge={showStatHighlights ? car.badges?.['weightLb']         : null}>{car.weightLb         ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['powerHp']          : null}>{convertPower(car.powerHp,    prefs.powerUnits).value ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['torqueFtLb']       : null}>{convertTorque(car.torqueFtLb, prefs.units).value      ?? '—'}</StatTd>
+            <StatTd badge={showStatHighlights ? car.badges?.['weightLb']         : null}>{convertWeight(car.weightLb,   prefs.units).value      ?? '—'}</StatTd>
             <StatTd badge={showStatHighlights ? car.badges?.['powerToWeight']    : null}>
               {car.powerHp != null && car.weightLb ? (car.powerHp / car.weightLb).toFixed(3) : '—'}
             </StatTd>

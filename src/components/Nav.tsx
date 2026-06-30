@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useUser, SignInButton, SignOutButton } from '@clerk/nextjs'
 import { useState } from 'react'
 import ThemeToggle from '@/components/ThemeToggle'
+import { UnitsNavButton } from '@/components/UnitsNavButton'
 import { useNavControls } from '@/context/NavControls'
 import { GridIcon, TableIcon } from '@/components/table-ui'
 
@@ -128,7 +129,8 @@ export default function Nav() {
           </div>
         )}
 
-        <div className={`flex items-center gap-2 ${showControls ? 'ml-auto md:ml-0' : 'ml-auto'}`}>
+        <div className={`flex items-center gap-1 ${showControls ? 'ml-auto md:ml-0' : 'ml-auto'}`}>
+          <UnitsNavButton />
           <ThemeToggle />
 
           {isLoaded && (
