@@ -11,6 +11,7 @@ import { getRankedRaceTypes } from '@/lib/raceMatch'
 import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { getGroupForDivision } from '@/lib/divisionGroups'
 import StatBars from './StatBars'
+import StatInfoIcon from './StatInfoIcon'
 import { getMetric, getMetricValue, formatMetricValue, SIM_METRICS } from '@/lib/metrics'
 import { useUnitPreferences } from '@/components/UnitPreferencesContext'
 import { convertPower, convertTorque, convertWeight, convertSpeed, convertBraking, accelLabel, getUnitLabels } from '@/lib/unitConversions'
@@ -254,25 +255,28 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
   const ownsCar = !!displayCar?.owned
 
   // Spec tiles for the Overview grid (effective values; '—' when null)
-  const specTiles: { label: string; value: string | null; badgeKey: string | null }[] = displayCar ? [
+  const specTiles: { label: string; value: string | null; badgeKey: string | null; guideId: string }[] = displayCar ? [
     {
       label:    prefs.powerUnits.toUpperCase(),
       badgeKey: 'powerHp',
+      guideId:  'power',
       value:    displayCar.powerHp    != null ? String(convertPower(displayCar.powerHp, prefs.powerUnits).value)                          : null,
     },
     {
       label:    `Torque ${labels.torque}`,
       badgeKey: 'torqueFtLb',
+      guideId:  'torque',
       value:    displayCar.torqueFtLb != null ? String(convertTorque(displayCar.torqueFtLb, prefs.units).value)                           : null,
     },
     {
       label:    `Weight ${labels.weight}`,
       badgeKey: 'weightLb',
+      guideId:  'weight',
       value:    displayCar.weightLb   != null ? (convertWeight(displayCar.weightLb, prefs.units).value?.toLocaleString() ?? null)         : null,
     },
-    { label: 'Front weight', badgeKey: null, value: displayCar.frontWeight   != null ? `${displayCar.frontWeight}%`    : null },
-    { label: 'Displacement', badgeKey: null, value: displayCar.displacementL != null ? `${displayCar.displacementL} L` : null },
-    { label: 'Drivetrain',   badgeKey: null, value: displayCar.drivetrain ?? null },
+    { label: 'Front weight', badgeKey: null, guideId: 'front-weight', value: displayCar.frontWeight   != null ? `${displayCar.frontWeight}%`    : null },
+    { label: 'Displacement', badgeKey: null, guideId: 'displacement', value: displayCar.displacementL != null ? `${displayCar.displacementL} L` : null },
+    { label: 'Drivetrain',   badgeKey: null, guideId: 'drivetrain',   value: displayCar.drivetrain ?? null },
   ] : []
   const hasAnySpec = specTiles.some((t) => t.value != null)
 
@@ -294,18 +298,18 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
   const fmtSpeed    = (v: number | null | undefined) => convertSpeed(v ?? null,   prefs.units).value?.toString() ?? '—'
   const fmtBraking  = (v: number | null | undefined) => convertBraking(v ?? null, prefs.units).value?.toString() ?? '—'
 
-  const simHeadline: { label: string; unit: string; value: string; badgeKey: string | null; value2?: string }[] = [
-    { label: accelLabel(60,  prefs.units), unit: 's',        value: simFmt('simZeroToSixty'),                           badgeKey: 'simZeroToSixty'   },
-    { label: accelLabel(100, prefs.units), unit: 's',        value: simFmt('simZeroToHundred'),                         badgeKey: 'simZeroToHundred' },
-    { label: 'Top speed',                  unit: speedUnit,  value: fmtSpeed(displayCar?.simTopSpeed),                  badgeKey: 'simTopSpeed'      },
-    { label: '60–0 brake',                 unit: distUnit,   value: fmtBraking(displayCar?.simBraking60),               badgeKey: 'simBraking60'     },
-    { label: '100–0 brake',                unit: distUnit,   value: fmtBraking(displayCar?.simBraking100),              badgeKey: null               },
-    { label: 'Lateral G',                  unit: 'g',        value: simFmt('simLateralG60'), badgeKey: 'simLateralG60', value2: simFmt('simLateralG120') },
+  const simHeadline: { label: string; unit: string; value: string; badgeKey: string | null; guideId: string; value2?: string }[] = [
+    { label: accelLabel(60,  prefs.units), unit: 's',        value: simFmt('simZeroToSixty'),                           badgeKey: 'simZeroToSixty',   guideId: 'zero-to-sixty'    },
+    { label: accelLabel(100, prefs.units), unit: 's',        value: simFmt('simZeroToHundred'),                         badgeKey: 'simZeroToHundred', guideId: 'zero-to-hundred'  },
+    { label: 'Top speed',                  unit: speedUnit,  value: fmtSpeed(displayCar?.simTopSpeed),                  badgeKey: 'simTopSpeed',      guideId: 'top-speed'        },
+    { label: '60–0 brake',                 unit: distUnit,   value: fmtBraking(displayCar?.simBraking60),               badgeKey: 'simBraking60',     guideId: 'braking-distance' },
+    { label: '100–0 brake',                unit: distUnit,   value: fmtBraking(displayCar?.simBraking100),              badgeKey: null,               guideId: 'braking-distance' },
+    { label: 'Lateral G',                  unit: 'g',        value: simFmt('simLateralG60'), badgeKey: 'simLateralG60', guideId: 'lateral-g', value2: simFmt('simLateralG120') },
   ]
-  const simRatios = [
-    { label: 'Aero eff', value: simFmt('simAeroEfficiency') },
-    { label: 'Mech bal', value: simFmt('simMechBalance') },
-    { label: 'Aero bal', value: simFmt('simAeroBalance') },
+  const simRatios: { label: string; value: string; guideId: string }[] = [
+    { label: 'Aero eff', value: simFmt('simAeroEfficiency'), guideId: 'aero-efficiency' },
+    { label: 'Mech bal', value: simFmt('simMechBalance'),    guideId: 'mech-balance'    },
+    { label: 'Aero bal', value: simFmt('simAeroBalance'),    guideId: 'aero-balance'    },
   ]
 
   // Race type recommendations based on all tags (auto + user)
@@ -488,7 +492,7 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                       )}
                     </div>
 
-                    <StatBars car={displayCar} variant="large" showSpecs={false} badges={displayCar.badges} />
+                    <StatBars car={displayCar} variant="large" showSpecs={false} badges={displayCar.badges} showInfo />
 
                     {/* Spec tiles grid */}
                     {hasAnySpec ? (
@@ -510,8 +514,11 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                                 background: badge ? `var(--fh-badge-${badge.tier})` : undefined,
                               }}
                             >
-                              <div className="font-bold uppercase text-fh-muted" style={{ fontSize: 9, letterSpacing: '0.1em', marginBottom: 3 }}>
-                                {t.label}
+                              <div className="flex items-center gap-1" style={{ marginBottom: 3 }}>
+                                <span className="font-bold uppercase text-fh-muted" style={{ fontSize: 9, letterSpacing: '0.1em' }}>
+                                  {t.label}
+                                </span>
+                                <StatInfoIcon id={t.guideId} size={12} className="ml-auto" />
                               </div>
                               <div
                                 className={`tabular-nums text-fh-dark-2 ${badge ? 'font-bold' : 'font-semibold'}`}
@@ -602,9 +609,12 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                                 background: badge ? `var(--fh-badge-${badge.tier})` : undefined,
                               }}
                             >
-                              <div className="font-bold uppercase text-fh-muted flex items-baseline gap-1" style={{ fontSize: 9, letterSpacing: '0.08em', marginBottom: 3 }}>
-                                {t.label}
-                                <span className="text-fh-muted-2 lowercase" style={{ fontSize: 8 }}>{t.unit}</span>
+                              <div className="font-bold uppercase text-fh-muted flex items-center gap-1" style={{ fontSize: 9, letterSpacing: '0.08em', marginBottom: 3 }}>
+                                <span className="flex items-baseline gap-1">
+                                  {t.label}
+                                  <span className="text-fh-muted-2 lowercase" style={{ fontSize: 8 }}>{t.unit}</span>
+                                </span>
+                                <StatInfoIcon id={t.guideId} size={12} className="ml-auto" />
                               </div>
                               <div className="font-bold tabular-nums text-fh-dark" style={{ fontSize: 15, letterSpacing: '-0.01em', lineHeight: 1 }}>
                                 {t.value2 !== undefined ? (
@@ -626,8 +636,11 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                       <div className="grid grid-cols-3 mt-3 pt-3 border-t border-fh-border">
                         {simRatios.map((t) => (
                           <div key={t.label} className="px-1">
-                            <div className="font-medium uppercase text-fh-muted-2" style={{ fontSize: 9, letterSpacing: '0.08em', marginBottom: 3 }}>
-                              {t.label}
+                            <div className="flex items-center gap-1" style={{ marginBottom: 3 }}>
+                              <span className="font-medium uppercase text-fh-muted-2" style={{ fontSize: 9, letterSpacing: '0.08em' }}>
+                                {t.label}
+                              </span>
+                              <StatInfoIcon id={t.guideId} size={12} className="ml-auto" />
                             </div>
                             <div className="tabular-nums text-fh-muted" style={{ fontSize: 13, lineHeight: 1 }}>
                               {t.value}

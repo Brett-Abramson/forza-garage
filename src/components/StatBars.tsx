@@ -1,6 +1,8 @@
 import type { Car, CarBadgeMap } from '@/types/car'
 import { DIVISION_CLASS_AVERAGES, getStatColor } from '@/lib/statCallouts'
 import type { StatAvg } from '@/lib/statCallouts'
+import { BAR_GUIDE_ID } from '@/lib/statsGuideContent'
+import StatInfoIcon from './StatInfoIcon'
 
 interface Props {
   car: Car
@@ -10,6 +12,8 @@ interface Props {
   showSpecs?: boolean
   /** Per-car badge map for tinting qualifying bar values. Only statSpeed…statOffroad are eligible. */
   badges?: CarBadgeMap
+  /** Opt-in — appends a per-stat info icon (deep-links into /guide). Drawer only; off for cards/rows. */
+  showInfo?: boolean
 }
 
 const BARS: { key: keyof Car; label: string; avgKey: keyof StatAvg; description: string }[] = [
@@ -47,7 +51,7 @@ const COLOR_LABELS: Record<string, string> = {
   'bg-red-500':   'Well below average',
 }
 
-export default function StatBars({ car, variant = 'default', showSpecs = true, badges }: Props) {
+export default function StatBars({ car, variant = 'default', showSpecs = true, badges, showInfo = false }: Props) {
   const hasAnyBarStat = BARS.some(({ key }) => car[key] != null)
   const divAvg = DIVISION_CLASS_AVERAGES[car.division]?.[car.piClass] ?? null
 
@@ -110,6 +114,10 @@ export default function StatBars({ car, variant = 'default', showSpecs = true, b
             <div className={`${badge ? 'font-bold text-fh-dark-2' : `${valueText} text-fh-muted`} tabular-nums ${valueW} shrink-0`}>
               {value != null ? value.toFixed(1) : '—'}
             </div>
+
+            {showInfo && BAR_GUIDE_ID[key as string] && (
+              <StatInfoIcon id={BAR_GUIDE_ID[key as string]} size={13} />
+            )}
 
             {/* Tooltip */}
             <div className="

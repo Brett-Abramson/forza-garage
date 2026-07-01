@@ -896,6 +896,71 @@ describe('getStatCallouts — arch-dirt archetype', () => {
     expect(ids[0]).toBe('arch-dirt')
     expect(ids).not.toContain('sustained-acceleration')
   })
+
+  it('leads the "Dirt-focused car" bucket (unchanged copy + subsumes) for a car that is neither a weapon nor weak-for-division', () => {
+    // Pickups & 4x4s C: offroad avg 8.14, delta(C) = -1.3 -> weak threshold 6.84.
+    // 7.5 clears the weak threshold but is below the 8.0 "weapon" floor -> falls to bucket 3.
+    const ids = getStatCallouts(makeCar({
+      division: 'Pickups & 4x4s', piClass: 'C', statOffroad: 7.5,
+    })).map((c) => c.id)
+    const archetype = getStatCallouts(makeCar({
+      division: 'Pickups & 4x4s', piClass: 'C', statOffroad: 7.5,
+    })).find((c) => c.id === 'arch-dirt')!
+    expect(ids[0]).toBe('arch-dirt')
+    expect(archetype.title).toBe('Dirt-focused car')
+    expect(archetype.body).toContain('judge it by how it handles dirt, gravel, and mixed surfaces')
+  })
+})
+
+describe('getStatCallouts — arch-offroad-outlier archetype (street-tuned outlier)', () => {
+  // 1991 GMC Syclone shape: Pickups & 4x4s, C-class, AWD, offroad well below the
+  // division+class average (avg 8.14, delta(C) -1.3 -> weak threshold 6.84), but quick
+  // in a straight line (drag-strip launch traction, not dirt).
+  const syclone = {
+    division: 'Pickups & 4x4s', piClass: 'C', drivetrain: 'AWD',
+    statOffroad: 5.7, simZeroToSixty: 4.5,
+  } as const
+
+  it('returns arch-offroad-outlier (not arch-dirt) when weak-for-division on offroad', () => {
+    const callouts = getStatCallouts(makeCar(syclone))
+    const ids = callouts.map((c) => c.id)
+    expect(ids[0]).toBe('arch-offroad-outlier')
+    expect(ids).not.toContain('arch-dirt')
+  })
+
+  it('does not claim dirt-focus in the title or body', () => {
+    const archetype = getStatCallouts(makeCar(syclone)).find((c) => c.id === 'arch-offroad-outlier')!
+    expect(archetype.title).toBe('Street-tuned outlier')
+    expect(archetype.body).not.toMatch(/dirt-focused|built for loose surfaces/i)
+    expect(archetype.body).toContain('offroad reads well below the division average')
+    expect(archetype.body).toContain('top speed, braking, and acceleration')
+  })
+
+  it('does not subsume tarmac callouts — strong-acceleration still surfaces', () => {
+    const ids = getStatCallouts(makeCar(syclone)).map((c) => c.id)
+    expect(ids).toContain('strong-acceleration')
+  })
+
+  it('leaves low-offroad visible — it is the evidence for the outlier framing, not a contradiction', () => {
+    const ids = getStatCallouts(makeCar(syclone)).map((c) => c.id)
+    expect(ids).toContain('low-offroad')
+  })
+
+  it('a genuine cross-country car (offroad at/above division average) still gets arch-dirt, unchanged title/subsumes', () => {
+    // Rally Monsters A: offroad avg 8.23 -> 9.0 clears both the weak threshold and the 8.0 weapon floor.
+    const callouts = getStatCallouts(makeCar({
+      division: 'Rally Monsters', piClass: 'A', statOffroad: 9.0,
+      simZeroToSixty: 4.0, simZeroToHundred: 8.0,
+    }))
+    const ids = callouts.map((c) => c.id)
+    const archetype = callouts.find((c) => c.id === 'arch-dirt')!
+    expect(ids[0]).toBe('arch-dirt')
+    expect(ids).not.toContain('arch-offroad-outlier')
+    expect(archetype.title).toBe('Cross-country weapon')
+    // Confirms the original subsumes list is still applied for this branch
+    // (sustained-acceleration would otherwise fire: ratio 4.0/8.0 <= ACCEL_SUSTAINED_MAX).
+    expect(ids).not.toContain('sustained-acceleration')
+  })
 })
 
 describe('getStatCallouts — arch-point-squirt archetype', () => {

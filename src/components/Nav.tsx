@@ -14,6 +14,7 @@ const links = [
   { href: '/cars', label: 'Car Database', icon: DatabaseIcon, shortcut: 'c' },
   { href: '/races', label: 'Races', icon: RacesIcon, shortcut: 'r' },
   { href: '/builds', label: 'Builds', icon: BuildsIcon, shortcut: 'b' },
+  { href: '/guide', label: 'Stats Guide', icon: GuideIcon, shortcut: 's' },
 ]
 
 function getInitials(firstName?: string | null, lastName?: string | null, email?: string | null): string {
@@ -254,6 +255,14 @@ function BuildsIcon() {
     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
       <path d="M2 3h5v2H2zM2 7h9v2H2zM2 11h7v2H2z" />
       <circle cx="13" cy="4" r="2" />
+    </svg>
+  )
+}
+
+function GuideIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M3 1.5A1.5 1.5 0 0 0 1.5 3v10A1.5 1.5 0 0 0 3 14.5h10a.5.5 0 0 0 .5-.5V2a.5.5 0 0 0-.5-.5H3Zm.5 2h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1 0-1Zm0 2.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1 0-1Z" />
     </svg>
   )
 }

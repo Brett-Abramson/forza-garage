@@ -401,6 +401,18 @@ export interface Archetype {
   subsumes: string[]   // callout ids absorbed when this archetype fires
 }
 
+// Mirrors Rule 6's low-offroad gate exactly (same DIVISION_CLASS_AVERAGES + CLASS_DELTAS
+// margin) so detectArchetype's arch-offroad-outlier branch and the low-offroad callout can
+// never disagree about which cars are weak-for-division on offroad. If Rule 6's threshold
+// changes, update this alongside it — don't let a second copy of the comparison drift.
+function offroadWeaknessForDivision(car: Car): { weak: boolean; avgOffroad: number | null } {
+  const avg        = DIVISION_CLASS_AVERAGES[car.division]?.[car.piClass] ?? null
+  const delta       = CLASS_DELTAS[car.piClass] ?? -1.2
+  const avgOffroad  = avg?.offroad ?? null
+  const weak        = avgOffroad != null && car.statOffroad != null && car.statOffroad < avgOffroad + delta
+  return { weak, avgOffroad }
+}
+
 function detectArchetype(car: Car): Archetype | null {
   const strongGripMin     = STRONG_GRIP_MIN[car.piClass]
   const strongBrakingMax  = STRONG_BRAKING_MAX[car.piClass]
@@ -417,16 +429,41 @@ function detectArchetype(car: Car): Archetype | null {
     const strongBraking = strongBrakingMax != null && car.simBraking100 != null && car.simBraking100 <= strongBrakingMax
     const strongOffroad = car.statOffroad != null && car.statOffroad >= 8.0
     const isWeapon = strongGrip || strongBraking || strongOffroad
-    const strengths: string[] = []
-    if (strongGrip) strengths.push('cornering grip')
-    if (strongBraking) strengths.push('braking')
-    if (strongOffroad) strengths.push('offroad handling')
+
+    if (isWeapon) {
+      const strengths: string[] = []
+      if (strongGrip) strengths.push('cornering grip')
+      if (strongBraking) strengths.push('braking')
+      if (strongOffroad) strengths.push('offroad handling')
+      return {
+        id:    'arch-dirt',
+        title: 'Cross-country weapon',
+        body:  `Built for loose surfaces — read it on dirt terms, not tarmac. Its ${strengths.join(' and ')} stand out for the class, which is what actually wins cross-country and dirt events; tarmac numbers like top speed and braking distance aren't the point.`,
+        suits:    ['Cross Country', 'Dirt Racing'],
+        subsumes: ['low-top-speed', 'long-braking-distance', 'sustained-acceleration', 'front-loaded-acceleration'],
+      }
+    }
+
+    // Street-tuned outlier — a division/body-style tag that reads as offroad-focused, but
+    // this specific car is weak-for-division on offroad (same gate as the low-offroad
+    // callout). The division tag is a category, not a capability claim; don't let the
+    // archetype assert dirt competence this car's own numbers contradict. Unlike the other
+    // two buckets, its on-road numbers ARE the story, so nothing is subsumed here.
+    const { weak: weakOffroad, avgOffroad } = offroadWeaknessForDivision(car)
+    if (weakOffroad && avgOffroad != null && car.statOffroad != null) {
+      return {
+        id:    'arch-offroad-outlier',
+        title: 'Street-tuned outlier',
+        body:  `This car sits in a typically offroad-heavy division, but its own numbers don't back that up — offroad reads well below the division average. Treat it like the street/tarmac performer it actually is: judge it on top speed, braking, and acceleration like any road car, not on how it handles loose surfaces.`,
+        suits:    [],
+        subsumes: [],
+      }
+    }
+
     return {
       id:    'arch-dirt',
-      title: isWeapon ? 'Cross-country weapon' : 'Dirt-focused car',
-      body:  isWeapon
-        ? `Built for loose surfaces — read it on dirt terms, not tarmac. Its ${strengths.join(' and ')} stand out for the class, which is what actually wins cross-country and dirt events; tarmac numbers like top speed and braking distance aren't the point.`
-        : `Built for loose surfaces — read it on dirt terms, not tarmac. Its on-road numbers (top speed, tarmac braking distance, sustained acceleration) don't define this car; judge it by how it handles dirt, gravel, and mixed surfaces instead.`,
+      title: 'Dirt-focused car',
+      body:  `Built for loose surfaces — read it on dirt terms, not tarmac. Its on-road numbers (top speed, tarmac braking distance, sustained acceleration) don't define this car; judge it by how it handles dirt, gravel, and mixed surfaces instead.`,
       suits:    ['Cross Country', 'Dirt Racing'],
       subsumes: ['low-top-speed', 'long-braking-distance', 'sustained-acceleration', 'front-loaded-acceleration'],
     }

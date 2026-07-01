@@ -6,6 +6,7 @@ const NAV_LINKS = [
   { label: 'My Garage',     href: '/garage' },
   { label: 'Races',         href: '/races' },
   { label: 'Builds',        href: '/builds' },
+  { label: 'Stats Guide',   href: '/guide' },
 ]
 
 export default function Footer() {
