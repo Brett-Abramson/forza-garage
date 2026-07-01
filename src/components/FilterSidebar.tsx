@@ -6,6 +6,7 @@ import { DIVISION_GROUPS } from '@/lib/divisionGroups'
 import { AUTO_TAGS } from '@/lib/tags'
 import { RACE_TYPES } from '@/lib/races'
 import type { RaceType } from '@/lib/races'
+import StatInfoIcon from './StatInfoIcon'
 
 interface FilterSidebarProps {
   isOpen: boolean
@@ -147,6 +148,7 @@ function SimRange({
   label,
   unit,
   step,
+  guideId,
   minVal,
   maxVal,
   onChange,
@@ -154,6 +156,8 @@ function SimRange({
   label: string
   unit: string
   step: number
+  /** Guide entry id for the info icon — see statsGuideContent.ts. */
+  guideId: string
   minVal: number | null
   maxVal: number | null
   onChange: (next: { min: number | null; max: number | null }) => void
@@ -178,7 +182,10 @@ function SimRange({
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="text-[10px] font-medium text-fh-muted-2">{label} <span className="lowercase">{unit}</span></div>
+      <div className="flex items-center gap-1 text-[10px] font-medium text-fh-muted-2">
+        <span>{label} <span className="lowercase">{unit}</span></span>
+        <StatInfoIcon id={guideId} size={12} />
+      </div>
       <div className="flex items-center gap-2">
         <input
           type="number" inputMode="decimal" step={step} aria-label={`${label} min`}
@@ -537,31 +544,31 @@ export default function FilterSidebar({
             {simOpen && (
               <div className="flex flex-col gap-3 mt-4 pl-1">
                 <SimRange
-                  label="0–60" unit="s" step={0.1}
+                  label="0–60" unit="s" step={0.1} guideId="zero-to-sixty"
                   minVal={filters.simZeroToSixtyMin}
                   maxVal={filters.simZeroToSixtyMax}
                   onChange={({ min, max }) => setFilters((f) => ({ ...f, simZeroToSixtyMin: min, simZeroToSixtyMax: max }))}
                 />
                 <SimRange
-                  label="0–100" unit="s" step={0.1}
+                  label="0–100" unit="s" step={0.1} guideId="zero-to-hundred"
                   minVal={filters.simZeroToHundredMin}
                   maxVal={filters.simZeroToHundredMax}
                   onChange={({ min, max }) => setFilters((f) => ({ ...f, simZeroToHundredMin: min, simZeroToHundredMax: max }))}
                 />
                 <SimRange
-                  label="Braking 60–0" unit="ft" step={1}
+                  label="Braking 60–0" unit="ft" step={1} guideId="braking-distance"
                   minVal={filters.simBraking60Min}
                   maxVal={filters.simBraking60Max}
                   onChange={({ min, max }) => setFilters((f) => ({ ...f, simBraking60Min: min, simBraking60Max: max }))}
                 />
                 <SimRange
-                  label="Lateral G (60)" unit="G" step={0.01}
+                  label="Lateral G (60)" unit="G" step={0.01} guideId="lateral-g"
                   minVal={filters.simLateralG60Min}
                   maxVal={filters.simLateralG60Max}
                   onChange={({ min, max }) => setFilters((f) => ({ ...f, simLateralG60Min: min, simLateralG60Max: max }))}
                 />
                 <SimRange
-                  label="Top Speed" unit="mph" step={1}
+                  label="Top Speed" unit="mph" step={1} guideId="top-speed"
                   minVal={filters.simTopSpeedMin}
                   maxVal={filters.simTopSpeedMax}
                   onChange={({ min, max }) => setFilters((f) => ({ ...f, simTopSpeedMin: min, simTopSpeedMax: max }))}
