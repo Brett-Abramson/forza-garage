@@ -13,7 +13,7 @@ A companion web app for **Forza Horizon 6**: browse the full car list, track an 
 - **Prisma 5** → **Postgres**: local Docker for dev (`docker-compose.yml`, host port 5433), **Neon** serverless in production
 - **Clerk** auth (middleware + server `auth()`)
 - **Server Actions** for all writes; thin **read-only API routes** for reads
-- **Vercel** hosting · **Vitest** + Testing Library (~709 tests)
+- **Vercel** hosting · **Vitest** + Testing Library (~917 tests)
 - A **Python scraper** (gitignored, lives outside the repo) → CSV → `prisma/upsert_cars.js`
 
 ## Directory map
@@ -42,7 +42,7 @@ src/
   types/car.ts               Car, FilterState, PI_CLASS_COLORS / PI_CLASS_HEX, getSourceColor
   __tests__/                 Vitest
 prisma/
-  schema.prisma              4 models
+  schema.prisma              5 models
   upsert_cars.js             CSV → DB import (null-safe; never touches UserGarage)
   fh6-cars.csv, scraped_car_stats.csv
   migrations/
@@ -54,6 +54,7 @@ prisma/
 - **UserGarage** — one row per `(userId, carId)` a user owns. `notes`, `pinned`, and **per-user stat/spec overrides** (`statSpeedOverride` … `rarityOverride`). Editing in the garage writes here.
 - **CarMeta** — race-type / PI-class meta rankings (leaderboard-derived), with `active`/`replacedAt` history. Powers the featured carousel.
 - **CarTag** — tags on a `UserGarage` entry; `source` = `"auto"` | `"user"`.
+- **UserPreferences** — one row per Clerk `userId`: `units` (English/Metric), `powerUnits` (hp/PS/kW), `springUnits`. Display-layer only — DB car data is always stored in English units.
 
 ## Routing & rendering
 
@@ -69,13 +70,17 @@ prisma/
 4. **Mutations = Server Actions only.** `src/server/actions/garage.ts` (`'use server'`): `setOwned`, `setTags`, `tuneCar`, `resetTuning`, `setNotes`, `setPinned`. Every one starts with `authorize()` = `requireUserId()` + `checkRateLimit(userId)`, validates input, calls the DAL, and returns a **discriminated result** `{ok:true,…} | {ok:false,error}` — it never throws across the network boundary. API routes are read-only; there is no REST write path.
 5. **Per-user overrides.** `tuneCar` maps canonical fields (`statSpeed`, `powerHp`…) to `UserGarage.*Override` columns via `STAT_OVERRIDE_MAP`; `null` clears one. `resolveEffectiveStats()` (lib/statUtils) merges override → base so the UI shows the effective value while the override column records the source. **Editing a car in the garage never mutates the shared Car catalog.**
 6. **Garage vs. database context in the UI.** Components detect "garage context" by the presence of the `onTagDetailsChange`/`onStatsChange` props (passed by `GarageShowcase`, not `GarageView`). That gates every editing affordance — the same `GarageDrawer` is read-only on `/cars` and editable in `/garage`.
-7. **Caching.** `getCarCount` via `unstable_cache` (24h, tag `car-count`) — the count only changes on import; a redeploy or the 24h revalidate clears it.
+7. **Caching.** `getCarCount` via `unstable_cache` (24h, tag `car-count`) — the count only changes on import; a redeploy or the 24h revalidate clears it. `getBadgeMatrix` (below) follows the same 24h/`unstable_cache` shape, tag `stat-percentiles`.
+8. **Stat-percentile badges.** `statPercentiles.ts` ranks 14 metrics (6 bar stats, 5 sim fields, 3 specs) per PI class into a five-band system (top-strong/top-soft/neutral/bottom-soft/bottom-strong, 10%/20% thresholds, competition ranking with ties, 70% coverage floor). `getBadgeMatrix()` (dal/cars.ts) computes it once over the full catalog and merges per-car `CarBadgeMap` into `Car.badges` at the same server boundary as ownership. Green/red highlight rendering in `CarRow`/`StatBars` is separately gated by the `showStatHighlights` FilterState toggle (display-only; doesn't affect the "has a top badge" filter or drawer decoration).
+9. **Unit preferences.** `UnitPreferencesProvider` (mounted in `layout.tsx`) hydrates from `UserPreferences` (signed-in, server-fetched) or `localStorage` (guests) and exposes `useUnitPreferences()`. `unitConversions.ts` is the only place display conversions happen — DB values and Server Action payloads stay in English units always. Any component reading power/weight/torque/speed/braking for display must go through it rather than hardcoding a unit label.
+10. **Stat callouts & archetypes.** `statCallouts.ts` combines bar-stat rules with sim-derived callouts (top speed, braking, lateral grip, 0-60/0-100, aero/mech balance) and a synthesis layer that recognizes recurring archetypes (dirt car, point-and-squirt, fast-sweeper, top-end cruiser, heavy GT/saloon) to lead the drawer with one card instead of several fragmented ones. Thresholds are division-relative, not class-only, so strong-DNA divisions (e.g. Classic Muscle's weak braking) don't get misflagged.
 
 ## Components (orientation)
 
 - `/cars`: `GarageView` → `GarageViewClient` (table/grid + `FilterSidebar` + `CarRow`/`CarCard` + `GarageDrawer`)
 - `/garage`: `GarageShowcase` → `GarageShowcaseClient` (same shell, editing enabled: pin/notes/tags/overrides)
-- Shared: `GarageDrawer` (tabbed — Overview / Guide / Tags & Notes; Overview includes Simulation section with 10 sim metrics), `StatBars` (bar stats; `variant` + `showSpecs` props), `table-ui` (3-way mode toggle: Standard / Stats / **Sim**), `MetaCarousel(Lazy)`, `Nav`, `ThemeToggle`, `KeyboardNav`, skeletons.
+- Shared: `GarageDrawer` (tabbed — Overview / Guide / Tags & Notes; Overview includes Simulation section with 10 sim metrics), `StatBars` (bar stats; `variant` + `showSpecs` props), `StatHeader` (shared badge/highlight header for stat groups), `table-ui` (3-way mode toggle: Standard / Stats / **Sim**), `FilterSidebar` (incl. collapsible "Sim Metrics" range filters and "Has a top badge" / "Has stat highlights" toggles), `MetaCarousel(Lazy)`, `Nav`, `UnitsNavButton` + `UnitSettingsToggle` (ruler-icon unit popover), `ThemeToggle`, `KeyboardNav`, skeletons.
+- Homepage: `FeatureHighlights` (5 alternating feature rows + scope-disclaimer strip) / `FeatureLightboxImage` (hover magnifier + fullscreen lightbox). `Footer` carries the same nav links (Home/Car Database/My Garage/Races/Builds) on every page.
 - Reference pages: `RacesView`, `BuildsView`, `design/DesignSystem.client`.
 
 ## Domain logic (`src/lib/`)
@@ -84,8 +89,10 @@ prisma/
 - `races.ts` — `RACE_TYPES` (demands / avoid / PI sweet spot / drivetrain notes); `raceMatch.ts` — scores a car's tags into ranked race types.
 - `autotags.ts` — division base tags + stat-gated extensions (v3): RWD drift is division+handling gated (≥7.0); dirt/offroad/technical/drag earned from car stats (via thresholds in `T`). `getAutoTags()` takes optional `AutoTagStats` (nulls degrade gracefully). `tags.ts` — the tag vocabulary.
 - `tuningGuides.ts` / `buildGuides.ts` — static guide content per race-type / PI / division.
-- `statCallouts.ts` — stat analysis (e.g. "power exceeds handling") + division/class averages; `statUtils.ts` — override resolution, payload mapping, `StatFields`.
-- `filterCars.ts` / `sort.ts` — table filtering & sorting; sort is metric-driven (from registry, direction-aware, nulls last). Plus `divisionGroups.ts`, `featuredCars.ts`, `exportCsv.ts`, `rateLimit.ts`.
+- `statCallouts.ts` — stat + sim-derived analysis (e.g. "power exceeds handling", archetype synthesis) with division-relative thresholds; `statUtils.ts` — override resolution, payload mapping, `StatFields`.
+- `statPercentiles.ts` — five-band (top-strong/top-soft/neutral/bottom-soft/bottom-strong) per-PI-class percentile/rank badges across 14 metrics; feeds `Car.badges` (`CarBadgeMap`, defined in `types/car.ts` to avoid a circular import).
+- `unitConversions.ts` — pure display-layer conversions (weight/power/torque/speed/braking); `UnitPreferences` type + `DEFAULT_PREFS`. DB values are always English; conversion happens only here.
+- `filterCars.ts` / `sort.ts` — table filtering & sorting; sort is metric-driven (from registry, direction-aware, nulls last); `filterCars.ts` also handles the 5-field sim-metric range filters (null bound = no-op, null car value excluded when any bound is active). Plus `divisionGroups.ts`, `featuredCars.ts`, `exportCsv.ts`, `rateLimit.ts`.
 
 ## Theming & design tokens
 
@@ -96,6 +103,7 @@ prisma/
 ## Data pipeline
 
 `prisma/fh6-cars.csv` (hand-maintained car list) + `scraped_car_stats.csv` (sim stats, from a scraper that lives outside the repo) are joined on year + make + model and loaded by `node prisma/upsert_cars.js` — one transaction, **null-safe** (never overwrites a non-null value with null), and it **never touches UserGarage**. Never use `prisma db seed` for data.
+- **Known source-data quirk**: the scraper's source (forza.labsgg.com) serves stale Simulation Results (0-60, top speed, braking, lateral G) on Forza Edition variant pages — Power/Weight and the 0-10 bars are correct, but sim numbers barely move even when FE power is 2-8x the base car's. Since `upsert_cars.js`'s null-safe coalesce can't *correct* a bad non-null value, the fix is a one-off script (`prisma/null_fe_sim_stats.js`) that explicitly nulls the affected `Sim_*` fields for known FE rows, run against the DB directly (with a Neon restore point first, per the DB-writes convention below).
 
 ## Conventions & constraints (these shape design choices)
 
@@ -104,7 +112,7 @@ prisma/
 - **Protect UserGarage data** — catalog edits and imports must never clobber per-user rows.
 - **Every mutation** validates the Clerk session + rate-limits (`authorize()`); API errors return sanitized `{ error }` only; Prisma typed queries only (no raw SQL string-building).
 - Keep client bundles small (Server Components are the default).
-- A change isn't done until `npm test` and `npx tsc --noEmit` pass; update tests in the same change when behavior or DOM shifts.
+- A change isn't done until `npx vitest` and `npx tsc --noEmit` pass; update tests in the same change when behavior or DOM shifts.
 - The browser preview server isn't usable in this setup — verify via tsc + tests, not a live preview.
 
 ## Testing
