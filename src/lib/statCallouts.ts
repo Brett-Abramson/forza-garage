@@ -210,6 +210,45 @@ const CLASS_DELTAS: Record<string, number> = {
   D: -1.5, C: -1.3, B: -1.2, A: -1.1, S1: -1.0, S2: -0.9, R: -0.8,
 }
 
+// Division "DNA" — each division's within-class z-score character (|z| >= 0.5), derived
+// from ~580 scraped cars (divisions with n>=8). Snapshot of the current dataset — re-derive
+// on catalog change, and treat like a tier list (verify against live community sources)
+// rather than as final. Divisions absent here (n<8, or omitted metrics) fall back to
+// class-only comparison everywhere they're read. Metric keys: grip, braking, accel,
+// topspeed, offroad, aeroGain, noseHeavy, rearBalance.
+export const DIVISION_PROFILES: Record<string, {
+  strong: string[]; weak: string[]; archetype: 'fast-sweeper' | 'top-end' | 'offroad' | 'rotation' | 'straight-line-weak' | 'neutral'
+}> = {
+  'Track Toys':            { strong: ['grip', 'braking', 'aeroGain'],             weak: ['accel'],                                          archetype: 'fast-sweeper' },
+  'Extreme Track Toys':    { strong: ['grip', 'aeroGain'],                        weak: [],                                                 archetype: 'fast-sweeper' },
+  'Hot Hatch':             { strong: ['grip', 'braking', 'aeroGain', 'noseHeavy'], weak: ['accel'],                                          archetype: 'fast-sweeper' },
+  'Modern Sports Cars':    { strong: ['grip', 'aeroGain'],                        weak: [],                                                 archetype: 'fast-sweeper' },
+  'Retro Sports Cars':     { strong: ['grip', 'topspeed'],                        weak: [],                                                 archetype: 'fast-sweeper' },
+  'Retro Supercars':       { strong: ['grip', 'topspeed', 'aeroGain', 'rearBalance'], weak: ['noseHeavy'],                                  archetype: 'rotation' },
+  'Modern Supercars':      { strong: ['rearBalance', 'topspeed'],                 weak: ['noseHeavy'],                                       archetype: 'rotation' },
+  'Retro Hot Hatch':       { strong: ['noseHeavy', 'rearBalance'],                weak: ['offroad'],                                         archetype: 'rotation' },
+  'Classic Racers':        { strong: ['topspeed', 'rearBalance'],                 weak: ['grip', 'braking', 'aeroGain', 'noseHeavy'],        archetype: 'rotation' },
+  'Rare Classics':         { strong: ['rearBalance'],                            weak: ['grip', 'braking', 'noseHeavy'],                     archetype: 'rotation' },
+  'Hypercars':             { strong: ['topspeed'],                               weak: [],                                                 archetype: 'top-end' },
+  'Super GT':              { strong: ['braking', 'topspeed'],                    weak: [],                                                 archetype: 'top-end' },
+  'Modern Super Saloons':  { strong: ['noseHeavy', 'topspeed'],                   weak: ['rearBalance'],                                     archetype: 'top-end' },
+  'Retro Super Saloons':   { strong: ['topspeed'],                               weak: [],                                                 archetype: 'top-end' },
+  'Modern Muscle':         { strong: ['noseHeavy'],                              weak: ['rearBalance'],                                     archetype: 'top-end' },
+  'Retro Muscle':          { strong: ['accel', 'topspeed'],                      weak: ['offroad'],                                         archetype: 'top-end' },
+  'Rally Monsters':        { strong: ['offroad', 'grip', 'braking'],             weak: ['topspeed'],                                        archetype: 'offroad' },
+  'Pickups & 4x4s':        { strong: ['offroad'],                                weak: ['grip', 'aeroGain', 'rearBalance'],                  archetype: 'offroad' },
+  'Unlimited Offroad':     { strong: ['offroad'],                                weak: ['grip', 'topspeed', 'aeroGain'],                     archetype: 'offroad' },
+  'Sports Utility Heroes': { strong: [],                                        weak: ['grip', 'aeroGain'],                                 archetype: 'offroad' },
+  'Classic Muscle':        { strong: [],                                        weak: ['grip', 'braking', 'aeroGain', 'rearBalance'],       archetype: 'straight-line-weak' },
+  'Classic Sports Cars':   { strong: [],                                        weak: ['braking', 'accel'],                                 archetype: 'straight-line-weak' },
+  'Utility Heroes':        { strong: ['noseHeavy'],                             weak: ['grip', 'braking', 'accel', 'aeroGain', 'rearBalance'], archetype: 'straight-line-weak' },
+  'Drift Cars':            { strong: ['noseHeavy'],                             weak: ['grip', 'braking', 'topspeed', 'aeroGain', 'rearBalance'], archetype: 'neutral' },
+  'Eclectic Domestics':    { strong: ['braking'],                               weak: [],                                                 archetype: 'neutral' },
+  'Modern Rally':          { strong: ['noseHeavy'],                             weak: ['rearBalance'],                                     archetype: 'neutral' },
+  'Super Hot Hatch':       { strong: ['noseHeavy'],                             weak: [],                                                 archetype: 'neutral' },
+  'Retro Rally':           { strong: [],                                       weak: [],                                                 archetype: 'neutral' },
+}
+
 // Only these divisions should receive the low offroad callout.
 const OFFROAD_RELEVANT_DIVISIONS = new Set([
   'Offroad', 'Pickups & 4x4s', 'UTVs', 'Unlimited Offroad', 'Unlimited Buggies',
@@ -223,6 +262,74 @@ const HP_THRESHOLD: Record<string, number> = {
   D: 200, C: 250, B: 350, A: 450, S1: 650, S2: 900,
 }
 
+// Per-class sim thresholds — derived from 580 joined cars (fh6-cars × scraped_car_stats).
+// TOP_SPEED_FLOOR = per-class p25; BRAKING_100_CEILING = per-class p75.
+
+const TOP_SPEED_FLOOR: Record<string, number> = {
+  D: 90, C: 139, B: 153, A: 180, S1: 192, S2: 203, R: 195,
+}
+
+const BRAKING_100_CEILING: Record<string, number> = {
+  D: 430, C: 398, B: 354, A: 317, S1: 258, S2: 207, R: 163,
+}
+
+// Lateral grip vs speed = simLateralG120 / simLateralG60.
+// Data median 1.03 — grip RISES with speed (downforce). So:
+const LATERAL_AERO_GAIN_MIN = 1.12   // >= : grip climbs hard with speed → fast-sweeper specialist (~top 20%)
+const LATERAL_FLAT_MAX      = 0.98   // <  : grip genuinely drops → low-speed chassis (~bottom 10%)
+
+// Acceleration shape = simZeroToHundred / simZeroToSixty (p25 / p75).
+const ACCEL_SUSTAINED_MAX = 2.10     // <= : strong top-end puller
+const ACCEL_LAUNCHY_MIN   = 2.60     // >= : front-loaded launcher
+
+// lbs/hp build-priority bands (p25 / ~p80).
+const PWR_TO_WEIGHT_LIGHT = 6        // <= : power-rich → spend PI on grip
+const PWR_TO_WEIGHT_HEAVY = 13       // >= : heavy for power → spend PI on power/weight
+
+// Ratio fields — scale/direction confirmed from data:
+const AERO_EFF_DRAGGY_MAX   = 0.70   // simAeroEfficiency below this = draggy (p10; range 0.07–0.93, higher=better)
+// simMechBalance correlates NEGATIVELY with front weight% (corr -0.61 across 549 cars): a low value means
+// nose-heavy / front-grip-biased → understeer; a high value means rear-heavy / rear-grip-biased → oversteer.
+// Confirmed against 2009 Audi RS 6 (59% front, mechbal 0.41 → understeer) and 2023 Porsche 911 Rallye
+// (40% front, rear-engine, mechbal 0.62 → oversteer).
+const MECH_UNDERSTEER_MAX   = 0.43   // <= : nose-heavy / front-grip-biased → understeer
+const MECH_OVERSTEER_MIN    = 0.61   // >= : rear-heavy / rear-grip-biased  → oversteer
+const AERO_BALANCE_PRESENT  = 0.10   // simAeroBalance must exceed this to count as "has aero" (135/549 cars are 0)
+const AERO_FRONT_BIAS_MIN   = 0.52   // p95 of cars-with-aero — direction is the least-verified sim field
+
+// Per-class "top of class" strength thresholds (p90 unless noted) — mirror-positives so a
+// genuinely strong car (e.g. a top-speed/braking standout) gets credit, not just weaknesses.
+const STRONG_TOP_SPEED_MIN: Record<string, number> = { // simTopSpeed >= class p90
+  D: 141, C: 159, B: 184, A: 208, S1: 225, S2: 274, R: 252,
+}
+const STRONG_BRAKING_MAX: Record<string, number> = {   // simBraking100 <= class p10 (shorter = better)
+  D: 386, C: 352, B: 313, A: 250, S1: 198, S2: 153, R: 139,
+}
+const STRONG_GRIP_MIN: Record<string, number> = {      // simLateralG120 >= class p90
+  D: 0.92, C: 0.95, B: 1.04, A: 1.19, S1: 1.47, S2: 2.22, R: 2.78,
+}
+const STRONG_ACCEL_MAX: Record<string, number> = {     // simZeroToSixty <= class p10 (quicker = better)
+  D: 7.0, C: 5.3, B: 4.2, A: 3.0, S1: 2.6, S2: 2.2, R: 2.0,
+}
+
+// "Point-and-squirt" identity — low cornering grip but strong off-the-line acceleration.
+const LOW_GRIP_MAX: Record<string, number> = {     // simLateralG120 <= class p25
+  D: 0.77, C: 0.81, B: 0.91, A: 0.97, S1: 1.15, S2: 1.39, R: 2.10,
+}
+const QUICK_ENOUGH_MAX: Record<string, number> = { // simZeroToSixty <= class p25
+  D: 8.0, C: 5.9, B: 4.5, A: 3.4, S1: 2.8, S2: 2.5, R: 2.4,
+}
+
+// Archetype-only thresholds (v3) — looser than the single-field strength bars above, because
+// an archetype is a synthesis of several fields agreeing, not one field being exceptional.
+const HIGH_GRIP_MIN: Record<string, number> = {  // simLateralG120 >= class p75 — "high grip for class"
+  D: 0.85, C: 0.91, B: 0.99, A: 1.12, S1: 1.37, S2: 2.07, R: 2.58,
+}
+const TOP_SPEED_MID: Record<string, number> = {  // simTopSpeed >= class p50 — "decent top speed for class"
+  D: 113, C: 147, B: 164, A: 191, S1: 207, S2: 224, R: 222,
+}
+const HEAVY_GT_WEIGHT_MIN = 3800  // lb — physically heavy (saloon/GT mass), class-agnostic
+
 // ── Color helper ─────────────────────────────────────────────────────────────
 
 export function getStatColor(stat: number, avg: number | null): string {
@@ -233,6 +340,169 @@ export function getStatColor(stat: number, avg: number | null): string {
   if (delta >= -0.3) return 'bg-amber-400'
   if (delta >= -1.0) return 'bg-orange-500'
   return 'bg-red-500'
+}
+
+// A handful of scraped rows (e.g. "Forza Edition" slug collisions resolving to the
+// base car's page) have power/weight that physically can't match the scraped 0-60 —
+// e.g. a sub-5 lb/hp car can't take longer than ~4.5s to reach 60mph. Gate the
+// longitudinal (accel/drag/top-end) callouts behind this so a Frankenstein row
+// doesn't surface contradictory advice. Root cause is in the scraper's slug
+// generation, not here — see run_pipeline.py follow-up.
+function simDataLooksConsistent(car: Car): boolean {
+  if (car.weightLb == null || car.powerHp == null || car.simZeroToSixty == null) return true
+  const lbPerHp = car.weightLb / car.powerHp
+  if (lbPerHp < 5 && car.simZeroToSixty > 4.5) return false
+  return true
+}
+
+// Division-DNA gates (v3.1) — class-only thresholds mis-fire on divisions with strong DNA:
+// flagging every Classic Muscle car "weak braking" is noise (that's the whole division), and
+// handing a Track Toy a "strong grip" badge for merely clearing the class bar undersells what
+// grip-specialist divisions actually deliver. Divisions absent from DIVISION_PROFILES (n<8)
+// or metrics not listed fall through to class-only behaviour unchanged.
+function isDivisionWeakFor(division: string, metric: string): boolean {
+  return DIVISION_PROFILES[division]?.weak.includes(metric) ?? false
+}
+
+function isDivisionStrongFor(division: string, metric: string): boolean {
+  return DIVISION_PROFILES[division]?.strong.includes(metric) ?? false
+}
+
+// For a division/metric marked "strong" in DIVISION_PROFILES, require the car to also clear
+// its own division+class bar-stat average (DIVISION_CLASS_AVERAGES) — not just the flat
+// class-wide sim threshold — so the positive callout means "strong even for this division,"
+// not merely "average for a division that's already ahead." Reuses the existing division+class
+// average table rather than a new per-division sim-median table. If the division isn't
+// strong-flagged for the metric, or data is missing, this doesn't gate (fails open).
+function meetsDivisionStrengthBar(
+  division: string,
+  metric: string,
+  avgValue: number | undefined | null,
+  carValue: number | null
+): boolean {
+  if (!isDivisionStrongFor(division, metric)) return true
+  if (avgValue == null || carValue == null) return true
+  return carValue >= avgValue
+}
+
+// ── Archetype synthesis (v3) ─────────────────────────────────────────────────
+// Rules 1-22 each describe one number; a car with a clear identity ends up with several
+// cards the user has to assemble by hand. An archetype does that assembly: at most one
+// fires per car (precedence order = evaluation order below), it leads the returned list,
+// and it absorbs (`subsumes`) the single-field callouts it re-explains. Callouts it doesn't
+// subsume — tuning notes, unrelated strengths, genuine weaknesses — still render below it.
+// A car matching none behaves exactly as v1/v2 (every individual callout renders standalone).
+
+export interface Archetype {
+  id:       string
+  title:    string
+  body:     string
+  suits:    string[]   // race-type labels this identity favours (for future raceMatch use — v4)
+  subsumes: string[]   // callout ids absorbed when this archetype fires
+}
+
+function detectArchetype(car: Car): Archetype | null {
+  const strongGripMin     = STRONG_GRIP_MIN[car.piClass]
+  const strongBrakingMax  = STRONG_BRAKING_MAX[car.piClass]
+  const highGripMin       = HIGH_GRIP_MIN[car.piClass]
+  const topSpeedMid       = TOP_SPEED_MID[car.piClass]
+  const strongTopSpeedMin = STRONG_TOP_SPEED_MIN[car.piClass]
+  const lowGripMax        = LOW_GRIP_MAX[car.piClass]
+  const quickEnoughMax    = QUICK_ENOUGH_MAX[car.piClass]
+  const topSpeedFloor     = TOP_SPEED_FLOOR[car.piClass]
+
+  // 1 — Cross-country / dirt car
+  if (OFFROAD_RELEVANT_DIVISIONS.has(car.division)) {
+    const strongGrip    = strongGripMin != null && car.simLateralG120 != null && car.simLateralG120 >= strongGripMin
+    const strongBraking = strongBrakingMax != null && car.simBraking100 != null && car.simBraking100 <= strongBrakingMax
+    const strongOffroad = car.statOffroad != null && car.statOffroad >= 8.0
+    const isWeapon = strongGrip || strongBraking || strongOffroad
+    const strengths: string[] = []
+    if (strongGrip) strengths.push('cornering grip')
+    if (strongBraking) strengths.push('braking')
+    if (strongOffroad) strengths.push('offroad handling')
+    return {
+      id:    'arch-dirt',
+      title: isWeapon ? 'Cross-country weapon' : 'Dirt-focused car',
+      body:  isWeapon
+        ? `Built for loose surfaces — read it on dirt terms, not tarmac. Its ${strengths.join(' and ')} stand out for the class, which is what actually wins cross-country and dirt events; tarmac numbers like top speed and braking distance aren't the point.`
+        : `Built for loose surfaces — read it on dirt terms, not tarmac. Its on-road numbers (top speed, tarmac braking distance, sustained acceleration) don't define this car; judge it by how it handles dirt, gravel, and mixed surfaces instead.`,
+      suits:    ['Cross Country', 'Dirt Racing'],
+      subsumes: ['low-top-speed', 'long-braking-distance', 'sustained-acceleration', 'front-loaded-acceleration'],
+    }
+  }
+
+  // 2 — Point-and-squirt (generalises Rule 22 — low absolute grip, strong launch)
+  if (
+    simDataLooksConsistent(car) &&
+    lowGripMax != null && car.simLateralG120 != null && car.simLateralG120 <= lowGripMax &&
+    quickEnoughMax != null && car.simZeroToSixty != null && car.simZeroToSixty <= quickEnoughMax
+  ) {
+    const limitedTopSpeedNote =
+      topSpeedFloor != null && car.simTopSpeed != null && car.simTopSpeed < topSpeedFloor
+        ? ` A low top speed means it gets run down in long drags, though it still shines in short ones.`
+        : ''
+    return {
+      id:    'arch-point-squirt',
+      title: 'Point-and-squirt',
+      body:  `Low cornering grip means it won't carry speed through fast corners, but it launches hard and punches out of slow ones — this car wins on exit, not entry. Favour Street Racing, Touge, and tight technical layouts; it's also strong off the line for short drags.${limitedTopSpeedNote}`,
+      suits:    ['Street Racing', 'Touge Racing', 'Drag Racing'],
+      subsumes: ['corner-exit', 'flat-grip-curve', 'drag-candidate', 'low-top-speed', 'front-loaded-acceleration'],
+    }
+  }
+
+  // 3 — Fast-sweeper / downforce car (mutually exclusive with point-and-squirt by construction:
+  // low absolute grip there vs high-and-rising grip here)
+  if (
+    car.simLateralG60  != null && car.simLateralG60 > 0 &&
+    car.simLateralG120 != null &&
+    car.simLateralG120 / car.simLateralG60 >= LATERAL_AERO_GAIN_MIN &&
+    highGripMin != null && car.simLateralG120 >= highGripMin
+  ) {
+    return {
+      id:    'arch-fast-sweeper',
+      title: 'Fast-sweeper',
+      body:  `Grip climbs with speed (downforce-driven) and is high for its class — strong in high-speed road racing and flowing circuits. It can feel inert in slow corners, so don't judge it on tight, technical layouts.`,
+      suits:    ['Road Racing'],
+      subsumes: ['comes-alive-at-speed', 'strong-cornering-grip'],
+    }
+  }
+
+  // 4 — Top-end cruiser
+  if (
+    simDataLooksConsistent(car) &&
+    strongTopSpeedMin != null && car.simTopSpeed != null && car.simTopSpeed >= strongTopSpeedMin &&
+    car.simZeroToSixty != null && car.simZeroToSixty > 0 &&
+    car.simZeroToHundred != null &&
+    car.simZeroToHundred / car.simZeroToSixty <= ACCEL_SUSTAINED_MAX
+  ) {
+    return {
+      id:    'arch-top-end',
+      title: 'Top-end cruiser',
+      body:  `Class-leading top speed with acceleration that keeps pulling all the way up — strong on long straights and high-speed circuits. It gives time back in tight, technical sections.`,
+      suits:    ['Road Racing'],
+      subsumes: ['strong-top-speed', 'sustained-acceleration'],
+    }
+  }
+
+  // 5 — Heavy GT / saloon (fallback — lowest precedence)
+  if (
+    simDataLooksConsistent(car) &&
+    car.weightLb     != null && car.weightLb >= HEAVY_GT_WEIGHT_MIN &&
+    car.frontWeight  != null && car.frontWeight >= 48 && car.frontWeight <= 62 &&
+    highGripMin != null && car.simLateralG120 != null && car.simLateralG120 <= highGripMin &&
+    topSpeedMid != null && car.simTopSpeed    != null && car.simTopSpeed >= topSpeedMid
+  ) {
+    return {
+      id:    'arch-heavy-gt',
+      title: 'Heavy GT / saloon',
+      body:  `Stable and consistent — it carries speed through corners better than its weight suggests, but won't match a lighter car's peak grip. Build for consistency: strong tyres, balanced spring rates, and brakes; prioritise weight reduction over more power.`,
+      suits:    ['Road Racing', 'Street Racing'],
+      subsumes: ['power-handling-gap'],
+    }
+  }
+
+  return null
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -251,8 +521,11 @@ export function getStatCallouts(
   const delta = CLASS_DELTAS[car.piClass] ?? -1.2
 
   // ── Rule 1 — Weak braking ────────────────────────────────────────────────
+  // Reworded per v3.1: meta cross-check (194 matched cars) shows braking barely separates
+  // road-race winners (p57 vs p49 baseline) — it's a build priority, not a selection signal.
   if (
     !isDrift &&
+    !isDivisionWeakFor(car.division, 'braking') &&
     avg?.braking != null &&
     car.statBraking != null &&
     car.statBraking < avg.braking + delta
@@ -260,7 +533,7 @@ export function getStatCallouts(
     callouts.push({
       id:    'weak-braking',
       title: 'Weak braking',
-      body:  `Braking reads as ${car.statBraking.toFixed(1)} — below the ${car.division} ${car.piClass} average of ${avg.braking.toFixed(1)}. This is likely the car's biggest weakness. Current FH6 meta consistently rewards brake upgrades. Prioritise at least one tier above stock, move brake bias slightly forward (52% front is a safe starting point), and increase brake pressure if the car takes too long to scrub speed.`,
+      body:  `Braking reads as ${car.statBraking.toFixed(1)} — below the ${car.division} ${car.piClass} average of ${avg.braking.toFixed(1)}. Stock braking is short for its class — plan to prioritise the brake upgrade. Most competitive builds max brakes regardless, so this is a cheap fix, not a reason to pass on the car. Move brake bias slightly forward (52% front is a safe starting point) and increase brake pressure if the car takes too long to scrub speed.`,
     })
   }
 
@@ -268,6 +541,7 @@ export function getStatCallouts(
   if (
     !isDrift &&
     !isDrag &&
+    !isDivisionWeakFor(car.division, 'grip') &&
     avg?.handling != null &&
     car.statHandling != null &&
     car.statHandling < avg.handling + delta
@@ -364,6 +638,239 @@ export function getStatCallouts(
       title: 'Power exceeds handling',
       body:  `${car.powerHp}hp with a handling stat of ${car.statHandling.toFixed(1)} — the engine is working faster than the chassis can manage. Chassis and tyre upgrades will gain more lap time than further power adds. Tires, suspension, and differential before any engine work.`,
     })
+  }
+
+  // ── Rule 9 — Grip vs speed ────────────────────────────────────────────────
+  if (
+    car.simLateralG60  != null &&
+    car.simLateralG120 != null &&
+    car.simLateralG60  > 0
+  ) {
+    const ratio = car.simLateralG120 / car.simLateralG60
+    if (ratio >= LATERAL_AERO_GAIN_MIN) {
+      callouts.push({
+        id:    'comes-alive-at-speed',
+        title: 'Comes alive at speed',
+        body:  `Lateral grip climbs sharply from ${car.simLateralG60.toFixed(2)}G at 60 mph to ${car.simLateralG120.toFixed(2)}G at 120 mph — this is a downforce-driven chassis. Strong for high-speed road racing and fast sweepers; it can feel inert at low speed, so don't judge it on tight, technical layouts.`,
+      })
+    } else if (ratio < LATERAL_FLAT_MAX) {
+      callouts.push({
+        id:    'flat-grip-curve',
+        title: 'Low-speed grip car',
+        body:  `Lateral grip drops from ${car.simLateralG60.toFixed(2)}G at 60 mph to ${car.simLateralG120.toFixed(2)}G at 120 mph — there's no aero benefit at speed. It's best on tight, technical layouts rather than fast sweepers.`,
+      })
+    }
+  }
+
+  // ── Rule 10 — Acceleration profile (shape, not absolute speed) ───────────
+  if (
+    simDataLooksConsistent(car) &&
+    car.simZeroToSixty   != null &&
+    car.simZeroToHundred != null &&
+    car.simZeroToSixty   > 0
+  ) {
+    const accelRatio = car.simZeroToHundred / car.simZeroToSixty
+    if (accelRatio <= ACCEL_SUSTAINED_MAX) {
+      callouts.push({
+        id:    'sustained-acceleration',
+        title: 'Pulls all the way up',
+        body:  `Keeps pulling past 60 — power doesn't tail off up top (0-60 in ${car.simZeroToSixty.toFixed(1)}s, 0-100 in ${car.simZeroToHundred.toFixed(1)}s). Suits longer circuits and high-speed maps.`,
+      })
+    } else if (accelRatio >= ACCEL_LAUNCHY_MIN) {
+      callouts.push({
+        id:    'front-loaded-acceleration',
+        title: 'Front-loaded acceleration',
+        body:  `Acceleration falls off above 60 (0-60 in ${car.simZeroToSixty.toFixed(1)}s, 0-100 in ${car.simZeroToHundred.toFixed(1)}s) — it makes its time low in the rev range. Best where you're launching from low speed (street starts, short sprints) rather than pulling at the top end.`,
+      })
+    }
+  }
+
+  // ── Rule 11 — Top-speed ceiling for class (road-racing lens; skip offroad) ─
+  if (
+    !OFFROAD_RELEVANT_DIVISIONS.has(car.division) &&
+    !isDivisionWeakFor(car.division, 'topspeed') &&
+    simDataLooksConsistent(car)
+  ) {
+    const floor = TOP_SPEED_FLOOR[car.piClass]
+    if (floor != null && car.simTopSpeed != null && car.simTopSpeed < floor) {
+      callouts.push({
+        id:    'low-top-speed',
+        title: 'Limited top speed',
+        body:  `Tops out near ${Math.round(car.simTopSpeed)} mph — low for ${car.piClass} class. It will get out-dragged on long straights and high-speed circuits. Favour it on tight, technical events, or raise the final drive to push top speed in the tune.`,
+      })
+    }
+  }
+
+  // ── Rule 12 — Real stopping distance (road-racing lens; skip offroad) ────
+  if (!OFFROAD_RELEVANT_DIVISIONS.has(car.division)) {
+    const ceiling = BRAKING_100_CEILING[car.piClass]
+    if (
+      !isDrift &&
+      ceiling != null &&
+      car.simBraking100 != null &&
+      car.simBraking100 > ceiling
+    ) {
+      callouts.push({
+        id:    'long-braking-distance',
+        title: 'Long braking distance',
+        body:  `Needs ~${Math.round(car.simBraking100)} ft to stop from 100 mph — long for ${car.piClass} class. On technical tracks with hard braking zones you'll need to brake noticeably earlier. Prioritise the brake upgrade and nudge bias forward.`,
+      })
+    }
+  }
+
+  // ── Rule 13 — Drag candidate (tarmac, genuinely quick AWD launchers) ─────
+  if (simDataLooksConsistent(car) && !OFFROAD_RELEVANT_DIVISIONS.has(car.division)) {
+    const quickEnough = QUICK_ENOUGH_MAX[car.piClass]
+    if (
+      car.drivetrain === 'AWD' &&
+      avg?.launch != null &&
+      car.statLaunch != null &&
+      car.statLaunch > avg.launch + 1.0 &&
+      car.simZeroToSixty != null &&
+      quickEnough != null &&
+      car.simZeroToSixty <= quickEnough
+    ) {
+      const floor = TOP_SPEED_FLOOR[car.piClass]
+      const limitedTopSpeedNote =
+        floor != null && car.simTopSpeed != null && car.simTopSpeed < floor
+          ? ` A low top speed means it shines in short drags and roll-starts off the line, but gets run down in longer ones.`
+          : ''
+      callouts.push({
+        id:    'drag-candidate',
+        title: 'Strong drag candidate',
+        body:  `AWD with a launch stat of ${car.statLaunch.toFixed(1)} and 0-60 in ${car.simZeroToSixty.toFixed(1)}s — it hooks up hard off the line. A good Drag Racing pick. Tune for a quick launch and run minimal aero.${limitedTopSpeedNote}`,
+      })
+    }
+  }
+
+  // ── Rule 14 — Power-to-weight build priority ─────────────────────────────
+  if (car.weightLb != null && car.powerHp != null && car.powerHp > 0) {
+    const lbsPerHp = car.weightLb / car.powerHp
+    if (lbsPerHp >= PWR_TO_WEIGHT_HEAVY) {
+      callouts.push({
+        id:    'heavy-build-priority',
+        title: 'Heavy for its power',
+        body:  `${car.weightLb} lb on ${car.powerHp} hp (${lbsPerHp.toFixed(1)} lb/hp) — straight-line pace is the limiter. Spend PI on engine and weight-reduction upgrades before chasing grip; the chassis can already handle what it makes.`,
+      })
+    } else if (lbsPerHp <= PWR_TO_WEIGHT_LIGHT) {
+      callouts.push({
+        id:    'grip-build-priority',
+        title: 'Power-rich for its weight',
+        body:  `${car.weightLb} lb on ${car.powerHp} hp (${lbsPerHp.toFixed(1)} lb/hp) — it already has the power. Spend PI on tyres, suspension, and aero; more engine here mostly adds wheelspin, not lap time.`,
+      })
+    }
+  }
+
+  // ── Rule 15 — Draggy aero ─────────────────────────────────────────────────
+  if (car.simAeroEfficiency != null && car.simAeroEfficiency < AERO_EFF_DRAGGY_MAX) {
+    callouts.push({
+      id:    'draggy-aero',
+      title: 'Draggy aero package',
+      body:  `Low aero efficiency — adding downforce will cost real top speed here. On high-speed maps, build with the minimum rear wing you can corner with; save heavy downforce for tight, grip-limited circuits.`,
+    })
+  }
+
+  // ── Rule 16 — Mechanical balance skew ────────────────────────────────────
+  // simMechBalance correlates NEGATIVELY with front weight% — a low value is nose-heavy
+  // (understeer), a high value is rear-heavy (oversteer). See constants above for evidence.
+  if (car.simMechBalance != null) {
+    if (car.simMechBalance <= MECH_UNDERSTEER_MAX) {
+      callouts.push({
+        id:    'mech-understeer',
+        title: 'Mechanical balance is front-biased',
+        body:  `Mechanical grip leans front (nose-heavy) — expect an understeer tendency at low speed. Soften the front anti-roll bar and/or stiffen the rear to free up rotation before reaching for aero.`,
+      })
+    } else if (car.simMechBalance >= MECH_OVERSTEER_MIN) {
+      callouts.push({
+        id:    'mech-oversteer',
+        title: 'Mechanical balance is rear-biased',
+        body:  `Mechanical grip leans rear — expect a loose, oversteer-prone feel at low speed. Stiffen the front anti-roll bar and/or soften the rear to settle it before reaching for aero.`,
+      })
+    }
+  }
+
+  // ── Rule 17 — Aero balance skew (high-speed lever; rare, least-verified field) ─
+  if (
+    car.simAeroBalance != null &&
+    car.simAeroBalance > AERO_BALANCE_PRESENT &&
+    car.simAeroBalance > AERO_FRONT_BIAS_MIN
+  ) {
+    callouts.push({
+      id:    'aero-balance-skew',
+      title: 'Aero balance is front-biased',
+      body:  `Downforce is biased toward the front, which can trim high-speed understeer or tip into oversteer at the limit. Trim the front wing if it gets unsettled through fast corners — this is the high-speed balance lever, distinct from mechanical balance above. Verify the direction against in-game feel; this is the least-certain sim field.`,
+    })
+  }
+
+  // ── Rule 18 — Strong top speed for class (raised bar on topspeed-strong divisions) ─
+  // Division gate uses statSpeed vs avg.speed — the closest available proxy without a new
+  // per-division sim-median table, but Forza's "Speed" bar blends accel + top speed rather
+  // than isolating top speed, so it's a looser fit here than the grip/braking proxies below.
+  if (simDataLooksConsistent(car)) {
+    const min = STRONG_TOP_SPEED_MIN[car.piClass]
+    if (
+      min != null && car.simTopSpeed != null && car.simTopSpeed >= min &&
+      meetsDivisionStrengthBar(car.division, 'topspeed', avg?.speed, car.statSpeed)
+    ) {
+      callouts.push({
+        id:    'strong-top-speed',
+        title: 'Top-of-class top speed',
+        body:  `Tops out near ${Math.round(car.simTopSpeed)} mph — among the fastest in ${car.piClass} class. Strong on fast circuits and long straights.`,
+      })
+    }
+  }
+
+  // ── Rule 19 — Strong braking for class (raised bar on braking-strong divisions) ─
+  if (simDataLooksConsistent(car)) {
+    const max = STRONG_BRAKING_MAX[car.piClass]
+    if (
+      max != null && car.simBraking100 != null && car.simBraking100 <= max &&
+      meetsDivisionStrengthBar(car.division, 'braking', avg?.braking, car.statBraking)
+    ) {
+      callouts.push({
+        id:    'strong-braking',
+        title: 'Stops short for its class',
+        body:  `Needs only ~${Math.round(car.simBraking100)} ft to stop from 100 mph — among the best in ${car.piClass} class. Brake later than feels natural; it'll reward aggressive braking zones.`,
+      })
+    }
+  }
+
+  // ── Rule 20 — Strong cornering grip for class (raised bar on grip-strong divisions) ─
+  if (simDataLooksConsistent(car)) {
+    const min = STRONG_GRIP_MIN[car.piClass]
+    if (
+      min != null && car.simLateralG120 != null && car.simLateralG120 >= min &&
+      meetsDivisionStrengthBar(car.division, 'grip', avg?.handling, car.statHandling)
+    ) {
+      callouts.push({
+        id:    'strong-cornering-grip',
+        title: 'High cornering grip for class',
+        body:  `${car.simLateralG120.toFixed(2)}G at 120 mph — among the highest in ${car.piClass} class. Carries corner speed well; strong on technical and road-course layouts.`,
+      })
+    }
+  }
+
+  // ── Rule 21 — Strong acceleration for class ──────────────────────────────
+  if (simDataLooksConsistent(car)) {
+    const max = STRONG_ACCEL_MAX[car.piClass]
+    if (max != null && car.simZeroToSixty != null && car.simZeroToSixty <= max) {
+      callouts.push({
+        id:    'strong-acceleration',
+        title: 'Among the quickest in class',
+        body:  `0-60 in ${car.simZeroToSixty.toFixed(1)}s — among the quickest off the line in ${car.piClass} class.`,
+      })
+    }
+  }
+
+  // Rule 22 (corner-exit / point-and-squirt) is retired as of v3: its gate was identical to
+  // arch-point-squirt's below, so it would always fire and always be immediately subsumed —
+  // dead weight. The archetype now owns this identity outright (see detectArchetype, gate 2).
+
+  // ── Archetype synthesis — leads the list and absorbs the callouts it subsumes ────────────
+  const archetype = detectArchetype(car)
+  if (archetype) {
+    const filtered = callouts.filter((c) => !archetype.subsumes.includes(c.id))
+    return [{ id: archetype.id, title: archetype.title, body: archetype.body }, ...filtered]
   }
 
   return callouts

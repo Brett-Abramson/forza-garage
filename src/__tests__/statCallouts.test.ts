@@ -108,6 +108,24 @@ describe('getStatCallouts — weak-braking rule', () => {
     expect(ids).not.toContain('weak-braking')
   })
 
+  // v3.1 Change 1 — reworded away from "meta rewards braking" toward build-priority framing
+  it('frames braking as a build priority, not a meta-selection reason (v3.1)', () => {
+    const callout = getStatCallouts(makeCar({ ...s1Hyper, statBraking: 6.5 }))
+      .find((c) => c.id === 'weak-braking')!
+    expect(callout.body).not.toContain('meta')
+    expect(callout.body).not.toContain("biggest weakness")
+    expect(callout.body).toContain('prioritise the brake upgrade')
+    expect(callout.body).toContain('not a reason to pass on the car')
+  })
+
+  // v3.1 Change 2 — suppressed entirely on divisions where braking is a known-weak DNA trait
+  it('is suppressed on a division where braking is division-weak (Classic Muscle)', () => {
+    // Classic Muscle B: braking avg = 3.00, delta(B) = -1.2 → threshold = 1.80; 1.5 would fire class-only
+    const ids = getStatCallouts(makeCar({ division: 'Classic Muscle', piClass: 'B', statBraking: 1.5 }))
+      .map((c) => c.id)
+    expect(ids).not.toContain('weak-braking')
+  })
+
   // Spec test 1: D class threshold is very low — most cars won't trip it
   it('D class Classic Muscle with braking 1.8 does NOT fire (threshold = 0.80)', () => {
     // avg = 2.30, delta = -1.5 → threshold = 0.80; 1.8 > 0.80
@@ -179,6 +197,22 @@ describe('getStatCallouts — low-handling rule', () => {
     const ids = getStatCallouts(makeCar({ ...s1Hyper, statHandling: 5.0 }), ['drag'])
       .map((c) => c.id)
     expect(ids).not.toContain('low-handling')
+  })
+
+  // v3.1 Change 2 — suppressed entirely on divisions where grip is a known-weak DNA trait
+  it('is suppressed on a division where grip is division-weak (Classic Muscle)', () => {
+    // Classic Muscle B: handling avg = 3.70, delta(B) = -1.2 → threshold = 2.50; 2.0 would fire class-only
+    const ids = getStatCallouts(makeCar({ division: 'Classic Muscle', piClass: 'B', statHandling: 2.0 }))
+      .map((c) => c.id)
+    expect(ids).not.toContain('low-handling')
+  })
+
+  // v3.1 — genuine outliers on a grip-strong division must still flag (not silenced by DNA)
+  it('still flags a genuinely low-grip car on a grip-strong division (Hot Hatch)', () => {
+    // Hot Hatch B: handling avg = 5.08, delta(B) = -1.2 → threshold = 3.88; 3.0 is a real outlier
+    const ids = getStatCallouts(makeCar({ division: 'Hot Hatch', piClass: 'B', statHandling: 3.0 }))
+      .map((c) => c.id)
+    expect(ids).toContain('low-handling')
   })
 })
 
@@ -509,6 +543,491 @@ describe('getStatCallouts — multiple rules', () => {
     const ids = callouts.map((c) => c.id)
     expect(ids).toContain('weak-braking')
     expect(ids).toContain('launch-braking-mismatch')
+  })
+})
+
+// ─── Rule 9: grip vs speed ──────────────────────────────────────────────────
+
+describe('getStatCallouts — grip vs speed rule', () => {
+  it('fires comes-alive-at-speed when grip climbs hard with speed', () => {
+    // Ratio clears LATERAL_AERO_GAIN_MIN but the absolute grip (0.6G) stays below HIGH_GRIP_MIN['A']
+    // (1.12), so this isolates Rule 9 without also tripping the arch-fast-sweeper archetype (v3).
+    const ids = getStatCallouts(makeCar({ simLateralG60: 0.5, simLateralG120: 0.6 })).map((c) => c.id)
+    expect(ids).toContain('comes-alive-at-speed')
+  })
+
+  it('fires flat-grip-curve when grip drops with speed', () => {
+    const ids = getStatCallouts(makeCar({ simLateralG60: 1.00, simLateralG120: 0.95 })).map((c) => c.id)
+    expect(ids).toContain('flat-grip-curve')
+  })
+
+  it('fires neither for a near-flat ~1.0 ratio', () => {
+    const ids = getStatCallouts(makeCar({ simLateralG60: 1.00, simLateralG120: 1.03 })).map((c) => c.id)
+    expect(ids).not.toContain('comes-alive-at-speed')
+    expect(ids).not.toContain('flat-grip-curve')
+  })
+
+  it('fires neither when simLateralG60 is null', () => {
+    const ids = getStatCallouts(makeCar({ simLateralG60: null, simLateralG120: 1.15 })).map((c) => c.id)
+    expect(ids).not.toContain('comes-alive-at-speed')
+    expect(ids).not.toContain('flat-grip-curve')
+  })
+})
+
+// ─── Rule 10: acceleration profile ─────────────────────────────────────────
+
+describe('getStatCallouts — acceleration profile rule', () => {
+  it('fires sustained-acceleration for a low 0-100/0-60 ratio', () => {
+    const ids = getStatCallouts(makeCar({ simZeroToSixty: 4.0, simZeroToHundred: 8.0 })).map((c) => c.id)
+    expect(ids).toContain('sustained-acceleration')
+  })
+
+  it('fires front-loaded-acceleration for a high 0-100/0-60 ratio', () => {
+    const ids = getStatCallouts(makeCar({ simZeroToSixty: 3.0, simZeroToHundred: 8.0 })).map((c) => c.id)
+    expect(ids).toContain('front-loaded-acceleration')
+  })
+
+  it('fires neither for a mid-range ratio', () => {
+    const ids = getStatCallouts(makeCar({ simZeroToSixty: 4.0, simZeroToHundred: 9.0 })).map((c) => c.id)
+    expect(ids).not.toContain('sustained-acceleration')
+    expect(ids).not.toContain('front-loaded-acceleration')
+  })
+
+  it('fires neither when fields are null', () => {
+    const ids = getStatCallouts(makeCar({ simZeroToSixty: null, simZeroToHundred: 8.0 })).map((c) => c.id)
+    expect(ids).not.toContain('sustained-acceleration')
+    expect(ids).not.toContain('front-loaded-acceleration')
+  })
+})
+
+// ─── Rule 11: top-speed ceiling ─────────────────────────────────────────────
+// A class floor = 180
+
+describe('getStatCallouts — low-top-speed rule', () => {
+  it('fires when simTopSpeed is below the class floor', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simTopSpeed: 170 })).map((c) => c.id)
+    expect(ids).toContain('low-top-speed')
+  })
+
+  it('does not fire when simTopSpeed is at or above the class floor', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simTopSpeed: 180 })).map((c) => c.id)
+    expect(ids).not.toContain('low-top-speed')
+  })
+
+  it('does not fire for an unaffected class at the same speed', () => {
+    // 170 is above the S2 floor of 203? No — use a class where 170 is fine: D floor = 90
+    const ids = getStatCallouts(makeCar({ piClass: 'D', simTopSpeed: 170 })).map((c) => c.id)
+    expect(ids).not.toContain('low-top-speed')
+  })
+
+  it('is suppressed for offroad-relevant divisions (Fix 6)', () => {
+    const ids = getStatCallouts(makeCar({
+      division: 'Rally Monsters', piClass: 'A', simTopSpeed: 170,
+    })).map((c) => c.id)
+    expect(ids).not.toContain('low-top-speed')
+  })
+
+  // v3.1 Change 2 — generalizes Fix 6 via DIVISION_PROFILES: topspeed is a division-weak
+  // trait for Rally Monsters (z = -1.4), so it's suppressed independent of the offroad set
+  it('is suppressed on a division where topspeed is division-weak (Rally Monsters)', () => {
+    const ids = getStatCallouts(makeCar({
+      division: 'Rally Monsters', piClass: 'A', simTopSpeed: 170,
+    })).map((c) => c.id)
+    expect(ids).not.toContain('low-top-speed')
+  })
+})
+
+// ─── Rule 12: long braking distance ─────────────────────────────────────────
+// A class ceiling = 317
+
+describe('getStatCallouts — long-braking-distance rule', () => {
+  it('fires when simBraking100 is above the class ceiling', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simBraking100: 330 })).map((c) => c.id)
+    expect(ids).toContain('long-braking-distance')
+  })
+
+  it('does not fire when simBraking100 is at or below the class ceiling', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simBraking100: 317 })).map((c) => c.id)
+    expect(ids).not.toContain('long-braking-distance')
+  })
+
+  it('does not fire for drift cars', () => {
+    const ids = getStatCallouts(makeCar({ division: 'Drift Cars', piClass: 'A', simBraking100: 330 })).map((c) => c.id)
+    expect(ids).not.toContain('long-braking-distance')
+  })
+
+  it('is suppressed for offroad-relevant divisions (Fix 6)', () => {
+    const ids = getStatCallouts(makeCar({
+      division: 'Rally Monsters', piClass: 'A', simBraking100: 330,
+    })).map((c) => c.id)
+    expect(ids).not.toContain('long-braking-distance')
+  })
+})
+
+// ─── Rule 13: drag candidate ─────────────────────────────────────────────────
+// S1 Hypercars: launch avg = 7.62, threshold = 8.62. QUICK_ENOUGH_MAX['S1'] = 2.8.
+
+describe('getStatCallouts — drag-candidate rule', () => {
+  const s1Hyper = { division: 'Hypercars', piClass: 'S1' } as const
+
+  it('fires for AWD with a high launch stat and a genuinely quick 0-60 (e-tron GT case)', () => {
+    const ids = getStatCallouts(makeCar({
+      ...s1Hyper, drivetrain: 'AWD', statLaunch: 9.0, simZeroToSixty: 2.5,
+    })).map((c) => c.id)
+    expect(ids).toContain('drag-candidate')
+  })
+
+  it('does not fire for the same car as RWD', () => {
+    const ids = getStatCallouts(makeCar({
+      ...s1Hyper, drivetrain: 'RWD', statLaunch: 9.0, simZeroToSixty: 2.5,
+    })).map((c) => c.id)
+    expect(ids).not.toContain('drag-candidate')
+  })
+
+  it('does not fire when 0-60 is not genuinely quick for class', () => {
+    const ids = getStatCallouts(makeCar({
+      ...s1Hyper, drivetrain: 'AWD', statLaunch: 9.0, simZeroToSixty: 3.5,
+    })).map((c) => c.id)
+    expect(ids).not.toContain('drag-candidate')
+  })
+
+  it('is suppressed for an offroad-division truck even with a high launch stat (F-150 Lightning case)', () => {
+    const ids = getStatCallouts(makeCar({
+      division: 'Pickups & 4x4s', piClass: 'B', drivetrain: 'AWD',
+      statLaunch: 9.0, simZeroToSixty: 2.0, simTopSpeed: 110,
+    })).map((c) => c.id)
+    expect(ids).not.toContain('drag-candidate')
+  })
+})
+
+// ─── Rule 14: power-to-weight build priority ────────────────────────────────
+
+describe('getStatCallouts — power-to-weight build priority rule', () => {
+  it('fires heavy-build-priority when lb/hp is high', () => {
+    const ids = getStatCallouts(makeCar({ weightLb: 3900, powerHp: 300 })).map((c) => c.id)
+    expect(ids).toContain('heavy-build-priority')
+  })
+
+  it('fires grip-build-priority when lb/hp is low', () => {
+    const ids = getStatCallouts(makeCar({ weightLb: 3000, powerHp: 600 })).map((c) => c.id)
+    expect(ids).toContain('grip-build-priority')
+  })
+
+  it('fires neither in the mid-range', () => {
+    const ids = getStatCallouts(makeCar({ weightLb: 3200, powerHp: 400 })).map((c) => c.id)
+    expect(ids).not.toContain('heavy-build-priority')
+    expect(ids).not.toContain('grip-build-priority')
+  })
+
+  it('fires neither when fields are null', () => {
+    const ids = getStatCallouts(makeCar({ weightLb: null, powerHp: 300 })).map((c) => c.id)
+    expect(ids).not.toContain('heavy-build-priority')
+    expect(ids).not.toContain('grip-build-priority')
+  })
+})
+
+// ─── Rule 15: draggy aero ────────────────────────────────────────────────────
+
+describe('getStatCallouts — draggy-aero rule', () => {
+  it('fires when simAeroEfficiency is below the threshold', () => {
+    const ids = getStatCallouts(makeCar({ simAeroEfficiency: 0.5 })).map((c) => c.id)
+    expect(ids).toContain('draggy-aero')
+  })
+
+  it('does not fire when simAeroEfficiency is at or above the threshold', () => {
+    const ids = getStatCallouts(makeCar({ simAeroEfficiency: 0.7 })).map((c) => c.id)
+    expect(ids).not.toContain('draggy-aero')
+  })
+
+  it('does not fire when null', () => {
+    const ids = getStatCallouts(makeCar({ simAeroEfficiency: null })).map((c) => c.id)
+    expect(ids).not.toContain('draggy-aero')
+  })
+})
+
+// ─── Rule 16: mechanical balance skew (direction fixed — Fix 1) ─────────────
+// simMechBalance correlates NEGATIVELY with front weight%: low value = nose-heavy =
+// understeer; high value = rear-heavy = oversteer.
+
+describe('getStatCallouts — mech-understeer / mech-oversteer rules', () => {
+  it('fires mech-oversteer for a high simMechBalance (911 Rallye case: 0.62)', () => {
+    const ids = getStatCallouts(makeCar({ simMechBalance: 0.65 })).map((c) => c.id)
+    expect(ids).toContain('mech-oversteer')
+    expect(ids).not.toContain('mech-understeer')
+  })
+
+  it('does not fire for a centered simMechBalance', () => {
+    const ids = getStatCallouts(makeCar({ simMechBalance: 0.50 })).map((c) => c.id)
+    expect(ids).not.toContain('mech-understeer')
+    expect(ids).not.toContain('mech-oversteer')
+  })
+
+  it('fires mech-understeer for a low simMechBalance (RS 6 case: 0.41)', () => {
+    const ids = getStatCallouts(makeCar({ simMechBalance: 0.40 })).map((c) => c.id)
+    expect(ids).toContain('mech-understeer')
+    expect(ids).not.toContain('mech-oversteer')
+  })
+})
+
+// ─── Rule 17: aero balance skew ──────────────────────────────────────────────
+
+describe('getStatCallouts — aero-balance-skew rule', () => {
+  it('fires for a front-biased aero car', () => {
+    const ids = getStatCallouts(makeCar({ simAeroBalance: 0.6 })).map((c) => c.id)
+    expect(ids).toContain('aero-balance-skew')
+  })
+
+  it('does not fire for a car with no aero (simAeroBalance: 0)', () => {
+    const ids = getStatCallouts(makeCar({ simAeroBalance: 0 })).map((c) => c.id)
+    expect(ids).not.toContain('aero-balance-skew')
+  })
+
+  it('does not fire for a low-but-present aero balance', () => {
+    const ids = getStatCallouts(makeCar({ simAeroBalance: 0.3 })).map((c) => c.id)
+    expect(ids).not.toContain('aero-balance-skew')
+  })
+})
+
+// ─── Rule 18: strong top speed for class ────────────────────────────────────
+// A class strength floor = 208
+
+describe('getStatCallouts — strong-top-speed rule', () => {
+  it('fires at or above the class strength threshold', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simTopSpeed: 208 })).map((c) => c.id)
+    expect(ids).toContain('strong-top-speed')
+  })
+
+  it('does not fire just under the threshold', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simTopSpeed: 207 })).map((c) => c.id)
+    expect(ids).not.toContain('strong-top-speed')
+  })
+})
+
+// ─── Rule 19: strong braking for class ──────────────────────────────────────
+// A class strength ceiling = 250
+
+describe('getStatCallouts — strong-braking rule', () => {
+  it('fires at or below the class strength threshold', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simBraking100: 250 })).map((c) => c.id)
+    expect(ids).toContain('strong-braking')
+  })
+
+  it('does not fire just over the threshold', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simBraking100: 251 })).map((c) => c.id)
+    expect(ids).not.toContain('strong-braking')
+  })
+})
+
+// ─── Rule 20: strong cornering grip for class ───────────────────────────────
+// A class strength floor = 1.19
+
+describe('getStatCallouts — strong-cornering-grip rule', () => {
+  it('fires at or above the class strength threshold', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simLateralG120: 1.19 })).map((c) => c.id)
+    expect(ids).toContain('strong-cornering-grip')
+  })
+
+  it('does not fire just under the threshold', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simLateralG120: 1.18 })).map((c) => c.id)
+    expect(ids).not.toContain('strong-cornering-grip')
+  })
+
+  // v3.1 Change 2 — grip-strong divisions (Track Toys) require clearing the division's own
+  // handling average too, not just the class p90 sim bar, so "strong" means strong even here.
+  describe('division-strong gating (Track Toys)', () => {
+    // Track Toys A: handling avg = 6.16
+    it('does not fire at class p90 grip if below the division handling average', () => {
+      const ids = getStatCallouts(makeCar({
+        division: 'Track Toys', piClass: 'A', simLateralG120: 1.19, statHandling: 5.0,
+      })).map((c) => c.id)
+      expect(ids).not.toContain('strong-cornering-grip')
+    })
+
+    it('fires at class p90 grip when also above the division handling average', () => {
+      const ids = getStatCallouts(makeCar({
+        division: 'Track Toys', piClass: 'A', simLateralG120: 1.19, statHandling: 6.5,
+      })).map((c) => c.id)
+      expect(ids).toContain('strong-cornering-grip')
+    })
+  })
+
+  // v3.1 — fallback: a division absent from DIVISION_PROFILES behaves exactly as before
+  it('fires at the class threshold alone for a division not in DIVISION_PROFILES (GT Cars)', () => {
+    const ids = getStatCallouts(makeCar({
+      division: 'GT Cars', piClass: 'A', simLateralG120: 1.19, statHandling: null,
+    })).map((c) => c.id)
+    expect(ids).toContain('strong-cornering-grip')
+  })
+})
+
+// ─── Rule 21: strong acceleration for class ─────────────────────────────────
+// A class strength ceiling = 3.0
+
+describe('getStatCallouts — strong-acceleration rule', () => {
+  it('fires at or below the class strength threshold', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simZeroToSixty: 3.0, weightLb: 3500, powerHp: 500 })).map((c) => c.id)
+    expect(ids).toContain('strong-acceleration')
+  })
+
+  it('does not fire just over the threshold', () => {
+    const ids = getStatCallouts(makeCar({ piClass: 'A', simZeroToSixty: 3.1, weightLb: 3500, powerHp: 500 })).map((c) => c.id)
+    expect(ids).not.toContain('strong-acceleration')
+  })
+})
+
+// ─── Rule 22 (retired in v3) — corner-exit / point-and-squirt ───────────────
+// v3 note: Rule 22's gate was identical to arch-point-squirt's, so it always fired and was
+// always immediately subsumed — dead weight. It's retired; the archetype below owns this
+// identity outright. Coverage moves to the "arch-point-squirt archetype" describe block.
+
+// ─── v3: archetype synthesis layer ──────────────────────────────────────────
+// A class thresholds used below: STRONG_GRIP_MIN=1.19, STRONG_BRAKING_MAX=250,
+// HIGH_GRIP_MIN=1.12, TOP_SPEED_MID=191, STRONG_TOP_SPEED_MIN=208, LOW_GRIP_MAX=0.97,
+// QUICK_ENOUGH_MAX=3.4, TOP_SPEED_FLOOR=180, ACCEL_SUSTAINED_MAX=2.10.
+
+describe('getStatCallouts — arch-dirt archetype', () => {
+  it('leads the list and subsumes sustained-acceleration for an offroad-division car', () => {
+    // Without the archetype, ratio 4.0/8.0=2.0 <= ACCEL_SUSTAINED_MAX would fire sustained-acceleration
+    const ids = getStatCallouts(makeCar({
+      division: 'Pickups & 4x4s', piClass: 'B', statOffroad: 8.5,
+      simZeroToSixty: 4.0, simZeroToHundred: 8.0,
+    })).map((c) => c.id)
+    expect(ids[0]).toBe('arch-dirt')
+    expect(ids).not.toContain('sustained-acceleration')
+  })
+})
+
+describe('getStatCallouts — arch-point-squirt archetype', () => {
+  it('leads the list and subsumes flat-grip-curve for a low-grip, quick-launch car', () => {
+    // Without the archetype, 0.95/1.05 = 0.90 < LATERAL_FLAT_MAX would fire flat-grip-curve
+    const ids = getStatCallouts(makeCar({
+      piClass: 'A', simLateralG60: 1.05, simLateralG120: 0.95, simZeroToSixty: 3.0,
+    })).map((c) => c.id)
+    expect(ids[0]).toBe('arch-point-squirt')
+    expect(ids).not.toContain('flat-grip-curve')
+  })
+})
+
+describe('getStatCallouts — arch-fast-sweeper archetype', () => {
+  it('leads the list and subsumes comes-alive-at-speed and strong-cornering-grip', () => {
+    const ids = getStatCallouts(makeCar({
+      piClass: 'A', simLateralG60: 1.00, simLateralG120: 1.20,
+    })).map((c) => c.id)
+    expect(ids[0]).toBe('arch-fast-sweeper')
+    expect(ids).not.toContain('comes-alive-at-speed')
+    expect(ids).not.toContain('strong-cornering-grip')
+  })
+})
+
+describe('getStatCallouts — arch-top-end archetype', () => {
+  it('leads the list and subsumes strong-top-speed and sustained-acceleration', () => {
+    const ids = getStatCallouts(makeCar({
+      piClass: 'A', simTopSpeed: 215, simZeroToSixty: 3.0, simZeroToHundred: 6.0,
+    })).map((c) => c.id)
+    expect(ids[0]).toBe('arch-top-end')
+    expect(ids).not.toContain('strong-top-speed')
+    expect(ids).not.toContain('sustained-acceleration')
+  })
+})
+
+describe('getStatCallouts — arch-heavy-gt archetype', () => {
+  it('leads the list and subsumes power-handling-gap, but leaves low-handling visible (RS 6 case)', () => {
+    // GT Cars A: handling avg = 5.58, delta(A) = -1.1 -> threshold 4.48; HP_THRESHOLD['A'] = 450
+    const ids = getStatCallouts(makeCar({
+      division: 'GT Cars', piClass: 'A', weightLb: 4376, frontWeight: 59,
+      simLateralG120: 1.00, simTopSpeed: 195, powerHp: 700, statHandling: 4.0,
+    })).map((c) => c.id)
+    expect(ids[0]).toBe('arch-heavy-gt')
+    expect(ids).not.toContain('power-handling-gap')
+    expect(ids).toContain('low-handling')   // a genuine weakness still surfaces under the archetype
+  })
+})
+
+describe('getStatCallouts — archetype precedence & mutual exclusion', () => {
+  it('an offroad + low-grip + quick fixture returns arch-dirt, not arch-point-squirt', () => {
+    const ids = getStatCallouts(makeCar({
+      division: 'Pickups & 4x4s', piClass: 'A', simLateralG120: 0.90, simZeroToSixty: 3.0,
+    })).map((c) => c.id)
+    expect(ids[0]).toBe('arch-dirt')
+    expect(ids).not.toContain('arch-point-squirt')
+  })
+
+  it('a fixture matching both fast-sweeper and top-end-cruiser gates returns only fast-sweeper', () => {
+    const ids = getStatCallouts(makeCar({
+      piClass: 'A', simLateralG60: 1.00, simLateralG120: 1.20,
+      simTopSpeed: 215, simZeroToSixty: 3.0, simZeroToHundred: 6.0,
+    })).map((c) => c.id)
+    expect(ids[0]).toBe('arch-fast-sweeper')
+    expect(ids).not.toContain('arch-top-end')
+    expect(ids.filter((id) => id.startsWith('arch-'))).toHaveLength(1)
+  })
+
+  it('a point-and-squirt car with mech-oversteer still shows the balance card below the archetype', () => {
+    const ids = getStatCallouts(makeCar({
+      piClass: 'A', simLateralG120: 0.90, simZeroToSixty: 3.0, simMechBalance: 0.65,
+    })).map((c) => c.id)
+    expect(ids[0]).toBe('arch-point-squirt')
+    expect(ids).toContain('mech-oversteer')
+  })
+})
+
+describe('getStatCallouts — archetype simDataLooksConsistent guard', () => {
+  it('blocks point-and-squirt and top-end-cruiser on an inconsistent D-class row', () => {
+    // 2.3 lb/hp with a 7.48s 0-60 is physically impossible (Tacoma FE slug-collision shape);
+    // every other gate value (grip, quick-enough-for-D, top speed, accel ratio) would otherwise pass.
+    const ids = getStatCallouts(makeCar({
+      piClass: 'D', weightLb: 2661, powerHp: 1149, simZeroToSixty: 7.48,
+      simLateralG120: 0.70, simTopSpeed: 150, simZeroToHundred: 14.0,
+    })).map((c) => c.id)
+    expect(ids).not.toContain('arch-point-squirt')
+    expect(ids).not.toContain('arch-top-end')
+  })
+
+  it('blocks heavy-gt on an inconsistent, otherwise-qualifying heavy row', () => {
+    const ids = getStatCallouts(makeCar({
+      piClass: 'D', weightLb: 4000, powerHp: 900, simZeroToSixty: 7.0,
+      frontWeight: 55, simLateralG120: 0.80, simTopSpeed: 120,
+    })).map((c) => c.id)
+    expect(ids).not.toContain('arch-heavy-gt')
+  })
+})
+
+describe('getStatCallouts — archetype regression: balanced car unchanged', () => {
+  it('a car matching no archetype gate returns the v2 list unchanged', () => {
+    const ids = getStatCallouts(makeCar({ division: 'Hypercars', piClass: 'S1', statBraking: 6.5 }))
+      .map((c) => c.id)
+    expect(ids).toEqual(['weak-braking'])
+    expect(ids[0]).not.toMatch(/^arch-/)
+  })
+})
+
+// ─── Fix 8: sanity guard for impossible sim rows ────────────────────────────
+
+describe('getStatCallouts — simDataLooksConsistent guard', () => {
+  // 2.3 lb/hp but 7.48s to 60 is physically impossible (Tacoma TRD Pro FE slug-collision case)
+  const inconsistent = { weightLb: 2661, powerHp: 1149, simZeroToSixty: 7.48 } as const
+
+  it('suppresses longitudinal callouts for an inconsistent sim row', () => {
+    const ids = getStatCallouts(makeCar({
+      piClass: 'S1', ...inconsistent, simZeroToHundred: 15.0, simTopSpeed: 170,
+      drivetrain: 'AWD', division: 'Hypercars', statLaunch: 9.0,
+    })).map((c) => c.id)
+    expect(ids).not.toContain('sustained-acceleration')
+    expect(ids).not.toContain('front-loaded-acceleration')
+    expect(ids).not.toContain('low-top-speed')
+    expect(ids).not.toContain('drag-candidate')
+    expect(ids).not.toContain('strong-acceleration')
+    expect(ids).not.toContain('arch-point-squirt')
+    expect(ids).not.toContain('arch-top-end')
+  })
+
+  it('does not suppress callouts for a consistent sim row', () => {
+    const ids = getStatCallouts(makeCar({
+      piClass: 'A', weightLb: 3500, powerHp: 500, simZeroToSixty: 3.0,
+      simZeroToHundred: 8.0, simTopSpeed: 170,
+    })).map((c) => c.id)
+    expect(ids).toContain('front-loaded-acceleration')
+    expect(ids).toContain('low-top-speed')
   })
 })
 
