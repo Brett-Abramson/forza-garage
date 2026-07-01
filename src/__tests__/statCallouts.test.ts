@@ -108,14 +108,15 @@ describe('getStatCallouts — weak-braking rule', () => {
     expect(ids).not.toContain('weak-braking')
   })
 
-  // v3.1 Change 1 — reworded away from "meta rewards braking" toward build-priority framing
-  it('frames braking as a build priority, not a meta-selection reason (v3.1)', () => {
+  // v3.2 Change — reworded away from "barely separates"/build-only framing toward braking as a
+  // real secondary signal (behind grip), per the forza.guide/meta recheck
+  it('frames braking as a secondary signal behind grip, not a negligible one (v3.2)', () => {
     const callout = getStatCallouts(makeCar({ ...s1Hyper, statBraking: 6.5 }))
       .find((c) => c.id === 'weak-braking')!
-    expect(callout.body).not.toContain('meta')
+    expect(callout.body).not.toContain('barely separates')
     expect(callout.body).not.toContain("biggest weakness")
     expect(callout.body).toContain('prioritise the brake upgrade')
-    expect(callout.body).toContain('not a reason to pass on the car')
+    expect(callout.body).toContain('grip separates the competitive field more than braking does')
   })
 
   // v3.1 Change 2 — suppressed entirely on divisions where braking is a known-weak DNA trait

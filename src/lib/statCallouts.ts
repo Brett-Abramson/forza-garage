@@ -521,8 +521,10 @@ export function getStatCallouts(
   const delta = CLASS_DELTAS[car.piClass] ?? -1.2
 
   // ── Rule 1 — Weak braking ────────────────────────────────────────────────
-  // Reworded per v3.1: meta cross-check (194 matched cars) shows braking barely separates
-  // road-race winners (p57 vs p49 baseline) — it's a build priority, not a selection signal.
+  // Reworded per v3.2: braking calibration based on forza.guide/meta (live, checked 6/2026,
+  // 113 matched cars) — re-verify against that site if this copy is revisited later. Road-meta
+  // cars sit at within-class braking p67 vs p49 baseline (39% vs 23% top-quartile), a real
+  // secondary signal but clearly behind grip (p77, 57% vs 26%).
   if (
     !isDrift &&
     !isDivisionWeakFor(car.division, 'braking') &&
@@ -533,7 +535,7 @@ export function getStatCallouts(
     callouts.push({
       id:    'weak-braking',
       title: 'Weak braking',
-      body:  `Braking reads as ${car.statBraking.toFixed(1)} — below the ${car.division} ${car.piClass} average of ${avg.braking.toFixed(1)}. Stock braking is short for its class — plan to prioritise the brake upgrade. Most competitive builds max brakes regardless, so this is a cheap fix, not a reason to pass on the car. Move brake bias slightly forward (52% front is a safe starting point) and increase brake pressure if the car takes too long to scrub speed.`,
+      body:  `Braking reads as ${car.statBraking.toFixed(1)} — below the ${car.division} ${car.piClass} average of ${avg.braking.toFixed(1)}. Stock braking is short for its class — worth weighing if you're comparing similar options, though grip separates the competitive field more than braking does. Either way, prioritise the brake upgrade first; most competitive builds max brakes, so it's a cheap fix once you're tuning. Move brake bias slightly forward (52% front is a safe starting point) and increase brake pressure if the car takes too long to scrub speed.`,
     })
   }
 
