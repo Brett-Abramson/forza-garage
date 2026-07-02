@@ -82,7 +82,6 @@ const ALL_TAGS = new Set<string>(CAR_TAGS)
 
 export default function GarageView({ initialCars, isSignedIn = false }: Props) {
   const searchParams = useSearchParams()
-  const searchRef = useRef<HTMLInputElement>(null)
   const { prefs } = useUnitPreferences()
   const labels = getUnitLabels(prefs)
 
@@ -206,23 +205,6 @@ export default function GarageView({ initialCars, isSignedIn = false }: Props) {
     return () => unregister()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search, view, sidebarOpen, activeFilterCount, register, unregister])
-
-  // ── Press / to focus search ─────────────────────────────────────────────────
-  useEffect(() => {
-    function handler(e: KeyboardEvent) {
-      if (
-        e.key === '/' &&
-        !(e.target instanceof HTMLInputElement) &&
-        !(e.target instanceof HTMLTextAreaElement) &&
-        !(e.target instanceof HTMLSelectElement)
-      ) {
-        e.preventDefault()
-        searchRef.current?.focus()
-      }
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [])
 
   // ── Sync filter/view state to URL ────────────────────────────────────────────
   useEffect(() => {

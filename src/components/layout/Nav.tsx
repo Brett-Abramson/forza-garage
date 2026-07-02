@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser, SignInButton, SignOutButton } from '@clerk/nextjs'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { UnitsNavButton } from '@/components/ui/UnitsNavButton'
 import { useNavControls } from '@/context/NavControls'
@@ -32,6 +32,31 @@ export default function Nav() {
   const { controls } = useNavControls()
   const showControls = (pathname === '/cars' || pathname === '/garage') && controls !== null
 
+  // Two input instances exist at once (desktop bar row + mobile row below it,
+  // toggled via CSS breakpoints), so each needs its own ref — a shared ref would
+  // just point at whichever mounted last, which may be the CSS-hidden one.
+  const desktopSearchRef = useRef<HTMLInputElement>(null)
+  const mobileSearchRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!showControls) return
+    function handler(e: KeyboardEvent) {
+      if (
+        e.key !== '/' ||
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement ||
+        (e.target instanceof HTMLElement && e.target.isContentEditable) ||
+        e.metaKey || e.ctrlKey || e.altKey
+      ) return
+      e.preventDefault()
+      const visible = desktopSearchRef.current?.offsetParent ? desktopSearchRef.current : mobileSearchRef.current
+      visible?.focus()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [showControls])
+
   const initials = isSignedIn
     ? getInitials(
         user.firstName,
@@ -40,34 +65,45 @@ export default function Nav() {
       )
     : ''
 
-  // Search + grid/table toggle — rendered inline in the bar on desktop, and as a
-  // full-width row below the bar on mobile (where it won't fit in the bar).
-  const searchAndView = controls && showControls ? (
-    <>
-      <input
-        type="text"
-        placeholder="Search make, model, division…"
-        value={controls.search}
-        onChange={(e) => controls.setSearch(e.target.value)}
-        className="flex-1 min-w-0 bg-fh-panel-2 border border-fh-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-fh-red placeholder:text-fh-muted"
-      />
-      <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0">
-        <button
-          onClick={() => controls.setView('grid')}
-          title="Grid view"
-          className={`px-2.5 py-1.5 transition-colors ${controls.view === 'grid' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
-        >
-          <GridIcon />
-        </button>
-        <button
-          onClick={() => controls.setView('table')}
-          title="Table view"
-          className={`px-2.5 py-1.5 transition-colors ${controls.view === 'table' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
-        >
-          <TableIcon />
-        </button>
+  function renderSearchInput(ref: React.RefObject<HTMLInputElement | null>) {
+    return (
+      <div className="relative flex-1 min-w-0">
+        <input
+          ref={ref}
+          type="text"
+          placeholder="Search make, model, division…"
+          value={controls!.search}
+          onChange={(e) => controls!.setSearch(e.target.value)}
+          className="w-full bg-fh-panel-2 border border-fh-border rounded-md pl-3 pr-7 py-1.5 text-sm focus:outline-none focus:border-fh-red placeholder:text-fh-muted"
+        />
+        {!controls!.search && (
+          <kbd className="hidden lg:inline-flex absolute right-2 top-1/2 -translate-y-1/2 items-center px-1 py-0.5 rounded text-[9px] font-mono border border-fh-border text-fh-muted-2 bg-fh-panel leading-none pointer-events-none">
+            /
+          </kbd>
+        )}
       </div>
-    </>
+    )
+  }
+
+  // Grid/table toggle — rendered inline in the bar on desktop, and as a
+  // full-width row below the bar on mobile (where it won't fit in the bar).
+  const viewToggle = controls && showControls ? (
+    <div className="flex bg-fh-panel border border-fh-border rounded-lg overflow-hidden shrink-0">
+      <button
+        onClick={() => controls.setView('grid')}
+        title="Grid view"
+        className={`px-2.5 py-1.5 transition-colors ${controls.view === 'grid' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
+      >
+        <GridIcon />
+      </button>
+      <button
+        onClick={() => controls.setView('table')}
+        title="Table view"
+        className={`px-2.5 py-1.5 transition-colors ${controls.view === 'table' ? 'bg-fh-red-pale text-fh-red' : 'text-fh-muted hover:text-fh-dark-2'}`}
+      >
+        <TableIcon />
+      </button>
+    </div>
   ) : null
 
   return (
@@ -124,9 +160,10 @@ export default function Nav() {
           })}
         </div>
 
-        {searchAndView && (
+        {controls && showControls && (
           <div className="hidden md:flex ml-auto items-center gap-2 flex-1 max-w-sm">
-            {searchAndView}
+            {renderSearchInput(desktopSearchRef)}
+            {viewToggle}
           </div>
         )}
 
@@ -179,9 +216,10 @@ export default function Nav() {
       </div>
 
       {/* Mobile-only search + view toggle row (the bar is too narrow for it) */}
-      {searchAndView && (
+      {controls && showControls && (
         <div className="md:hidden max-w-screen-2xl mx-auto px-4 pb-2 flex items-center gap-2">
-          {searchAndView}
+          {renderSearchInput(mobileSearchRef)}
+          {viewToggle}
         </div>
       )}
 

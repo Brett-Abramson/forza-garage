@@ -87,7 +87,6 @@ type TagDetail = { tag: string; source: string }
 
 export default function GarageShowcase({ initialCars, totalCars }: Props) {
   const searchParams = useSearchParams()
-  const searchRef = useRef<HTMLInputElement>(null)
   const { prefs } = useUnitPreferences()
   const labels = getUnitLabels(prefs)
 
@@ -163,23 +162,6 @@ export default function GarageShowcase({ initialCars, totalCars }: Props) {
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [view, sidebarOpen])
-
-  // Press / to focus search (skips when cursor is already in a form field)
-  useEffect(() => {
-    function handler(e: KeyboardEvent) {
-      if (
-        e.key === '/' &&
-        !(e.target instanceof HTMLInputElement) &&
-        !(e.target instanceof HTMLTextAreaElement) &&
-        !(e.target instanceof HTMLSelectElement)
-      ) {
-        e.preventDefault()
-        searchRef.current?.focus()
-      }
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [])
 
   // Sync filter/view state to URL — debounced 300 ms
   useEffect(() => {
