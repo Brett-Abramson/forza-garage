@@ -4,8 +4,8 @@ import type { Car, CarBadgeMap } from '@/types/car'
 import { DIVISION_CLASS_AVERAGES, getStatColor } from '@/lib/statCallouts'
 import type { StatAvg } from '@/lib/statCallouts'
 import { BAR_GUIDE_ID } from '@/lib/statsGuideContent'
-import StatInfoIcon from './StatInfoIcon'
-import { useHoverCard } from './useHoverCard'
+import StatInfoIcon from '@/components/car/StatInfoIcon'
+import { useHoverCard } from '@/hooks/useHoverCard'
 
 interface Props {
   car: Car

@@ -1,4 +1,4 @@
-import RacesView from '@/components/RacesView'
+import RacesView from '@/components/races/RacesView'
 import { RACE_TYPES } from '@/lib/races'
 
 export default function RacesPage() {

@@ -1,8 +1,8 @@
 import { Suspense } from 'react'
 import { auth } from '@clerk/nextjs/server'
 import { getCarsWithOwnership } from '@/server/dal/cars'
-import GarageViewClient from '@/components/GarageViewClient'
-import CarsSkeleton from '@/components/CarsSkeleton'
+import GarageViewClient from '@/components/cars/GarageViewClient'
+import CarsSkeleton from '@/components/cars/CarsSkeleton'
 
 export const dynamic = 'force-dynamic'
 

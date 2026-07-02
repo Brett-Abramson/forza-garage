@@ -1,4 +1,4 @@
-import { FeatureLightboxImage } from '@/components/FeatureLightboxImage'
+import { FeatureLightboxImage } from '@/components/home/FeatureLightboxImage'
 
 interface Feature {
   title: string

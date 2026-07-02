@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, within } from './test-utils'
 import userEvent from '@testing-library/user-event'
-import GarageView from '@/components/GarageView'
+import GarageView from '@/components/cars/GarageView'
 import { NavControlsProvider, useNavControls } from '@/context/NavControls'
-import { GridIcon, TableIcon } from '@/components/table-ui'
+import { GridIcon, TableIcon } from '@/components/ui/table-ui'
 import type { Car } from '@/types/car'
 
 // @tanstack/react-virtual measures its scroll container via ResizeObserver +

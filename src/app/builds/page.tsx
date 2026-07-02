@@ -1,4 +1,4 @@
-import BuildsView from '@/components/BuildsView'
+import BuildsView from '@/components/builds/BuildsView'
 
 export const metadata = { title: 'Build Guides — Forza Garage' }
 

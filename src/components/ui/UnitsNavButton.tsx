@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useUnitPreferences } from '@/components/UnitPreferencesContext'
+import { useUnitPreferences } from '@/context/UnitPreferences'
 import type { UnitSystem, PowerUnit } from '@/lib/unitConversions'
 
 function RulerIcon({ className = '' }: { className?: string }) {

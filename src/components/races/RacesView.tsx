@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { RACE_TYPES, getRaceFilterUrl, type RaceType } from '@/lib/races'
-import { RaceIcon } from '@/components/RaceIcons'
+import { RaceIcon } from '@/components/car/RaceIcons'
 import { getGuidesByRaceType, type TuningGuide } from '@/lib/tuningGuides'
 
 const SURFACE_COLORS: Record<string, string> = {

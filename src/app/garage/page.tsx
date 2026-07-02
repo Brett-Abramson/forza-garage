@@ -3,8 +3,8 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { ensureStarterCars, getGarageCars } from '@/server/dal/garage'
 import { getCarCount } from '@/server/dal/cars'
-import GarageShowcaseClient from '@/components/GarageShowcaseClient'
-import GarageSkeleton from '@/components/GarageSkeleton'
+import GarageShowcaseClient from '@/components/garage/GarageShowcaseClient'
+import GarageSkeleton from '@/components/garage/GarageSkeleton'
 
 export const dynamic = 'force-dynamic'
 

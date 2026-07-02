@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
-import StatBars from '@/components/StatBars'
+import StatBars from '@/components/car/StatBars'
 import type { Car } from '@/types/car'
 
 // Base car with all stat and spec fields null

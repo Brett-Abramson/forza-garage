@@ -1,7 +1,7 @@
 import 'server-only'
 import { unstable_cache } from 'next/cache'
 import { prisma } from '@/server/db'
-import type { MetaCarEntry } from '@/components/MetaCarousel'
+import type { MetaCarEntry } from '@/components/home/MetaCarousel'
 
 /**
  * Active featured-car entries for the landing-page carousel.

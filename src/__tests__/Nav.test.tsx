@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from './test-utils'
 import userEvent from '@testing-library/user-event'
 import { useUser } from '@clerk/nextjs'
-import Nav from '@/components/Nav'
+import Nav from '@/components/layout/Nav'
 
 // Signed-out state (default mock from setup.ts)
 function renderNav() {

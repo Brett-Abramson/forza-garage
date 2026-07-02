@@ -1,6 +1,6 @@
 import { entriesFor, type StatGuideCategory, type StatGuideEntry } from '@/lib/statsGuideContent'
-import GuideToc, { type GuideTocSection } from './GuideToc'
-import BackToTop from './BackToTop'
+import GuideToc, { type GuideTocSection } from '@/components/guide/GuideToc'
+import BackToTop from '@/components/ui/BackToTop'
 
 // ─── Page-only content (not per-metric, so no `short`/tooltip versions) ───────
 

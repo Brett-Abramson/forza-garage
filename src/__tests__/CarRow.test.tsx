@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within } from './test-utils'
 import userEvent from '@testing-library/user-event'
-import CarRow from '@/components/CarRow'
+import CarRow from '@/components/car/CarRow'
 import type { Car } from '@/types/car'
 
 const baseCar: Car = {

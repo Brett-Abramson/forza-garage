@@ -10,11 +10,11 @@ import { CAR_TAGS } from '@/lib/tags'
 import { SortKey, SortDir, compareRows, defaultSort } from '@/lib/sort'
 import { SIM_COLUMN_METRICS } from '@/lib/metrics'
 import { RACE_TYPES } from '@/lib/races'
-import CarCard from './CarCard'
-import CarRow from './CarRow'
-import GarageDrawer from './GarageDrawer'
-import { SortTh, GridIcon, TableIcon, TableModeToggle, SortSelect, STANDARD_SORT_COLUMNS, STICKY_COL, STICKY_COL_STATS, type TableMode } from './table-ui'
-import { useUnitPreferences } from '@/components/UnitPreferencesContext'
+import CarCard from '@/components/car/CarCard'
+import CarRow from '@/components/car/CarRow'
+import GarageDrawer from '@/components/car/GarageDrawer'
+import { SortTh, GridIcon, TableIcon, TableModeToggle, SortSelect, STANDARD_SORT_COLUMNS, STICKY_COL, STICKY_COL_STATS, type TableMode } from '@/components/ui/table-ui'
+import { useUnitPreferences } from '@/context/UnitPreferences'
 import { getUnitLabels } from '@/lib/unitConversions'
 
 // Cumulative left offsets for stats-mode sticky header cells (View has no star col)
@@ -36,8 +36,8 @@ const VHL_S = {
 }
 import { filterCars, DEFAULT_FILTERS } from '@/lib/filterCars'
 import { getDivisionsForGroup } from '@/lib/divisionGroups'
-import BackToTop from './BackToTop'
-import FilterSidebar from './FilterSidebar'
+import BackToTop from '@/components/ui/BackToTop'
+import FilterSidebar from '@/components/car/FilterSidebar'
 
 type ViewMode = 'grid' | 'table'
 

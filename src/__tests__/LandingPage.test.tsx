@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { FujiSvg, BlossomSvg, ToriiSvg } from '@/components/JapanDecor'
+import { FujiSvg, BlossomSvg, ToriiSvg } from '@/components/home/JapanDecor'
 
 // ─── JapanDecor SVGs ──────────────────────────────────────────────────────────
 

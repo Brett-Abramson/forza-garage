@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent, act } from './test-utils'
 import userEvent from '@testing-library/user-event'
-import GarageDrawer from '@/components/GarageDrawer'
+import GarageDrawer from '@/components/car/GarageDrawer'
 import type { Car, CarBadge } from "@/types/car"
 import { CAR_TAGS } from '@/lib/tags'
 import { setTags, setNotes, resetTuning } from '@/server/actions/garage'

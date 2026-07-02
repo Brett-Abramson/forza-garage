@@ -1,4 +1,4 @@
-import StatsGuideView from '@/components/StatsGuideView'
+import StatsGuideView from '@/components/guide/StatsGuideView'
 
 export const metadata = { title: 'Stats & Sims Guide — Forza Garage' }
 

@@ -1,4 +1,4 @@
-import Spinner from '@/components/Spinner'
+import Spinner from '@/components/ui/Spinner'
 
 // Shown instantly on navigation to /cars while the server component runs its
 // (force-dynamic) DB query. Matches the page's main container so swapping the

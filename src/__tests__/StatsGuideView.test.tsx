@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import StatsGuideView from '@/components/StatsGuideView'
+import StatsGuideView from '@/components/guide/StatsGuideView'
 import { STAT_GUIDE_ENTRIES } from '@/lib/statsGuideContent'
 
 // StatsGuideView backs the /guide route, which sits outside middleware.ts's

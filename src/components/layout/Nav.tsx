@@ -4,10 +4,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser, SignInButton, SignOutButton } from '@clerk/nextjs'
 import { useState } from 'react'
-import ThemeToggle from '@/components/ThemeToggle'
-import { UnitsNavButton } from '@/components/UnitsNavButton'
+import ThemeToggle from '@/components/ui/ThemeToggle'
+import { UnitsNavButton } from '@/components/ui/UnitsNavButton'
 import { useNavControls } from '@/context/NavControls'
-import { GridIcon, TableIcon } from '@/components/table-ui'
+import { GridIcon, TableIcon } from '@/components/ui/table-ui'
 
 const links = [
   { href: '/garage', label: 'My Garage', icon: GarageIcon, shortcut: 'g' },

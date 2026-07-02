@@ -4,11 +4,11 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { auth } from '@clerk/nextjs/server'
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
-import Nav from '@/components/Nav'
-import Footer from '@/components/Footer'
-import KeyboardNav from '@/components/KeyboardNav'
+import Nav from '@/components/layout/Nav'
+import Footer from '@/components/layout/Footer'
+import KeyboardNav from '@/components/layout/KeyboardNav'
 import { NavControlsProvider } from '@/context/NavControls'
-import { UnitPreferencesProvider } from '@/components/UnitPreferencesContext'
+import { UnitPreferencesProvider } from '@/context/UnitPreferences'
 import { getUserPreferences } from '@/server/dal/preferences'
 import './globals.css'
 

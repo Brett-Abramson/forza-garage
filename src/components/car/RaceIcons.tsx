@@ -9,7 +9,7 @@ import React from 'react'
  * the occasional round-cap stroke. Size with width/height or font-size + em.
  *
  * Drop this in src/components/ and map by race id:
- *   import { RACE_ICONS } from '@/components/RaceIcons'
+ *   import { RACE_ICONS } from '@/components/car/RaceIcons'
  *   const Icon = RACE_ICONS[race.id]
  *   <Icon />
  */
@@ -115,7 +115,7 @@ export const RACE_ICONS: Record<string, (p: IconProps) => React.ReactElement> = 
  * for the race id; otherwise renders the race's `icon` emoji from races.ts —
  * so a newly-added race type still shows something until its icon is drawn.
  *
- *   import { RaceIcon } from '@/components/RaceIcons'
+ *   import { RaceIcon } from '@/components/car/RaceIcons'
  *   <RaceIcon id={race.id} emoji={race.icon} />
  */
 export function RaceIcon({

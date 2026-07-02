@@ -2,7 +2,7 @@
 
 import { Car, PI_CLASS_COLORS, getSourceColor } from '@/types/car'
 import { getBestRaceType } from '@/lib/raceMatch'
-import { RaceIcon } from '@/components/RaceIcons'
+import { RaceIcon } from '@/components/car/RaceIcons'
 import { formatAddedAt } from '@/lib/sort'
 
 const DIVISION_ACCENT: Record<string, string> = {

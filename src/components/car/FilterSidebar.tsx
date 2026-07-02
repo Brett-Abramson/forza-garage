@@ -6,7 +6,7 @@ import { DIVISION_GROUPS } from '@/lib/divisionGroups'
 import { AUTO_TAGS } from '@/lib/tags'
 import { RACE_TYPES } from '@/lib/races'
 import type { RaceType } from '@/lib/races'
-import StatInfoIcon from './StatInfoIcon'
+import StatInfoIcon from '@/components/car/StatInfoIcon'
 
 interface FilterSidebarProps {
   isOpen: boolean

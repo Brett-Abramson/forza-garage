@@ -1,6 +1,6 @@
 import { render as rtlRender, type RenderOptions } from '@testing-library/react'
 import type { ReactElement } from 'react'
-import { UnitPreferencesProvider } from '@/components/UnitPreferencesContext'
+import { UnitPreferencesProvider } from '@/context/UnitPreferences'
 
 // Wraps every render in UnitPreferencesProvider so components that call
 // useUnitPreferences() (Nav, GarageView, GarageShowcase, GarageDrawer, ...)

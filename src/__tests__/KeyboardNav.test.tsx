@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, fireEvent, cleanup } from '@testing-library/react'
 import { useRouter } from 'next/navigation'
-import KeyboardNav from '@/components/KeyboardNav'
+import KeyboardNav from '@/components/layout/KeyboardNav'
 
 // useRouter is globally mocked in setup.ts — override per-test to capture push
 function renderNav() {

@@ -17,7 +17,7 @@
 
 'use client'
 
-import { useUnitPreferences } from '@/components/UnitPreferencesContext'
+import { useUnitPreferences } from '@/context/UnitPreferences'
 import type { UnitSystem, PowerUnit } from '@/lib/unitConversions'
 
 // ─── Sub-component: a labelled pill group ─────────────────────────────────────

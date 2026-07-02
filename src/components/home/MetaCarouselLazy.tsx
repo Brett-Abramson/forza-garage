@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import type { MetaCarEntry } from './MetaCarousel'
+import type { MetaCarEntry } from '@/components/home/MetaCarousel'
 
 const MetaCarousel = dynamic(
   () => import('./MetaCarousel').then((m) => m.MetaCarousel),

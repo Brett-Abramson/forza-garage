@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import BottomSheet from './BottomSheet'
+import BottomSheet from '@/components/ui/BottomSheet'
 
 export interface GuideTocSection {
   id: string

@@ -15,7 +15,7 @@
  *
  *   import { auth } from '@clerk/nextjs/server'
  *   import { getUserPreferences } from '@/server/dal/preferences'
- *   import { UnitPreferencesProvider } from '@/components/UnitPreferencesContext'
+ *   import { UnitPreferencesProvider } from '@/context/UnitPreferences'
  *
  *   const { userId } = await auth()
  *   const serverPrefs = userId ? await getUserPreferences(userId) : null
