@@ -225,7 +225,7 @@ describe('StatBars — hover tooltip', () => {
     render(<StatBars car={barStatCar} />)
     const row = screen.getByText('Speed').parentElement!
     fireEvent.mouseEnter(row)
-    act(() => { vi.advanceTimersByTime(200) })
+    act(() => { vi.advanceTimersByTime(450) })
 
     const tooltip = screen.getByText(/top speed on long straights/i)
     expect(row.contains(tooltip)).toBe(false)
@@ -239,7 +239,7 @@ describe('StatBars — hover tooltip', () => {
     render(<StatBars car={barStatCar} />)
     const row = screen.getByText('Speed').parentElement!
     fireEvent.mouseEnter(row)
-    act(() => { vi.advanceTimersByTime(200) })
+    act(() => { vi.advanceTimersByTime(450) })
 
     expect(screen.getByText(/7\.5 vs class avg/i)).toBeInTheDocument()
 
@@ -263,7 +263,7 @@ describe('StatBars — hover tooltip', () => {
     render(<StatBars car={barStatCar} />)
     const row = screen.getByText('Speed').parentElement!
     fireEvent.mouseEnter(row)
-    act(() => { vi.advanceTimersByTime(200) })
+    act(() => { vi.advanceTimersByTime(450) })
     expect(screen.getByText(/top speed on long straights/i)).toBeInTheDocument()
 
     fireEvent.mouseLeave(row)

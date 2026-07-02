@@ -17,6 +17,10 @@ interface PositionedContent extends HoverCardContent {
   left: number
 }
 
+// Delay before the tooltip appears — long enough that skimming across a row of
+// bars/tiles doesn't pop a tooltip on every one you pass over.
+const SHOW_DELAY_MS = 450
+
 /**
  * Shared "hover a row/tile, see a small dark tooltip" behavior — description +
  * optional comparison/context lines, portaled to <body> and positioned from the
@@ -29,7 +33,8 @@ interface PositionedContent extends HoverCardContent {
  *
  * Usage: spread `hoverHandlers(content)` onto the hoverable element, and render
  * `tooltip` once anywhere in the tree (it's a portal, so placement doesn't
- * matter). A 200ms show delay avoids flicker when the pointer just passes over;
+ * matter). The show delay (SHOW_DELAY_MS) avoids flicker when the pointer just
+ * passes over, or pops a tooltip on every row while skimming down the drawer;
  * hiding is immediate.
  */
 export function useHoverCard() {
@@ -47,7 +52,7 @@ export function useHoverCard() {
         const top = rect.top
         const left = rect.left + rect.width / 2
         if (timer.current) clearTimeout(timer.current)
-        timer.current = setTimeout(() => setTip({ ...content, top, left }), 200)
+        timer.current = setTimeout(() => setTip({ ...content, top, left }), SHOW_DELAY_MS)
       },
       onMouseLeave: () => {
         if (timer.current) clearTimeout(timer.current)

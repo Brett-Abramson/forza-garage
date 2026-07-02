@@ -854,7 +854,7 @@ describe('GarageDrawer — spec/sim tile hover tooltip', () => {
     renderDrawer(badgedCar)
     const tile = screen.getByTitle('top 10% HP · S1 (stock)')
     fireEvent.mouseEnter(tile)
-    act(() => { vi.advanceTimersByTime(200) })
+    act(() => { vi.advanceTimersByTime(450) })
 
     expect(screen.getByText(/peak horsepower/i)).toBeInTheDocument()
     expect(screen.getByText('top 10% HP · S1 (stock)')).toBeInTheDocument()
@@ -867,7 +867,7 @@ describe('GarageDrawer — spec/sim tile hover tooltip', () => {
     renderDrawer(badgedCar)
     const tile = screen.getByTitle('top 10% HP · S1 (stock)')
     fireEvent.mouseEnter(tile)
-    act(() => { vi.advanceTimersByTime(200) })
+    act(() => { vi.advanceTimersByTime(450) })
     expect(screen.getByText(/peak horsepower/i)).toBeInTheDocument()
 
     fireEvent.mouseLeave(tile)
@@ -881,7 +881,7 @@ describe('GarageDrawer — spec/sim tile hover tooltip', () => {
     renderDrawer(badgedCar)
     const tile = screen.getByText('Drivetrain').closest('div')!.parentElement!
     fireEvent.mouseEnter(tile)
-    act(() => { vi.advanceTimersByTime(200) })
+    act(() => { vi.advanceTimersByTime(450) })
 
     expect(screen.getByText(/determines launch behaviour/i)).toBeInTheDocument()
 
