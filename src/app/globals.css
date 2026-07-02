@@ -41,19 +41,19 @@
 
   /* Brand red (#CC0000) is too dark as small foreground text on the near-black
      dark surfaces; lift it for chips/labels while bg-fh-red stays the brand fill. */
-  --fh-red-fg:      #F87171;
+  --fh-red-fg:      #FA8A8A;
   --fh-bg:          #0E0E10;
   --fh-bg2:         #141416;
   --fh-panel:       #141416;
   --fh-panel2:      #1C1C1F;
   --fh-dark:        #F0E8D8;
   --fh-dark2:       #D4C8B0;
-  --fh-muted:       #9D9282;
-  --fh-muted2:      #897E6E;
+  --fh-muted:       #B0A598;
+  --fh-muted2:      #A89588;
   --fh-border:      rgba(240,232,216,0.1);
   --fh-border2:     rgba(240,232,216,0.06);
   --fh-border-strong: rgba(240,232,216,0.18);
-  --fh-amber:             #D4920A;
+  --fh-amber:             #E5A319;
   --fh-amber-pale:        rgba(212,146,10,0.1);
   --fh-badge-top-strong:    rgba(34,197,94,0.26);
   --fh-badge-top-soft:      rgba(34,197,94,0.14);
@@ -61,9 +61,9 @@
   --fh-badge-bottom-soft:   rgba(248,113,113,0.22);
   /* Brighter blue/purple for dark surfaces — the light-mode values (#1A5FA0,
      #6600CC) drop to ~2.5:1 on the near-black panel. */
-  --fh-blue:        #5BA0E5;
+  --fh-blue:        #6DB3F2;
   --fh-blue-pale:   rgba(26,95,160,0.1);
-  --fh-purple:      #A78BFA;
+  --fh-purple:      #B9A3FF;
 }
 
 /* ── Base ───────────────────────────────────────────────────────────────────── */
