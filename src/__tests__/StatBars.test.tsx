@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import StatBars from '@/components/StatBars'
 import type { Car } from '@/types/car'
 
@@ -210,6 +210,66 @@ describe('StatBars — badge pip accents', () => {
     render(<StatBars car={barStatCar} />)
     expect(document.querySelectorAll('[title]')).toHaveLength(0)
     expect(document.querySelectorAll('[aria-hidden="true"]')).toHaveLength(0)
+  })
+})
+
+// ─── Hover tooltip ────────────────────────────────────────────────────────────
+// Regression coverage for a bug where the tooltip, positioned absolute inside
+// the row, got clipped by an overflow-y-auto ancestor (the garage drawer's
+// scrollable body) and appeared to render behind the drawer's tab bar. The fix
+// portals the tooltip to document.body instead.
+
+describe('StatBars — hover tooltip', () => {
+  it('portals the tooltip to document.body rather than nesting it inside the row', () => {
+    vi.useFakeTimers()
+    render(<StatBars car={barStatCar} />)
+    const row = screen.getByText('Speed').parentElement!
+    fireEvent.mouseEnter(row)
+    act(() => { vi.advanceTimersByTime(200) })
+
+    const tooltip = screen.getByText(/top speed on long straights/i)
+    expect(row.contains(tooltip)).toBe(false)
+    expect(document.body.contains(tooltip)).toBe(true)
+
+    vi.useRealTimers()
+  })
+
+  it('shows the class-average comparison line once the hover delay elapses', () => {
+    vi.useFakeTimers()
+    render(<StatBars car={barStatCar} />)
+    const row = screen.getByText('Speed').parentElement!
+    fireEvent.mouseEnter(row)
+    act(() => { vi.advanceTimersByTime(200) })
+
+    expect(screen.getByText(/7\.5 vs class avg/i)).toBeInTheDocument()
+
+    vi.useRealTimers()
+  })
+
+  it('does not show the tooltip before the hover delay elapses', () => {
+    vi.useFakeTimers()
+    render(<StatBars car={barStatCar} />)
+    const row = screen.getByText('Speed').parentElement!
+    fireEvent.mouseEnter(row)
+    act(() => { vi.advanceTimersByTime(100) })
+
+    expect(screen.queryByText(/top speed on long straights/i)).not.toBeInTheDocument()
+
+    vi.useRealTimers()
+  })
+
+  it('hides the tooltip on mouseleave', () => {
+    vi.useFakeTimers()
+    render(<StatBars car={barStatCar} />)
+    const row = screen.getByText('Speed').parentElement!
+    fireEvent.mouseEnter(row)
+    act(() => { vi.advanceTimersByTime(200) })
+    expect(screen.getByText(/top speed on long straights/i)).toBeInTheDocument()
+
+    fireEvent.mouseLeave(row)
+    expect(screen.queryByText(/top speed on long straights/i)).not.toBeInTheDocument()
+
+    vi.useRealTimers()
   })
 })
 

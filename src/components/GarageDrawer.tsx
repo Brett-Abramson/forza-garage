@@ -12,10 +12,12 @@ import { getTuningGuide, getDivisionFallback } from '@/lib/tuningGuides'
 import { getGroupForDivision } from '@/lib/divisionGroups'
 import StatBars from './StatBars'
 import StatInfoIcon from './StatInfoIcon'
+import { useHoverCard, badgeTierColorClass } from './useHoverCard'
 import { getMetric, getMetricValue, formatMetricValue, SIM_METRICS } from '@/lib/metrics'
 import { useUnitPreferences } from '@/components/UnitPreferencesContext'
 import { convertPower, convertTorque, convertWeight, convertSpeed, convertBraking, accelLabel, getUnitLabels } from '@/lib/unitConversions'
 import { getStatCallouts } from '@/lib/statCallouts'
+import { getStatGuideEntry } from '@/lib/statsGuideContent'
 import { StatFields, carToStats, statsToPayload, RARITY_OPTIONS, resolveEffectiveStats, STAT_OVERRIDE_MAP, hasOverrides } from '@/lib/statUtils'
 import { setTags, setNotes as persistNotes, tuneCar, resetTuning } from '@/server/actions/garage'
 
@@ -46,6 +48,10 @@ interface Props {
 
 export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStatsChange, onToggleOwned, onTogglePin, isSignedIn = true }: Props) {
   const { prefs } = useUnitPreferences()
+  // Hover tooltip for the spec/sim tiles — same description (statsGuideContent's
+  // `short`, no new copy) + badge-context pattern StatBars already uses for the
+  // bar stats above; these tiles get the badge tint but had no hover UI until now.
+  const { hoverHandlers: tileHover, tooltip: tileTooltip } = useHoverCard()
   const labels = getUnitLabels(prefs)
   // Keep a stale copy so the drawer content doesn't vanish during slide-out
   const [displayCar, setDisplayCar] = useState<Car | null>(car)
@@ -507,6 +513,11 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                               key={t.label}
                               className="bg-fh-panel"
                               title={badge?.label}
+                              {...tileHover({
+                                description: getStatGuideEntry(t.guideId)?.short ?? '',
+                                contextLine: badge?.label ?? null,
+                                contextColorClass: badge ? badgeTierColorClass(badge.tier) : undefined,
+                              })}
                               style={{
                                 padding: '11px 14px',
                                 borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
@@ -602,6 +613,11 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                               key={t.label}
                               className="bg-fh-panel"
                               title={badge?.label}
+                              {...tileHover({
+                                description: getStatGuideEntry(t.guideId)?.short ?? '',
+                                contextLine: badge?.label ?? null,
+                                contextColorClass: badge ? badgeTierColorClass(badge.tier) : undefined,
+                              })}
                               style={{
                                 padding: '11px 14px',
                                 borderRight: i % 3 !== 2 ? '1px solid var(--fh-border-strong)' : undefined,
@@ -635,7 +651,11 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
                       {/* Balance ratios — de-emphasized, divided off below */}
                       <div className="grid grid-cols-3 mt-3 pt-3 border-t border-fh-border">
                         {simRatios.map((t) => (
-                          <div key={t.label} className="px-1">
+                          <div
+                            key={t.label}
+                            className="px-1"
+                            {...tileHover({ description: getStatGuideEntry(t.guideId)?.short ?? '' })}
+                          >
                             <div className="flex items-center gap-1" style={{ marginBottom: 3 }}>
                               <span className="font-medium uppercase text-fh-muted-2" style={{ fontSize: 9, letterSpacing: '0.08em' }}>
                                 {t.label}
@@ -954,6 +974,8 @@ export default function GarageDrawer({ car, onClose, onTagDetailsChange, onStats
           </>
         )}
       </div>
+
+      {tileTooltip}
     </>
   )
 }

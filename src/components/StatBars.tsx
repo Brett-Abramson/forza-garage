@@ -1,8 +1,11 @@
+'use client'
+
 import type { Car, CarBadgeMap } from '@/types/car'
 import { DIVISION_CLASS_AVERAGES, getStatColor } from '@/lib/statCallouts'
 import type { StatAvg } from '@/lib/statCallouts'
 import { BAR_GUIDE_ID } from '@/lib/statsGuideContent'
 import StatInfoIcon from './StatInfoIcon'
+import { useHoverCard } from './useHoverCard'
 
 interface Props {
   car: Car
@@ -54,6 +57,7 @@ const COLOR_LABELS: Record<string, string> = {
 export default function StatBars({ car, variant = 'default', showSpecs = true, badges, showInfo = false }: Props) {
   const hasAnyBarStat = BARS.some(({ key }) => car[key] != null)
   const divAvg = DIVISION_CLASS_AVERAGES[car.division]?.[car.piClass] ?? null
+  const { hoverHandlers, tooltip } = useHoverCard()
 
   const large = variant === 'large'
   const barTrack = large ? 'h-2' : 'h-1.5'
@@ -94,11 +98,20 @@ export default function StatBars({ car, variant = 'default', showSpecs = true, b
 
         const badge = badges?.[key as string] ?? null
 
+        const contextColorClass =
+          color === 'bg-green-500' ? 'text-green-400' :
+          color === 'bg-green-400' ? 'text-green-400' :
+          color === 'bg-amber-400' ? 'text-amber-400' :
+          color === 'bg-orange-500' ? 'text-orange-400' :
+          color === 'bg-red-500'   ? 'text-red-400'    :
+          'text-gray-400'
+
         return (
           <div
             key={key}
-            className="relative group flex items-center gap-2"
+            className="relative flex items-center gap-2"
             title={badge?.label}
+            {...hoverHandlers({ description, comparisonLine, contextLine, contextColorClass })}
             style={badge ? { background: `var(--fh-badge-${badge.tier})`, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: -4, marginRight: -4 } : undefined}
           >
             {badge && <span aria-hidden="true" style={{ display: 'none' }} />}
@@ -118,31 +131,6 @@ export default function StatBars({ car, variant = 'default', showSpecs = true, b
             {showInfo && BAR_GUIDE_ID[key as string] && (
               <StatInfoIcon id={BAR_GUIDE_ID[key as string]} size={13} />
             )}
-
-            {/* Tooltip */}
-            <div className="
-              pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50
-              invisible opacity-0 group-hover:visible group-hover:opacity-100
-              transition-opacity duration-200 delay-200
-              w-56 rounded-md bg-gray-900 border border-gray-700 px-3 py-2 shadow-lg
-            ">
-              <p className="text-[10px] text-gray-300 leading-snug">{description}</p>
-              {comparisonLine && (
-                <p className="text-[10px] text-white font-medium mt-1 tabular-nums">{comparisonLine}</p>
-              )}
-              {contextLine && (
-                <p className={`text-[10px] mt-0.5 ${
-                  color === 'bg-green-500' ? 'text-green-400' :
-                  color === 'bg-green-400' ? 'text-green-400' :
-                  color === 'bg-amber-400' ? 'text-amber-400' :
-                  color === 'bg-orange-500' ? 'text-orange-400' :
-                  color === 'bg-red-500'   ? 'text-red-400'    :
-                  'text-gray-400'
-                }`}>{contextLine}</p>
-              )}
-              {/* Arrow */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-700" />
-            </div>
           </div>
         )
       })}
@@ -150,6 +138,8 @@ export default function StatBars({ car, variant = 'default', showSpecs = true, b
       {/* Specs row — only show fields that have values (omitted when the caller
           renders its own spec grid, e.g. the drawer's tile grid) */}
       {showSpecs && <SpecsRow car={car} />}
+
+      {tooltip}
     </div>
   )
 }

@@ -73,3 +73,16 @@ if (!window.history.replaceState) {
     writable: true,
   })
 }
+
+// jsdom has no IntersectionObserver — stub it as a no-op so scroll-spy
+// components (e.g. GuideToc) can mount in tests without firing callbacks.
+class IntersectionObserverStub {
+  observe    = vi.fn()
+  unobserve  = vi.fn()
+  disconnect = vi.fn()
+  takeRecords = vi.fn(() => [])
+}
+// @ts-expect-error — partial stub, sufficient for components that only call observe/disconnect
+window.IntersectionObserver = IntersectionObserverStub
+// @ts-expect-error — same stub for the global reference some libs check instead of window.*
+global.IntersectionObserver = IntersectionObserverStub

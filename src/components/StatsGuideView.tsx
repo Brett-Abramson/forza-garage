@@ -1,6 +1,21 @@
-import { entriesFor, type StatGuideEntry } from '@/lib/statsGuideContent'
+import { entriesFor, type StatGuideCategory, type StatGuideEntry } from '@/lib/statsGuideContent'
+import GuideToc, { type GuideTocSection } from './GuideToc'
+import BackToTop from './BackToTop'
 
 // ─── Page-only content (not per-metric, so no `short`/tooltip versions) ───────
+
+// The 7 top-level sections — powers both the ToC and the section anchors below.
+// Individual metric cards (25 of them) keep their own anchors for the drawer's
+// StatInfoIcon deep-links, but don't clutter the ToC with that density.
+const SECTIONS: GuideTocSection[] = [
+  { id: 'identity',           label: 'Identity' },
+  { id: 'bar-stats',          label: 'Bar stats' },
+  { id: 'raw-specs',          label: 'Raw specs' },
+  { id: 'sim-metrics',        label: 'Sim metrics' },
+  { id: 'how-numbers-relate', label: 'How the numbers relate' },
+  { id: 'reading-in-30',      label: 'Reading a car in 30 seconds' },
+  { id: 'appendix',           label: 'Appendix' },
+]
 
 // §5 — how clusters of numbers add up to an identity.
 const ARCHETYPES: { name: string; cars?: string; text: string }[] = [
@@ -38,19 +53,37 @@ const BAR_SIM_PAIRS: { bar: string; sim: string }[] = [
   { bar: 'Offroad',      sim: '(no sim twin)' },
 ]
 
-// §6 — reading a car in 30 seconds.
-const THIRTY_SECONDS: string[] = [
-  "Class + division — sets the yardstick and which weaknesses matter.",
-  "lb/hp — the build-priority dial (grip vs power vs weight).",
-  "Front weight % — balance feel before you even tune.",
-  "Lateral-G pair — how much grip, and whether it needs speed to show it.",
-  "Top speed + braking vs class — straight-line and stopping, weighted by the division (skip top speed for dirt cars).",
-  "Acceleration shape — where it makes its time.",
+// §6 — reading a car in 30 seconds. Condensed one-liners power the top-of-page
+// quick version; the full text renders in the §6 section further down.
+const THIRTY_SECONDS: { quick: string; full: string }[] = [
+  { quick: 'Class + division — the yardstick', full: "Class + division — sets the yardstick and which weaknesses matter." },
+  { quick: 'lb/hp — grip vs power vs weight',  full: "lb/hp — the build-priority dial (grip vs power vs weight)." },
+  { quick: 'Front weight % — balance feel',    full: "Front weight % — balance feel before you even tune." },
+  { quick: 'Lateral-G pair — how much, and does it need speed', full: "Lateral-G pair — how much grip, and whether it needs speed to show it." },
+  { quick: 'Top speed + braking vs class',     full: "Top speed + braking vs class — straight-line and stopping, weighted by the division (skip top speed for dirt cars)." },
+  { quick: 'Acceleration shape — where it makes its time', full: "Acceleration shape — where it makes its time." },
 ]
 
-// Appendix — per-class reference tables (from ~580 cars). See provenance note below.
-const APPENDIX_TABLES: { title: string; note: string; columns: string[]; rows: (string | number)[][] }[] = [
+// Section 3/4 visual sub-groups — clusters entries the way §5's prose already
+// says they relate (weight family; accel pair; grip & balance trio), so the eye
+// can see the relationship before reading the text that explains it.
+const SPEC_GROUPS: { title: string; ids: string[] }[] = [
+  { title: 'Output',       ids: ['power', 'torque'] },
+  { title: 'Weight family', ids: ['weight', 'front-weight', 'power-to-weight'] },
+  { title: 'Descriptive',  ids: ['displacement'] },
+]
+const SIM_GROUPS: { title: string; ids: string[] }[] = [
+  { title: 'Acceleration',   ids: ['zero-to-sixty', 'zero-to-hundred'] },
+  { title: 'Braking',        ids: ['braking-distance'] },
+  { title: 'Top-end & aero', ids: ['top-speed', 'aero-efficiency'] },
+  { title: 'Grip & balance', ids: ['lateral-g', 'mech-balance', 'aero-balance'] },
+]
+
+// Appendix — per-class reference tables (from ~580 cars). `id` is the jump target
+// each matching metric card links to via its `appendixRef`. See provenance note below.
+const APPENDIX_TABLES: { id: string; title: string; note: string; columns: string[]; rows: (string | number)[][] }[] = [
   {
+    id: 'appendix-top-speed',
     title: 'Top speed (mph)',
     note: 'higher is better',
     columns: ['Class', 'mean', 'p90 (strong)'],
@@ -60,6 +93,7 @@ const APPENDIX_TABLES: { title: string; note: string; columns: string[]; rows: (
     ],
   },
   {
+    id: 'appendix-braking',
     title: '100–0 braking (ft)',
     note: 'lower is better',
     columns: ['Class', 'mean', 'p10 (strong)'],
@@ -69,6 +103,7 @@ const APPENDIX_TABLES: { title: string; note: string; columns: string[]; rows: (
     ],
   },
   {
+    id: 'appendix-lateral-g',
     title: 'Lateral G @ 120 (g)',
     note: 'higher is better',
     columns: ['Class', 'mean', 'p90 (strong)', 'p25 (low)'],
@@ -78,6 +113,7 @@ const APPENDIX_TABLES: { title: string; note: string; columns: string[]; rows: (
     ],
   },
   {
+    id: 'appendix-zero-to-sixty',
     title: '0–60 (s)',
     note: 'lower is better',
     columns: ['Class', 'mean', 'p10 (strong)', 'p25 (quick)'],
@@ -101,11 +137,15 @@ const DATASET_FACTS: string[] = [
 
 function GuideEntryCard({ entry }: { entry: StatGuideEntry }) {
   return (
-    <section id={entry.id} className="scroll-mt-20 rounded-lg border border-fh-border bg-fh-panel p-4">
+    <section id={entry.id} className="scroll-mt-24 rounded-lg border border-fh-border bg-fh-panel p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-2">
         <h3 className="text-sm font-semibold text-fh-dark">{entry.label}</h3>
         {entry.field && <span className="text-[11px] text-fh-muted-2 font-mono">{entry.field}</span>}
       </div>
+
+      {entry.hook && (
+        <p className="text-sm font-semibold text-fh-dark mb-2 leading-snug">{entry.hook}</p>
+      )}
 
       <div className="flex flex-col gap-2">
         {entry.long.map((p, i) => (
@@ -113,24 +153,65 @@ function GuideEntryCard({ entry }: { entry: StatGuideEntry }) {
         ))}
       </div>
 
+      {/* Threshold table — same shape for every metric that has bands, so it reads
+          as "the cheat-sheet part of this card" regardless of which stat you're on. */}
       {entry.bullets && (
         <div className="mt-3 flex flex-col gap-1.5">
           {entry.bullets.map((b, i) => (
             <div key={i} className="rounded-md bg-fh-panel-2 px-3 py-2">
-              {b.label && <div className="text-xs font-semibold text-fh-dark mb-0.5">{b.label}</div>}
+              <div className="flex items-baseline gap-2 mb-0.5">
+                <span className="text-xs font-semibold text-fh-dark">{b.label}</span>
+                {b.detail && <span className="text-[10px] text-fh-muted-2 font-mono">{b.detail}</span>}
+              </div>
               <div className="text-sm text-fh-dark-2 leading-relaxed">{b.text}</div>
             </div>
           ))}
         </div>
       )}
 
-      {entry.seeAlso && (
-        <p className="mt-3 pt-3 border-t border-fh-border text-xs text-fh-muted leading-relaxed">
-          <span className="uppercase tracking-wide text-fh-muted-2 mr-1.5">See also</span>
-          {entry.seeAlso}
-        </p>
+      {(entry.relatedStat || entry.note || entry.appendixRef) && (
+        <div className="mt-3 pt-3 border-t border-fh-border flex flex-col gap-1.5">
+          {entry.relatedStat && (
+            <p className="text-xs text-fh-muted leading-relaxed">
+              <span className="uppercase tracking-wide text-fh-muted-2 mr-1.5">Related stat</span>
+              {entry.relatedStat}
+            </p>
+          )}
+          {entry.note && (
+            <p className="text-xs text-fh-muted leading-relaxed">
+              <span className="uppercase tracking-wide text-fh-amber mr-1.5">Note</span>
+              {entry.note}
+            </p>
+          )}
+          {entry.appendixRef && (
+            <a href={`#${entry.appendixRef}`} className="text-xs text-fh-red hover:underline w-fit">
+              ↓ Per-class ranges in the Appendix
+            </a>
+          )}
+        </div>
       )}
     </section>
+  )
+}
+
+// Renders a section's entries clustered into labelled sub-groups (a light visual
+// container, not a new card style) so related specs/metrics read as one family.
+function GroupedEntries({ category, groups }: { category: StatGuideCategory; groups: { title: string; ids: string[] }[] }) {
+  const byId = new Map(entriesFor(category).map((e) => [e.id, e]))
+  return (
+    <div className="flex flex-col gap-4">
+      {groups.map((g) => (
+        <div key={g.title} className="rounded-xl border border-fh-border bg-fh-panel-2 p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-fh-muted-2 mb-2 px-1">{g.title}</div>
+          <div className="flex flex-col gap-3">
+            {g.ids
+              .map((id) => byId.get(id))
+              .filter((e): e is StatGuideEntry => !!e)
+              .map((e) => <GuideEntryCard key={e.id} entry={e} />)}
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -149,7 +230,11 @@ function SectionHeader({ n, title, blurb }: { n: string; title: string; blurb: s
 
 export default function StatsGuideView() {
   return (
-    <div className="flex flex-col gap-12 max-w-3xl">
+    <>
+    <div className="md:flex md:items-start md:gap-8">
+      <GuideToc sections={SECTIONS} />
+
+      <div className="flex-1 min-w-0 flex flex-col gap-12 max-w-3xl">
 
       {/* Intro */}
       <div className="rounded-xl border border-fh-blue/20 bg-fh-blue-pale px-5 py-4">
@@ -160,8 +245,28 @@ export default function StatsGuideView() {
         </p>
       </div>
 
+      {/* Quick version — the §6 payoff, surfaced up front for anyone in a hurry.
+          Open by default; collapsible for repeat visitors. Same content as §6 below,
+          condensed — full walkthrough still lives in its original place in the doc order. */}
+      <details open className="rounded-xl border border-fh-red bg-fh-red-pale px-5 py-4">
+        <summary className="text-sm font-semibold text-fh-dark cursor-pointer select-none">
+          Quick version — reading a car in 30 seconds
+        </summary>
+        <ol className="flex flex-col gap-1.5 mt-3">
+          {THIRTY_SECONDS.map(({ quick }, i) => (
+            <li key={i} className="flex gap-2 text-sm text-fh-dark-2 leading-relaxed">
+              <span className="font-mono shrink-0 w-4" style={{ color: 'var(--fh-red-fg)' }}>{i + 1}.</span>
+              {quick}
+            </li>
+          ))}
+        </ol>
+        <a href="#reading-in-30" className="inline-block mt-3 text-xs text-fh-red hover:underline">
+          Full walkthrough ↓
+        </a>
+      </details>
+
       {/* 1 — Identity layer */}
-      <div>
+      <div id="identity" className="scroll-mt-24">
         <SectionHeader n="1" title="The identity layer" blurb="These don't describe performance directly — they frame everything else." />
         <div className="flex flex-col gap-3">
           {entriesFor('identity').map((e) => <GuideEntryCard key={e.id} entry={e} />)}
@@ -169,7 +274,7 @@ export default function StatsGuideView() {
       </div>
 
       {/* 2 — Bar stats */}
-      <div>
+      <div id="bar-stats" className="scroll-mt-24">
         <SectionHeader n="2" title="The six bar stats (0–10)" blurb="The in-game star bars — a quick read. The sim metrics below are the precise version of the same qualities." />
         <div className="flex flex-col gap-3">
           {entriesFor('bar').map((e) => <GuideEntryCard key={e.id} entry={e} />)}
@@ -177,23 +282,19 @@ export default function StatsGuideView() {
       </div>
 
       {/* 3 — Raw specs */}
-      <div>
-        <SectionHeader n="3" title="Raw specs" blurb="The underlying numbers the bars are built from — plus the one derived figure worth computing yourself." />
-        <div className="flex flex-col gap-3">
-          {entriesFor('spec').map((e) => <GuideEntryCard key={e.id} entry={e} />)}
-        </div>
+      <div id="raw-specs" className="scroll-mt-24">
+        <SectionHeader n="3" title="Raw specs" blurb="The underlying numbers the bars are built from — grouped by how §5 says they relate." />
+        <GroupedEntries category="spec" groups={SPEC_GROUPS} />
       </div>
 
       {/* 4 — Sim metrics */}
-      <div>
-        <SectionHeader n="4" title="Simulation metrics" blurb="The precise, physics-model versions. Units are implied by the field name; always read against class." />
-        <div className="flex flex-col gap-3">
-          {entriesFor('sim').map((e) => <GuideEntryCard key={e.id} entry={e} />)}
-        </div>
+      <div id="sim-metrics" className="scroll-mt-24">
+        <SectionHeader n="4" title="Simulation metrics" blurb="The precise, physics-model versions, grouped by family. Units are implied by the field name; always read against class." />
+        <GroupedEntries category="sim" groups={SIM_GROUPS} />
       </div>
 
       {/* 5 — How the numbers relate */}
-      <div>
+      <div id="how-numbers-relate" className="scroll-mt-24">
         <SectionHeader n="5" title="How the numbers relate" blurb="The part that makes the rest click — how the quick bars, the precise sims, and weight all wire together." />
 
         <div className="flex flex-col gap-4">
@@ -263,26 +364,26 @@ export default function StatsGuideView() {
         </div>
       </div>
 
-      {/* 6 — Reading a car in 30 seconds */}
-      <div>
+      {/* 6 — Reading a car in 30 seconds (full walkthrough — quick version lives near the top) */}
+      <div id="reading-in-30" className="scroll-mt-24">
         <SectionHeader n="6" title="Reading a car in 30 seconds" blurb="Run these six in order and a car's race fit and build path usually fall out on their own." />
         <ol className="flex flex-col gap-2">
-          {THIRTY_SECONDS.map((step, i) => (
+          {THIRTY_SECONDS.map(({ full }, i) => (
             <li key={i} className="flex gap-3 text-sm text-fh-dark-2 leading-relaxed">
               <span className="text-fh-red font-mono shrink-0 w-5">{i + 1}.</span>
-              {step}
+              {full}
             </li>
           ))}
         </ol>
       </div>
 
       {/* Appendix */}
-      <div id="appendix" className="scroll-mt-20">
+      <div id="appendix" className="scroll-mt-24">
         <SectionHeader n="—" title="Appendix — per-class reference ranges" blurb="From ~580 cars. p90 / p10 mark the strong-for-class tails; these are the baselines every callout compares against." />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {APPENDIX_TABLES.map((t) => (
-            <div key={t.title} className="rounded-lg border border-fh-border bg-fh-panel p-4">
+            <div key={t.id} id={t.id} className="scroll-mt-24 rounded-lg border border-fh-border bg-fh-panel p-4">
               <div className="flex items-baseline justify-between gap-2 mb-3">
                 <h3 className="text-sm font-semibold text-fh-dark">{t.title}</h3>
                 <span className="text-[11px] text-fh-muted-2 italic">{t.note}</span>
@@ -311,9 +412,16 @@ export default function StatsGuideView() {
           ))}
         </div>
 
-        {/* Whole-dataset facts */}
-        <div className="mt-4 rounded-lg border border-fh-border bg-fh-panel p-4">
-          <div className="text-[11px] text-fh-muted uppercase tracking-wide mb-2">Ratios / whole-dataset facts</div>
+        {/* Whole-dataset facts — the reference-grade numbers behind the thresholds
+            above. Collapsed by default: most players don't need r-values to use the
+            guide, but they're one click away for anyone verifying a claim. */}
+        <details className="mt-4 rounded-lg border border-fh-border bg-fh-panel p-4">
+          <summary className="text-[11px] text-fh-muted uppercase tracking-wide cursor-pointer select-none">
+            For the curious — the numbers behind the thresholds above
+          </summary>
+          <p className="text-xs text-fh-muted mt-2 mb-2 leading-relaxed">
+            Exact percentiles and correlations for anyone verifying a claim or pushing past the rounded guidance used elsewhere on this page.
+          </p>
           <ul className="flex flex-col gap-1.5">
             {DATASET_FACTS.map((f, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-fh-dark-2 leading-relaxed">
@@ -322,7 +430,7 @@ export default function StatsGuideView() {
               </li>
             ))}
           </ul>
-        </div>
+        </details>
 
         {/* Provenance / caution — same convention as DIVISION_PROFILES */}
         <p className="mt-4 text-xs text-fh-muted italic leading-relaxed border-l-2 border-fh-border pl-3">
@@ -331,6 +439,10 @@ export default function StatsGuideView() {
         </p>
       </div>
 
+      </div>
     </div>
+
+    <BackToTop />
+    </>
   )
 }

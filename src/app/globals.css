@@ -93,6 +93,25 @@ body::before {
   scrollbar-color: var(--fh-border) var(--fh-bg);
 }
 
+/* ── Smooth anchor scrolling ────────────────────────────────────────────────
+   CSS-driven so real <a href="#id"> jumps (e.g. the Stats Guide's ToC) keep
+   native browser history behavior — a JS scrollIntoView() in a click handler
+   would replace the history entry instead of pushing one, breaking back/forward. */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Hover-card fade-in ─────────────────────────────────────────────────────
+   Used by portaled hover tooltips (useHoverCard) — a plain CSS animation runs
+   on every mount, no JS opacity-toggling needed. */
+@keyframes fh-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.fh-fade-in {
+  animation: fh-fade-in 150ms ease-out;
+}
+
 /* ── Clipped-corner button ───────────────────────────────────────────────────
    Diagonal cut on top-right and bottom-left corners — used across CTA buttons. */
 

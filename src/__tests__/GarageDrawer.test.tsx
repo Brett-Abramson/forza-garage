@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from './test-utils'
+import { render, screen, waitFor, fireEvent, act } from './test-utils'
 import userEvent from '@testing-library/user-event'
 import GarageDrawer from '@/components/GarageDrawer'
 import type { Car, CarBadge } from "@/types/car"
@@ -821,5 +821,70 @@ describe('GarageDrawer — badge border accents in Overview', () => {
   it('no badge label text appears as visible text in the header pill row', () => {
     renderDrawer(badgedCar)
     expect(screen.queryByText('top 10% speed · S1 (stock)')).not.toBeInTheDocument()
+  })
+})
+
+// ─── Hover tooltip on spec/sim tiles ───────────────────────────────────────
+// The tiles already tint via badges just like the bar stats; they now get the
+// same hover-tooltip treatment (description from statsGuideContent's `short` +
+// the badge label as context), portaled so it can't be clipped by the drawer's
+// scrollable body.
+
+describe('GarageDrawer — spec/sim tile hover tooltip', () => {
+  const mkBadge = (label: string, tier: CarBadge['tier'] = 'top-strong') => ({
+    kind: 'percentile' as const,
+    tier,
+    label,
+    rank: 1,
+    n: 10,
+  })
+
+  const badgedCar: Car = {
+    ...baseCar,
+    powerHp: 450,
+    simZeroToSixty: 3.4,
+    badges: {
+      powerHp:        mkBadge('top 10% HP · S1 (stock)'),
+      simZeroToSixty: mkBadge('top 5% 0–60 · S1 (stock)'),
+    },
+  }
+
+  it('shows the guide description and badge context on a badged spec tile', () => {
+    vi.useFakeTimers()
+    renderDrawer(badgedCar)
+    const tile = screen.getByTitle('top 10% HP · S1 (stock)')
+    fireEvent.mouseEnter(tile)
+    act(() => { vi.advanceTimersByTime(200) })
+
+    expect(screen.getByText(/peak horsepower/i)).toBeInTheDocument()
+    expect(screen.getByText('top 10% HP · S1 (stock)')).toBeInTheDocument()
+
+    vi.useRealTimers()
+  })
+
+  it('hides the tile tooltip on mouseleave', () => {
+    vi.useFakeTimers()
+    renderDrawer(badgedCar)
+    const tile = screen.getByTitle('top 10% HP · S1 (stock)')
+    fireEvent.mouseEnter(tile)
+    act(() => { vi.advanceTimersByTime(200) })
+    expect(screen.getByText(/peak horsepower/i)).toBeInTheDocument()
+
+    fireEvent.mouseLeave(tile)
+    expect(screen.queryByText(/peak horsepower/i)).not.toBeInTheDocument()
+
+    vi.useRealTimers()
+  })
+
+  it('shows a description-only tooltip for an unbadged tile (no context line)', () => {
+    vi.useFakeTimers()
+    renderDrawer(badgedCar)
+    const tile = screen.getByText('Drivetrain').closest('div')!.parentElement!
+    fireEvent.mouseEnter(tile)
+    act(() => { vi.advanceTimersByTime(200) })
+
+    expect(screen.getByText(/determines launch behaviour/i)).toBeInTheDocument()
+
+    vi.useRealTimers()
   })
 })
