@@ -112,6 +112,25 @@ html {
   animation: fh-fade-in 150ms ease-out;
 }
 
+/* ── Muted text that reddens on hover ─────────────────────────────────────────
+   Used by the track breadcrumb and jump-to TOC chips — red text must use
+   --fh-red-fg (AA-audited), never text-fh-red. */
+.fh-hover-red-fg {
+  color: var(--fh-muted);
+  transition: color 150ms;
+}
+.fh-hover-red-fg:hover {
+  color: var(--fh-red-fg);
+}
+
+/* ── Track image fallback hatch ─────────────────────────────────────────────
+   Used by TrackImage behind the <img> — visible once the src 404s (game/
+   ForzaLabs assets, linked by reference, occasionally broken/missing). */
+.fh-img-hatch {
+  background-image: repeating-linear-gradient(135deg, var(--fh-panel2) 0 10px, transparent 10px 20px);
+  background-color: var(--fh-bg2);
+}
+
 /* ── Clipped-corner button ───────────────────────────────────────────────────
    Diagonal cut on top-right and bottom-left corners — used across CTA buttons. */
 

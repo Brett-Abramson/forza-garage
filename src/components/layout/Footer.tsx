@@ -5,6 +5,7 @@ const NAV_LINKS = [
   { label: 'Car Database',  href: '/cars' },
   { label: 'My Garage',     href: '/garage' },
   { label: 'Races',         href: '/races' },
+  { label: 'Tracks',        href: '/tracks' },
   { label: 'Builds',        href: '/builds' },
   { label: 'Stats Guide',   href: '/guide' },
 ]

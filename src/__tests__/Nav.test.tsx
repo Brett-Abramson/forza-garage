@@ -121,4 +121,9 @@ describe('Nav — links', () => {
     renderNav()
     expect(screen.getByRole('link', { name: /races/i })).toBeInTheDocument()
   })
+
+  it('renders Tracks link pointing to /tracks', () => {
+    renderNav()
+    expect(screen.getByRole('link', { name: /tracks/i })).toHaveAttribute('href', '/tracks')
+  })
 })
