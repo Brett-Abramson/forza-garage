@@ -56,12 +56,12 @@ const BAR_SIM_PAIRS: { bar: string; sim: string }[] = [
 // §6 — reading a car in 30 seconds. Condensed one-liners power the top-of-page
 // quick version; the full text renders in the §6 section further down.
 const THIRTY_SECONDS: { quick: string; full: string }[] = [
-  { quick: 'Class + division — the yardstick', full: "Class + division — sets the yardstick and which weaknesses matter." },
-  { quick: 'lb/hp — grip vs power vs weight',  full: "lb/hp — the build-priority dial (grip vs power vs weight)." },
-  { quick: 'Front weight % — balance feel',    full: "Front weight % — balance feel before you even tune." },
-  { quick: 'Lateral-G pair — how much, and does it need speed', full: "Lateral-G pair — how much grip, and whether it needs speed to show it." },
-  { quick: 'Top speed + braking vs class',     full: "Top speed + braking vs class — straight-line and stopping, weighted by the division (skip top speed for dirt cars)." },
-  { quick: 'Acceleration shape — where it makes its time', full: "Acceleration shape — where it makes its time." },
+  { quick: 'Class + division — the yardstick', full: "Check the class first — it's the yardstick every other number below gets read against, so a '141 mph top speed' means something completely different in D than in S2. The division then tells you which weaknesses are even worth caring about: a rally car's low top speed is a non-issue, a GT car's isn't." },
+  { quick: 'lb/hp — grip vs power vs weight',  full: "This is the single fastest tell for what the car needs. Under ~6 lb/hp, it's power-rich — spend PI on grip; over ~13, it's power-light and straight-line pace is the limiter; in between, just build to the race type." },
+  { quick: 'Front weight % — balance feel',    full: "Nose-heavy (>55%) means understeer tendency and lazy rotation; tail-heavy (<45%) means it rotates eagerly and can get twitchy off-throttle — this is your balance feel before any tuning at all." },
+  { quick: 'Lateral-G pair — how much, and does it need speed', full: "Two questions in one number: how much grip (absolute G vs class p90), and whether that grip shows up only at speed (the 120/60 ratio). A high absolute value with a flat curve is a strong but low-speed chassis; a rising curve (ratio ≥ ~1.12) means it's downforce-driven and needs speed to come alive." },
+  { quick: 'Top speed + braking vs class',     full: "Weight both against the division, not just the raw number — top speed barely matters on technical or dirt layouts, so skip it for dirt cars entirely. Braking, especially the 100–0 figure, is what actually separates cars on hard-braking technical tracks." },
+  { quick: 'Acceleration shape — where it makes its time', full: "Divide 0–100 by 0–60 to see where the car makes its time, since two cars can share a 0–60 and still be totally different. Sustained (ratio ≤ ~2.1) keeps pulling up top and suits long circuits; front-loaded (ratio ≥ ~2.6) fades after 60 and suits street starts and short sprints." },
 ]
 
 // Section 3/4 visual sub-groups — clusters entries the way §5's prose already
