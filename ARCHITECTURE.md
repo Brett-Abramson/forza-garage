@@ -15,6 +15,7 @@ A companion web app for **Forza Horizon 6**: browse the full car list, track an 
 - **Server Actions** for all writes; thin **read-only API routes** for reads
 - **Vercel** hosting · **Vitest** + Testing Library (~939 tests)
 - A **Python scraper** (gitignored, lives outside the repo) → CSV → `prisma/upsert_cars.js`
+- A **Node.js track scraper** (`scrape_tracks.js`, external) → `fh6-tracks.csv` → `prisma/upsert_tracks.js`
 
 ## Directory map
 
@@ -43,9 +44,10 @@ src/
   types/car.ts               Car, FilterState, PI_CLASS_COLORS / PI_CLASS_HEX, getSourceColor
   __tests__/                 Vitest
 prisma/
-  schema.prisma              5 models
+  schema.prisma              8 models (Car, UserGarage, CarMeta, CarTag, UserPreferences, Track, TrackProfile, TrackCorner)
   upsert_cars.js             CSV → DB import (null-safe; never touches UserGarage)
-  fh6-cars.csv, scraped_car_stats.csv
+  upsert_tracks.js           CSV → Track import (idempotent; upserts on raceName)
+  fh6-cars.csv, scraped_car_stats.csv, fh6-tracks.csv
   migrations/
 ```
 
@@ -56,6 +58,9 @@ prisma/
 - **CarMeta** — race-type / PI-class meta rankings (leaderboard-derived), with `active`/`replacedAt` history. Powers the featured carousel.
 - **CarTag** — tags on a `UserGarage` entry; `source` = `"auto"` | `"user"`.
 - **UserPreferences** — one row per Clerk `userId`: `units` (English/Metric), `powerUnits` (hp/PS/kW), `springUnits`. Display-layer only — DB car data is always stored in English units.
+- **Track** — scraped race data: `raceName`, `raceType` (Street/Road/Touge/Drag/Dirt/Cross Country/Wristband), `distanceMi`, `laps`, `region`. Includes reference image URLs (`trackImageUrl`, `detailsImageUrl` — game/ForzaLabs assets linked by reference, not re-hosted). Unique on `raceName`. Links to optional `TrackProfile` and ordered `TrackCorner[]`.
+- **TrackProfile** — derived per-track summary from telemetry (elevation, lateral G, brake zones, corner count). Built by the telemetry-ingest pipeline from captured or community laps, not the scraper. `sampleLapCount`, `source` (solo-capture/community-bundle), `qualityChecked` track data provenance.
+- **TrackCorner** — ordered corner breakdown (sequence, label, speed, lateral G, braking zone, throttle-on-exit) for charting and analysis. Populated alongside `TrackProfile`.
 
 ## Routing & rendering
 
@@ -108,8 +113,10 @@ prisma/
 
 ## Data pipeline
 
-`prisma/fh6-cars.csv` (hand-maintained car list) + `scraped_car_stats.csv` (sim stats, from a scraper that lives outside the repo) are joined on year + make + model and loaded by `node prisma/upsert_cars.js` — one transaction, **null-safe** (never overwrites a non-null value with null), and it **never touches UserGarage**. Never use `prisma db seed` for data.
+**Car data:** `prisma/fh6-cars.csv` (hand-maintained car list) + `scraped_car_stats.csv` (sim stats, from a scraper that lives outside the repo) are joined on year + make + model and loaded by `node prisma/upsert_cars.js` — one transaction, **null-safe** (never overwrites a non-null value with null), and it **never touches UserGarage**. Never use `prisma db seed` for data.
 - **Known source-data quirk**: the scraper's source (forza.labsgg.com) serves stale Simulation Results (0-60, top speed, braking, lateral G) on Forza Edition variant pages — Power/Weight and the 0-10 bars are correct, but sim numbers barely move even when FE power is 2-8x the base car's. Since `upsert_cars.js`'s null-safe coalesce can't *correct* a bad non-null value, the fix is a one-off script (`prisma/null_fe_sim_stats.js`) that explicitly nulls the affected `Sim_*` fields for known FE rows, run against the DB directly (with a Neon restore point first, per the DB-writes convention below).
+
+**Track data:** `fh6-tracks.csv` (scraped from forza.labsgg.com by an external Node scraper) is loaded by `node prisma/upsert_tracks.js` — idempotent upsert on unique `raceName`. Scraper retrieves race metadata (type, distance, laps, region) and reference image URLs (game/ForzaLabs assets, never re-hosted binaries). Track enrichment (elevation, corners, lateral G) comes later from the telemetry-ingest pipeline (captured laps), which populates `TrackProfile` and `TrackCorner[]`.
 
 ## Conventions & constraints (these shape design choices)
 

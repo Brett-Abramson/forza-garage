@@ -13,6 +13,7 @@ Built because the in-game garage is great for *owning* cars and terrible for *de
 - **Race types** — a reference guide for each discipline: what it demands, what to avoid, the competitive PI range, and drivetrain notes.
 - **Race tray** — open a race type while browsing your garage and the list instantly filters to your matching cars.
 - **Build guides** — upgrade paths and tuning priorities for each race type and PI class.
+- **Track database** — all FH6 races (100+) indexed by type and region, with distance, lap count, and reference track/layout images.
 - **Meta carousel** — the landing page features standout cars pulled from Rivals leaderboard data.
 
 ## Stack
@@ -38,7 +39,8 @@ You'll need a `.env.local` with `DATABASE_URL` (pointing at the Docker Postgres)
 ### Data & migrations
 
 - **Load or refresh car data** with `node prisma/upsert_cars.js` (not `prisma db seed`) — it joins the two CSVs on year/make/model in a single transaction and never touches your garage rows. The simulation stats are pulled in separately by a scraper that lives outside this repo.
-- **After changing `schema.prisma`**, run `npx prisma migrate dev` locally, then `npx prisma migrate deploy` against production once it checks out. Take a Neon restore point before running any data script against production.
+- **Load track data** with `node prisma/upsert_tracks.js` — idempotent upsert from the FH6 track CSV (scraped from forza.labsgg.com). Image URLs are linked by reference (game/ForzaLabs assets); track telemetry (elevation, corners, lateral G) is populated separately by the telemetry-ingest pipeline.
+- **After changing `schema.prisma`**, run `npx prisma migrate dev --env-file .env.local` locally (to use your local DB), then `npx prisma migrate deploy` against production once it checks out. Take a Neon restore point before running any data script against production.
 
 ## Status
 
@@ -50,10 +52,12 @@ Active personal project — built and tweaked as the game gets played.
 
 - **Surface the simulation data in the UI** — the sim stats (0–60, 0–100, braking, lateral G, top speed) are already scraped into the database; next is wiring them into Stats mode and the car drawer, sortable alongside the raw specs.
 - **Car comparison** — pick two or more cars and put their stats and sim numbers side by side.
+- **Track database UI** — browse races by type and region; surface track telemetry (elevation, corners, braking zones) once captured laps populate `TrackProfile`.
 
 **Next**
 
 - **Race recommender** — pick a race type and PI cap, get your owned cars ranked by fit with the reasoning behind it (builds on the existing race-matching logic).
+- **Telemetry capture & analysis** — record laps, extract telemetry (elevation, speed, lateral G), and populate track profiles and corner data for deeper race prep.
 - **Collection completion tracking** — percent owned by division, class, country, and rarity, with a missing-cars checklist.
 - **Rank & filter by sim metrics** — sort and filter the database by 0–60, braking, top speed, and the rest, not just the raw specs.
 - **Saved filter presets** — save a filter combination (say, "A-class AWD dirt") and recall it in one click.
