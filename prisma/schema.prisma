@@ -139,3 +139,92 @@ model UserPreferences {
   springUnits String   @default("N/mm")      // "N/mm" | "lb/in" | "kgf/mm"
   updatedAt   DateTime @updatedAt
 }
+
+model Track {
+  id           Int      @id @default(autoincrement())
+  raceName     String                    // e.g. "Cedar Run Street Race" — scrape identity key
+  raceType     String                    // "Street Race" | "Road Race" | "Touge Race" | "Drag Race"
+                                          // | "Dirt Race" | "Cross Country" | "Wristband Event"
+  distanceMi   Float?                    // null when the source page doesn't list one (e.g. Hakone Nanamagari)
+  laps         Int?
+  region       String?                   // "Discover Japan" | "Horizon Festival" — free string, not enum
+                                          // (forward-compatible with DLC regions without a migration,
+                                          // same reasoning as Car.source)
+
+  // Reference images — URLs only, never re-hosted binaries. See scrape_tracks.js
+  // header comment: these are game/ForzaLabs assets, linked by reference.
+  trackImageUrl   String?
+  detailsImageUrl String?
+
+  sourceUrl    String                    // provenance — where this row was scraped from
+  scrapedAt    DateTime  @default(now())
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  profile      TrackProfile?             // 1:1 — the current derived summary, if one exists
+  corners      TrackCorner[]             // 1:many — ordered corner breakdown
+
+  @@unique([raceName])
+  @@index([raceType])
+  @@index([region])
+}
+
+// One active telemetry-derived summary per Track. Distinct from Track itself
+// because this data has a fundamentally different source and lifecycle —
+// scraped fields are refreshed by re-running the scraper; profile fields are
+// only ever produced by the telemetry-ingest pipeline (your own captured
+// laps, later community-submitted laps), and may not exist yet for most
+// tracks. Nullable fields here are the norm, not the exception, especially
+// early on.
+model TrackProfile {
+  id              Int      @id @default(autoincrement())
+  trackId         Int      @unique
+  track           Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  elevationDeltaFt   Float?     // max(y) - min(y) across the reference lap(s)
+  elevationMinFt     Float?
+  elevationMaxFt     Float?
+
+  avgLateralG        Float?     // aggregate across all detected corners
+  maxLateralG        Float?
+  brakeZoneCount     Int?       // count of distinct braking events on a clean lap
+  cornerCount        Int?       // detected corners — cross-check against the site's own turn count, if known
+
+  // Provenance / confidence — how much to trust this profile. A profile
+  // built from 1 unfiltered solo lap should read differently in the UI than
+  // one averaged over several quality-checked community laps.
+  sampleLapCount     Int      @default(1)
+  source             String              // "solo-capture" | "community-bundle" | ...
+  qualityChecked     Boolean  @default(false)  // passed the clean-lap slip/spin/contact checks
+  notes              String?             // free text, e.g. "raced in traffic, treat speed data as noisy"
+
+  capturedAt         DateTime?           // when the underlying lap(s) were driven, not when this row was written
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// Per-corner breakdown, ordered by position along the lap. Populated by the
+// same telemetry-ingest pipeline as TrackProfile — a corner list is
+// structurally a table, not a scalar column, hence the separate model
+// rather than cramming it onto Track or TrackProfile as JSON.
+model TrackCorner {
+  id              Int      @id @default(autoincrement())
+  trackId         Int
+  track           Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  sequence        Int                  // 1-based order along the lap — this is the sort key
+  label           String?              // optional human label, e.g. "Turn 4" or a community nickname
+
+  distanceIntoLapFt Float?             // where this corner starts, for placing it on an elevation/speed chart
+  minSpeedMph       Float?
+  maxLateralG       Float?
+  brakingZone       Boolean  @default(false)
+  throttleOnExit    Boolean?           // null = not determined; true/false once derived from telemetry
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([trackId, sequence])
+  @@index([trackId])
+}
