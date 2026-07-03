@@ -39,6 +39,7 @@ const DIVISION_ACCENT: Record<string, string> = {
   // Rally / Offroad
   'Classic Rally':         'border-t-green-600',
   'Retro Rally':           'border-t-green-600',
+  'Modern Rally':          'border-t-green-600',
   'Rally Monsters':        'border-t-green-600',
   'Unlimited Offroad':     'border-t-green-700',
   'Unlimited Buggies':     'border-t-green-700',

@@ -1,217 +1,249 @@
 # Handoff: Filter Sidebar (Car Database & My Garage)
 
-## Overview
-Today the **Car Database** (`/cars`) and **My Garage** (`/garage`) pages render all of their
-filtering UI in a **sticky horizontal "filter bank"** that sits under the top nav and stays
-pinned while the user scrolls the results. It stacks 4–5 rows — division-group chips, six
-`<select>` dropdowns, source chips, a Tags/Race-type mode toggle, and the chip set — which
-consumes **~250–350px of vertical height** on every scroll and crowds the results grid.
+> **Status: Implemented.** This redesign has shipped on both `/cars` and `/garage`. This doc
+> is kept as the as-built reference — the sections below describe the original design intent
+> plus notes on how the shipped implementation differs (component names/paths moved, a few
+> fields were added, one "recommended but optional" piece was dropped). See **"Implementation
+> notes"** at the end for the diff against the original prototype handoff.
 
-This redesign **moves all filtering into a collapsible left sidebar** and keeps a **slim top
+## Overview
+Previously the **Car Database** (`/cars`) and **My Garage** (`/garage`) pages rendered all of
+their filtering UI in a **sticky horizontal "filter bank"** that sat under the top nav and
+stayed pinned while the user scrolled the results. It stacked 4–5 rows — division-group chips,
+six `<select>` dropdowns, source chips, a Tags/Race-type mode toggle, and the chip set — which
+consumed **~250–350px of vertical height** on every scroll and crowded the results grid.
+
+This redesign **moved all filtering into a collapsible left sidebar** and keeps a **slim top
 bar** for global nav + search + view toggle. The result: filters are always reachable but the
 results area reclaims the full viewport height.
 
-The chosen direction is **"Compact rail + More filters"** (referred to as Variant C in the
+The shipped direction is **"Compact rail + More filters"** (referred to as Variant C in the
 prototype): the most-used filters are always visible in the rail; secondary filters live behind
-a single "More filters" disclosure to keep the rail short.
+a single "More filters" disclosure (plus a separate "Sim Metrics" disclosure, added post-handoff)
+to keep the rail short.
 
 ## About the Design Files
 The files in this bundle are **design references built in HTML + React (via in-browser Babel)** —
-a working prototype that demonstrates the intended layout, interactions, and exact styling. They
-are **not production code to drop in**. The target app is already **Next.js (App Router) +
-TypeScript + Tailwind**, so the task is to **recreate this design using the codebase's existing
-components, tokens, and patterns** — reusing `FilterBar`, `DivisionGroupFilter`, the `NavControls`
-context, the `fh-*` Tailwind tokens, and the existing `SortTh` table headers rather than porting
-the prototype's CSS verbatim.
+the original working prototype that demonstrated the intended layout, interactions, and exact
+styling. They were **not** production code and were **not** ported verbatim — the target app is
+**Next.js (App Router) + TypeScript + Tailwind**, and the shipped version was built using the
+codebase's existing components, tokens, and patterns.
 
-Open `Filter Sidebar Explorations.html` to interact with it. The dark strip at the very top
-("Page / Theme") is **prototype tooling, not part of the product** — ignore it when implementing.
+Open `Filter Sidebar Explorations.html` to interact with the original prototype. The dark strip
+at the very top ("Page / Theme") is **prototype tooling, not part of the product**.
 
 ## Fidelity
-**High-fidelity.** Colors, typography, spacing, and interactions are final and pull directly from
-the codebase's design tokens (`src/app/globals.css`). Recreate the UI to match, using the existing
-Tailwind `fh-*` color scale and component classes (`.fh-nav-link`, `.btn-clip`, etc.).
+**High-fidelity, with minor evolution during implementation.** Colors, typography, and
+interaction model match the codebase's design tokens (`src/app/globals.css`) and the `fh-*`
+Tailwind color scale. A handful of measurements (sidebar width, drawer width) shipped slightly
+narrower than the original spec — see the measurements table below, which now reflects shipped
+values.
 
 ---
 
-## What changes, file by file
+## What changed, file by file (as shipped)
 
-### 1. `src/components/Nav.tsx` — slim top bar (keep, lightly extend)
-The top bar **stays** and keeps its current responsibilities. It already hosts the search box and
-grid/table toggle via the `NavControls` context on `/cars` and `/garage` — **keep search in the top
-bar** (this satisfies "search always visible"). Two additions:
+### 1. `src/components/layout/Nav.tsx` — slim top bar
+Keeps its original responsibilities, hosting the search box and grid/table toggle via the
+`NavControls` context on `/cars` and `/garage`. Two additions, as planned:
 
-- **Sidebar toggle button** at the far left (before the brand). Icon: a "panel-left" glyph
-  (rectangle with a vertical divider near the left edge). 30×30px, `rounded-md`, `border-fh-border`,
-  `text-fh-muted` → hover `text-fh-dark bg-fh-panel-2`.
-- **Active-filter count badge** on that toggle — a small red pill (top-right, `-5px/-5px`) showing
-  the number of active filters, **only when the sidebar is collapsed** so the count isn't lost.
+- **Sidebar toggle button** (`PanelLeftIcon`) at the far left, before the hamburger/brand.
+  `p-1.5 rounded-md text-fh-muted` → hover `text-fh-dark-2 bg-fh-panel-2`.
+- **Active-filter count badge** on that toggle — a small red pill (`-top-1 -right-1`) showing
+  `activeFilterCount`, rendered **only when `sidebarOpen` is false**.
 
-The toggle drives a shared "filters open" state (see State Management). On `/cars` and `/garage`
-the existing `showControls` cluster (search + view toggle) remains in the bar unchanged.
+The toggle reads/writes `sidebarOpen` from the shared `NavControls` context (see State
+Management). `showControls` (search + view toggle) is unchanged and still gated to
+`/cars` and `/garage`.
 
-### 2. `src/components/GarageView.tsx` — remove the sticky filter bank
-This component is the shared engine for both `/cars` and `/garage`.
+### 2. Page-level components — **two** components, not one
+The original handoff assumed a single shared `GarageView.tsx` engine for both pages with an
+`isGarage` prop. As shipped, the two pages diverged into **separate top-level components** that
+both compose the same `FilterSidebar`:
 
-**Remove** the block currently commented `{/* ── Sticky filter bank ── */}` — the
-`<div className="sticky top-12 z-10 …">` that wraps `DivisionGroupFilter`, `FilterBar`, the source
-chips, and the Tags/Race mode toggle. **Do not delete** those child components — they move into the
-new sidebar.
+- **`src/components/cars/GarageView.tsx`** — powers `/cars` (via
+  `src/components/cars/GarageViewClient.tsx`, a `next/dynamic(ssr:false)` wrapper). Renders
+  `<FilterSidebar isGarage={false} … />`.
+- **`src/components/garage/GarageShowcase.tsx`** — powers `/garage` (via
+  `GarageShowcaseClient.tsx`). Renders `<FilterSidebar isGarage={true} … />`. This component
+  also owns garage-only features that postdate the original handoff: pin/favourite (star column,
+  `setPinned`), CSV export (`src/lib/exportCsv.ts`), and its own sort-column set
+  (`GARAGE_SORT_COLUMNS` vs. `STANDARD_SORT_COLUMNS` in `table-ui.tsx`).
 
-**Restructure** the return into a two-column layout under the slim nav:
+Both components removed the old sticky filter bank and restructured their return into the
+planned two-column layout (`<div className="flex items-start min-h-screen">` wrapping
+`<FilterSidebar>` + a `flex-1 min-w-0` main column with header, progress bar, and results).
+Window/row virtualizers, `CarCard`/`CarRow`, `GarageDrawer`, and `BackToTop` were kept as-is —
+only the filter chrome relocated.
 
-```
-<div className="flex items-start">
-  <FilterSidebar … />                {/* new — see below; collapsible */}
-  <main className="flex-1 min-w-0 …"> {/* existing header + progress + results */}
-    <header>…</header>               {/* "Car Database" / "My Garage" + progress bar — unchanged */}
-    <div className="results-bar">…</div>
-    {/* grid / table results — unchanged, incl. virtualizers */}
-  </main>
-</div>
-```
+> **Sort:** unchanged from the plan — the table sorts via the clickable `SortTh` headers in
+> `table-ui.tsx` only. No sort dropdown was added; `SortSelect` (mobile-only, shown when columns
+> are hidden below a width breakpoint) selects a column to sort by, it doesn't replace header
+> sorting.
 
-Keep the window virtualizers, `CarCard`/`CarRow`, `GarageDrawer`, and `BackToTop` exactly as they
-are. Only the **filter chrome** relocates.
+### 3. `src/components/car/FilterSidebar.tsx` — the rail (single shared component)
+One client component serves **both** pages (`isGarage` + `isSignedIn` props switch the
+garage-status vs. favourites blocks). Unlike the original plan, this component **absorbed**
+`FilterBar.tsx` and `DivisionGroupFilter.tsx` outright — neither exists as a separate file
+in the shipped codebase; their `<select>`/chip markup was inlined directly into
+`FilterSidebar.tsx`.
 
-> **Note on sort:** the table already sorts via the clickable `SortTh` headers in `table-ui.tsx` —
-> **keep that as the only sort mechanism.** Do **not** add a sort dropdown. (The prototype's
-> "Sort: Default" select was a scratch control that has been removed to match current behavior.)
+**Structure (top → bottom), as shipped:**
 
-### 3. `src/components/FilterSidebar.tsx` — NEW component (the rail)
-A new client component holding the Variant C rail. It receives the same props/state the filter
-bank used (`filters`, `options`, `selectedGroupId`, `selectedTags`, `selectedRace`, `filterMode`,
-the setters, and `activeFilterCount`) and is purely presentational over them.
-
-**Structure (top → bottom):**
-
-1. **Header row** — `FILTERS` label (uppercase, 13px/700, with a filter icon) + active count
-   badge; a **"Clear all"** text button on the right when `activeFilterCount > 0`
-   (wired to the existing `clearAllFilters`).
-2. **Active-filter pills** — removable chips summarizing every active facet (Class, Category,
-   Division, Make, Drivetrain, Country, Source, Garage, each Tag, Race). Clicking a pill clears just
-   that facet. (Optional but recommended — it's what makes the compact rail legible.)
-3. **Always-visible primary blocks** (each: 10.5px/700 uppercase label + control):
-   - **Class** — the 7 `PI_CLASS_ORDER` values as toggle chips. Active chip uses the
-     `PI_CLASS_COLORS` background for that class.
-   - **Category** — the `DIVISION_GROUPS` as chips (reuse `DivisionGroupFilter`). Selecting a group
-     reveals its division sub-chips, exactly as today.
-   - **Race type** — the `RACE_TYPES` chips (reuse the race branch of the current mode UI). Active
-     state uses amber (`amber-500/20 text-amber-400`).
-   - **Garage status** — `All / Owned / Not owned` segmented control. **Render this block only on
-     `/cars`.** On `/garage` it is redundant (the user is already viewing owned cars) — **hide it**
-     and pass the existing `hideOwned` prop through `FilterBar`.
-4. **"More filters" disclosure** — a single full-width button (`bg-fh-panel-2`, `rounded-lg`) with a
-   chevron and its own count badge. Expands to reveal the secondary filters:
-   - **Make** — `<select>` (reuse the `Select` from `FilterBar.tsx`).
-   - **Drivetrain** — `AWD / RWD / FWD` segmented control. (Moved here from primary.)
+1. **Header row** — `FILTERS` label (uppercase, icon) + active count badge; **"Clear all"**
+   text button when `activeFilterCount > 0`, wired to `clearAllFilters`.
+2. ~~Active-filter pills~~ — **not implemented.** The prototype's per-facet removable pill row
+   was marked optional in the original handoff and was dropped in favor of the per-item chips
+   already present in the Make block (each selected make renders as its own removable chip) and
+   the "Year" decade chips toggling off on re-click. There is no single consolidated pill strip
+   summarizing every active facet.
+3. **Always-visible primary blocks:**
+   - **Class** — `PI_CLASS_ORDER` values, but rendered as a **7-column grid** of square buttons
+     (not free-wrapping chips) so D…R always stay on one row at sidebar width. Active class fills
+     with its `PI_CLASS_COLORS` background + red ring.
+   - **Make** *(added — not in original spec's "always visible" list)* — a `<select>` plus
+     removable chips for each selected make. Multi-select, unlike the plan's single dropdown.
+   - **Stat highlights toggle** *(added)* — a small switch controlling `showStatHighlights`.
+   - **Year** *(added)* — decade quick-chips (derived from the dataset's actual decades) plus a
+     custom From/To numeric range (`YearRange`), committed on blur/Enter.
+   - **Category** — `DIVISION_GROUPS` chips; selecting a group reveals its division sub-chips.
+     Multi-select (`selectedGroupIds: string[]`, OR logic), not the single `selectedGroupId` the
+     original doc described.
+   - **Race type** — `RACE_TYPES` chips, amber active state, matches the plan. Multi-select
+     (`selectedRaceIds: string[]`); when exactly one race is active, a summary card shows its
+     surface type.
+   - **Garage status** — `All / Owned / Not owned` segmented control. Renders only when
+     `!isGarage && isSignedIn` — i.e. `/cars` while signed in. (The plan's `hideOwned` prop
+     through `FilterBar` doesn't apply since `FilterBar` no longer exists; the equivalent gating
+     is the `isGarage`/`isSignedIn` conditional directly in `FilterSidebar`.)
+   - **Favourites** *(added, garage-only)* — `isGarage && pinnedCount > 0` shows a "Show only
+     favourites" toggle wired to `filters.pinned`.
+   - **Badges** *(added)* — a "Has stat highlights" toggle wired to `filters.hasTopBadge`.
+4. **"Sim Metrics" disclosure** *(added — not in original spec)* — shown only when
+   `hasSimData` is true for the current result set. Expands to five numeric min/max range
+   inputs (0–60, 0–100, Braking 60–0, Lateral G, Top Speed), each with a `StatInfoIcon` guide
+   link. Auto-opens if any sim filter is already active.
+5. **"More filters" disclosure** — matches the plan, minus Make (promoted to primary, see
+   above):
+   - **Drivetrain** — `AWD / RWD / FWD` segmented control.
    - **Country** — `<select>`.
-   - **Source** — the `SOURCE_CHIPS` as chips.
-   - **Tags** — the `AUTO_TAGS` as chips.
+   - **Source** — `SOURCE_CHIPS` chips.
+   - **Tags** — `AUTO_TAGS` chips.
+   Auto-opens if any of these is already active.
 
-**Collapse behavior:**
-- **Desktop (≥900px):** when collapsed, the sidebar column is removed and `<main>` takes full width.
-  The Nav toggle (with count badge) brings it back.
-- **Mobile (<900px):** the sidebar becomes an **off-canvas drawer** (`position: fixed; left: 0;
-  transform: translateX(-100%)`, slides in on open) over a 45%-black scrim. Esc or scrim-click
-  closes it.
+**Collapse behavior — matches the plan:**
+- **Desktop (≥900px):** collapsed → sidebar column unmounts, `<main>` takes full width. Nav
+  toggle (with count badge) brings it back.
+- **Mobile (<900px):** off-canvas drawer, fixed-position, slides in over a black scrim
+  (shipped at `bg-black/50`, slightly darker than the spec's `.45` alpha). Scrim click closes it;
+  `isMobile` is tracked via `matchMedia('(max-width: 900px)')`.
 
 ---
 
-## Layout & measurements (hifi)
+## Layout & measurements (as shipped)
 
-| Token | Value |
-|---|---|
-| Slim top bar height | **48px** (`h-12`) — unchanged |
-| Sidebar width | **316px** |
-| Sidebar position | `sticky`, top = `48px` (nav height), `height: calc(100vh - 48px)`, internal `overflow-y: auto` |
-| Sidebar border | `1px solid var(--fh-border)` on the right |
-| Main content padding | `22px 26px 80px` desktop; `18px 16px 80px` mobile |
-| Results grid | `repeat(auto-fill, minmax(196px, 1fr))`, `gap: 14px` |
-| Drawer breakpoint | `max-width: 900px` |
-| Drawer width / scrim | `320px` / `rgba(0,0,0,.45)` |
+| Token | Spec value | Shipped value |
+|---|---|---|
+| Slim top bar height | 48px (`h-12`) | 48px (`h-12`) — unchanged |
+| Sidebar width | 316px | **280px** (`w-[280px]`) |
+| Sidebar position | sticky, top 48px, `calc(100vh - 48px)` | matches: `sticky top-12 h-[calc(100vh-48px)] overflow-y-auto` |
+| Sidebar border | `1px solid var(--fh-border)` on the right | matches (`border-r`) |
+| Drawer breakpoint | max-width 900px | matches |
+| Drawer width / scrim | 320px / `rgba(0,0,0,.45)` | **300px** (`w-[300px]`) / `bg-black/50` |
+| Drawer transition | `transform .26s cubic-bezier(.4,0,.2,1)` | matches (`duration-[260ms] ease-out`) |
+| Main content padding | 22/26/80 desktop, 18/16/80 mobile | `px-6 pt-6 pb-20` (24/24/80) — close, not pixel-exact |
+| Results grid | `repeat(auto-fill, minmax(196px,1fr))` | responsive Tailwind grid (2/3/4/5 cols by breakpoint via `calcColumns()`), not a literal `auto-fill` grid |
 
-**Sidebar internals**
-- Section label: 10.5px, 700, `uppercase`, `letter-spacing: .1em`, `var(--fh-muted)`, 8px bottom margin.
-- Chip: `padding 5px 10px`, `border-radius 999px`, 12px/500, `border 1px var(--fh-border)`,
-  `bg var(--fh-panel)`, `color var(--fh-muted)`. Hover → `color var(--fh-dark)`,
-  `border var(--fh-muted-2)`. Active → `bg var(--fh-red-pale)`, `color var(--fh-red)`,
-  `border var(--fh-red)`. Amber (race) active → `bg var(--fh-amber-pale)`, `color var(--fh-amber)`,
-  `border var(--fh-amber)`.
-- Class chip: `38×30px`, `radius 7px`, 12px/700; active fills with the class color from
-  `PI_CLASS_COLORS`.
-- Sub-division chip: `padding 3px 9px`, 11px, same active treatment as chips.
-- Segmented control: `bg var(--fh-panel-2)`, `border var(--fh-border)`, `radius 8px`, `padding 3px`;
-  buttons 12px/600 `var(--fh-muted)`; active button `bg var(--fh-panel)`, `color var(--fh-red)`,
-  subtle shadow.
-- Active pill (removable): `border 1px var(--fh-red)`, `bg var(--fh-red-pale)`, `color var(--fh-red)`,
-  11px/500, trailing ✕.
-- "More filters" button: `bg var(--fh-panel-2)`, `border var(--fh-border)`, `radius 9px`,
-  `padding 10px 8px`, 12.5px/600.
-- Toggle count badge: `min-width 15px; height 15px; bg var(--fh-red); color #fff; 9px/700;
-  border 1.5px var(--fh-panel)`.
+**Sidebar internals** — chip, segmented-control, and active-pill treatments (colors, radii,
+active states) match the spec's token usage (`--fh-red`, `--fh-red-pale`, `--fh-amber`, etc.)
+closely enough that they weren't worth re-diffing line by line; check `FilterSidebar.tsx`
+directly if you need exact Tailwind classes for a given control.
 
 ---
 
 ## Interactions & Behavior
-- **Toggle sidebar:** Nav button flips the open/collapsed state. Desktop collapses the column;
-  mobile opens/closes the drawer. Show the count badge on the toggle only while collapsed.
-- **Filter chips / selects:** identical semantics to today — they call the same setters
-  (`setFilters`, `handleGroupChange`, `handleDivisionChange`, `toggleTag`, `toggleRace`,
-  `switchMode`). All existing URL-sync (`?q`, `?class`, `?group`, `?div`, `?make`, `?drive`,
-  `?country`, `?src`, `?owned`, `?tags`, `?race`, `?mode`, `?view`) is unchanged.
-- **Race-type selection:** selecting a race uses the existing OR/inclusion logic via
-  `selectedRace`/`activeRace` (a car matches if it has ANY of the race's `recommendedTags`).
-- **Clear all:** existing `clearAllFilters`. Individual active pills clear a single facet.
-- **Sorting:** unchanged — clickable `SortTh` headers (asc ⇄ desc, arrow indicator) in table view.
-- **Garage page:** hide the Garage-status block and pass `hideOwned`; when the user lands on or
-  switches to `/garage`, ensure `filters.owned` is forced to `'all'` so a stale `not-owned` value
-  doesn't hide their whole collection.
-- **Transitions:** drawer slide `transform .26s cubic-bezier(.4,0,.2,1)`; chip/segment color
-  changes `~120–150ms`. Respect `prefers-reduced-motion`.
+- **Toggle sidebar:** Nav button flips `sidebarOpen`. Desktop collapses the column; mobile
+  opens/closes the drawer. Count badge shows on the toggle only while collapsed. Matches plan.
+- **Filter chips / selects:** call the same setters as before (`setFilters`, `handleGroupChange`,
+  `handleDivisionChange`, `toggleTag`, `toggleRace`, `clearAllFilters`). URL-sync covers `?q`,
+  `?class`, `?group`, `?div`, `?make`, `?drive`, `?country`, `?src`, `?owned`, `?ymin`, `?ymax`,
+  `?tags`, `?race`, `?view` (see `GarageView.tsx`'s URL-sync effect). There is no `?mode` param —
+  the old Tags/Race "mode toggle" from the sticky filter bank doesn't exist in the sidebar; Tags
+  and Race type are both always-addressable (Tags under "More filters", Race type as its own
+  primary block) rather than mutually exclusive modes.
+- **Race-type selection:** OR/inclusion logic via `selectedRaceIds`/`activeRaces`, matches plan.
+- **Clear all:** resets `filters` to `DEFAULT_FILTERS` plus clears `selectedGroupIds`,
+  `selectedTags`, `selectedRaceIds`. No per-facet pill clearing exists (see "not implemented"
+  note above) beyond what the Make/Year controls already offer natively.
+- **Sorting:** unchanged — clickable `SortTh` headers only.
+- **Garage page:** doesn't need a `hideOwned` prop/forced `filters.owned = 'all'` workaround as
+  originally planned — `/garage`'s car list (`getGarageCars`) is already scoped to owned cars
+  server-side, and `FilterSidebar` simply doesn't render the Garage-status block when
+  `isGarage` is true.
+- **Transitions:** matches plan (drawer slide, chip/segment color transitions). No explicit
+  `prefers-reduced-motion` handling was found in `FilterSidebar.tsx` — worth a follow-up if that
+  matters for this codebase's a11y bar.
 
 ## State Management
-Reuse the existing `GarageView` state — nothing new is required except the sidebar open flag:
-- `filters: FilterState`, `selectedGroupId`, `selectedTags: Set<string>`, `selectedRace`,
-  `filterMode`, `view`, `sort` — all already present.
-- **New:** `sidebarOpen: boolean`. Default `true` on desktop, `false` on mobile (`matchMedia`).
-  It can live in `GarageView` and be passed to both `Nav` (via `NavControls`, alongside the existing
-  search/view registration) and `FilterSidebar`, OR be lifted into the `NavControls` context so the
-  Nav toggle and the sidebar share it. Lifting into `NavControls` is the cleaner fit since the toggle
-  lives in `Nav` and the panel lives in the page.
-- `activeFilterCount` is already computed in `GarageView` — reuse it for the badge.
+- `filters: FilterState`, `selectedGroupIds: string[]`, `selectedTags: Set<string>`,
+  `selectedRaceIds: string[]`, `view`, `sort` — live in `GarageView` / `GarageShowcase`.
+- `sidebarOpen: boolean` — lives in the page component and is **lifted into `NavControls`**
+  (the cleaner option the original doc called out), alongside `search`, `view`, and
+  `activeFilterCount`. See `src/context/NavControls.tsx`. Default is `true`, flipped to `false`
+  on mount if `matchMedia('(max-width: 900px)')` matches.
+- `activeFilterCount` is computed in the page component (a boolean array of every active facet,
+  `.filter(Boolean).length`) and passed through both to `NavControls` (for the toggle badge) and
+  directly to `FilterSidebar` (for the header badge).
 
 ## Design Tokens
-**Do not redefine these — they already exist in `src/app/globals.css` and `tailwind.config.ts`.**
-Use the Tailwind `fh-*` classes. Key tokens referenced by this design:
-
-- Accent: `--fh-red #CC0000`, `--fh-red-pale rgba(204,0,0,0.07)`, `--fh-red-border rgba(204,0,0,0.2)`
-- Amber (race): `--fh-amber #B87010` (dark `#D4920A`), `--fh-amber-pale`
-- Surfaces: `--fh-bg`, `--fh-bg2`, `--fh-panel`, `--fh-panel2`
-- Text: `--fh-dark`, `--fh-dark2`, `--fh-muted`, `--fh-muted2`
-- Lines: `--fh-border`, `--fh-border2`
-- PI class colors: `PI_CLASS_COLORS` in `src/types/car.ts`
-- Division accents: `DIVISION_ACCENT` in `src/components/CarCard.tsx`
-- Radii: chips `999px`, controls `7–9px`, cards `12px`. Both light + dark themes must be supported
-  (`[data-theme="dark"]`).
+Unchanged from the plan — nothing new was defined; existing `fh-*` Tailwind tokens from
+`src/app/globals.css` / `tailwind.config.ts` were reused throughout, including
+`PI_CLASS_COLORS` (`src/types/car.ts`) and `DIVISION_ACCENT` (`src/components/car/CarCard.tsx`).
+Both light + dark themes are supported via `[data-theme="dark"]`, consistent with the rest of the
+app (dark mode is AA-contrast audited — see project conventions for red-text tokens specifically).
 
 ## Assets
-None new. Nav/race icons are inline SVGs already in `Nav.tsx` and `RaceIcons.tsx`. Emoji used for
-division-group and race chips come from `DIVISION_GROUPS` (`divisionGroups.ts`) and `RACE_TYPES`
-(`races.ts`) and stay as-is.
+None new. Nav/race icons are inline SVGs in `Nav.tsx` and `RaceIcons.tsx`. Emoji for
+division-group and race chips come from `DIVISION_GROUPS` (`src/lib/divisionGroups.ts`) and
+`RACE_TYPES` (`src/lib/races.ts`).
 
-## Source data referenced
+## Source data referenced (current paths)
 - `src/types/car.ts` — `FilterState`, `PI_CLASS_ORDER`, `PI_CLASS_COLORS`, `SOURCE_CHIPS`
-- `src/lib/divisionGroups.ts` — `DIVISION_GROUPS`
-- `src/lib/tags.ts` — `AUTO_TAGS`
-- `src/lib/races.ts` — `RACE_TYPES`
-- `src/components/FilterBar.tsx`, `DivisionGroupFilter.tsx` — reuse the `Select` and group/division UI
-- `src/context/NavControls.tsx` — extend to also carry `sidebarOpen`
+- `src/lib/divisionGroups.ts` — `DIVISION_GROUPS`, `getDivisionsForGroup`
+- `src/lib/tags.ts` — `AUTO_TAGS`, `CAR_TAGS`
+- `src/lib/races.ts` — `RACE_TYPES`, `RaceType`
+- `src/lib/filterCars.ts` — `filterCars`, `DEFAULT_FILTERS` (shared filtering logic + defaults,
+  didn't exist as a named module in the original handoff)
+- `src/lib/metrics.ts` — `SIM_COLUMN_METRICS` (drives the Sim Metrics sidebar section + sim table
+  columns)
+- `src/components/car/FilterSidebar.tsx` — the rail itself (single component; `FilterBar.tsx` and
+  `DivisionGroupFilter.tsx` no longer exist separately)
+- `src/context/NavControls.tsx` — carries `sidebarOpen` alongside `search`/`view`/`activeFilterCount`
 
-## Files in this bundle (design reference)
+## Implementation notes (diff vs. original handoff)
+For future readers comparing this doc to the prototype bundle:
+1. **Two page components, not one.** `/cars` → `GarageView.tsx`; `/garage` → `GarageShowcase.tsx`.
+   They diverged rather than staying a single `isGarage`-switched component, because `/garage`
+   grew garage-only features (favourites/pin, CSV export, a different sort-column set) that don't
+   apply to `/cars`. Both still share the one `FilterSidebar`.
+2. **`FilterBar.tsx` / `DivisionGroupFilter.tsx` were never split out** — their markup lives
+   inline in `FilterSidebar.tsx`.
+3. **Fields added post-handoff:** Year (decade chips + range), Sim Metrics (5 numeric ranges),
+   Stat-highlights toggle, Badges toggle, Favourites (garage-only). Make was promoted from "More
+   filters" to an always-visible primary block and made multi-select.
+4. **Fields/concepts dropped:** the consolidated "active-filter pills" strip (optional in the
+   original spec), the Tags/Race "mode toggle" (both are independent controls now), the `?mode`
+   URL param, the `hideOwned` prop pass-through.
+5. **Measurements that shipped narrower than spec:** sidebar 280px (not 316px), drawer 300px
+   (not 320px). Everything else in the measurements table matches or is close enough not to
+   matter.
+
+## Files in this bundle (original design reference — historical)
 - `Filter Sidebar Explorations.html` — the interactive prototype (open this first)
-- `forza-styles.css` — all prototype styling; the source of the measurements/token usage above
-- `forza-sidebars.jsx` — the rail itself; `SidebarC` is the chosen direction (A & B are earlier
-  alternatives, kept for context only)
-- `forza-shared.jsx` — slim top bar, car card, sortable table, results region
-- `forza-data.js` — sample cars + the filter constants mirrored from the real codebase
+- `forza-styles.css` — original prototype styling; source of the original measurements/token
+  usage referenced above
+- `forza-sidebars.jsx` — the original rail prototype; `SidebarC` was the chosen direction (A & B
+  are earlier alternatives, kept for context only)
+- `forza-shared.jsx` — original slim top bar, car card, sortable table, results region prototype
+- `forza-data.js` — original sample cars + filter constants mirrored from the codebase at the
+  time of handoff (now superseded by the real `src/lib`/`src/types` modules listed above)

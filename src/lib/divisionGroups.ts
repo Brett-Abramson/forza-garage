@@ -53,7 +53,7 @@ export const DIVISION_GROUPS: DivisionGroup[] = [
     id: 'rally',
     name: 'Rally',
     icon: '🌲',
-    divisions: ['Classic Rally', 'Retro Rally', 'Rally Monsters'],
+    divisions: ['Classic Rally', 'Retro Rally', 'Modern Rally', 'Rally Monsters'],
   },
   {
     id: 'offroad',
