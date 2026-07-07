@@ -36,6 +36,12 @@ describe('KeyboardNav — shortcuts', () => {
     expect(push).toHaveBeenCalledWith('/races')
   })
 
+  it('navigates to /tracks on "t"', () => {
+    const { push } = renderNav()
+    fireEvent.keyDown(document, { key: 't' })
+    expect(push).toHaveBeenCalledWith('/tracks')
+  })
+
   it('navigates to / on "h"', () => {
     const { push } = renderNav()
     fireEvent.keyDown(document, { key: 'h' })

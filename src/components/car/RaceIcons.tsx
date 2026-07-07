@@ -99,6 +99,16 @@ export function DragIcon({ className, size }: IconProps) {
   )
 }
 
+/** Wristband Event — festival wristband (no discipline equivalent in races.ts) */
+export function WristbandIcon({ className, size }: IconProps) {
+  return (
+    <svg {...base(size)} fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <rect x="3" y="3" width="10" height="10" rx="5" />
+      <circle cx="8" cy="8" r="2.2" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 /** Keyed by RaceType.id from races.ts */
 export const RACE_ICONS: Record<string, (p: IconProps) => React.ReactElement> = {
   road: RoadIcon,
@@ -108,6 +118,28 @@ export const RACE_ICONS: Record<string, (p: IconProps) => React.ReactElement> = 
   drift: DriftIcon,
   touge: TougeIcon,
   drag: DragIcon,
+}
+
+/**
+ * Keyed by the Track model's exact `raceType` string (distinct id space from
+ * RaceType.id above — Track rows use "Street Race" etc., not "street").
+ * Reuses the same glyphs; only Wristband Event has no discipline equivalent.
+ */
+export const TRACK_TYPE_ICONS: Record<string, (p: IconProps) => React.ReactElement> = {
+  'Street Race': StreetIcon,
+  'Road Race': RoadIcon,
+  'Touge Race': TougeIcon,
+  'Drag Race': DragIcon,
+  'Dirt Race': DirtIcon,
+  'Cross Country': CrossCountryIcon,
+  'Wristband Event': WristbandIcon,
+}
+
+/** Renders the icon for a Track.raceType string, or nothing if unrecognized. */
+export function TrackTypeIcon({ raceType, className, size }: { raceType: string } & IconProps) {
+  const Icon = TRACK_TYPE_ICONS[raceType]
+  if (!Icon) return null
+  return <Icon className={className} size={size} />
 }
 
 /**

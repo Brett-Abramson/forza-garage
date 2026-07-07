@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
  *  g → /garage
  *  c → /cars
  *  r → /races
+ *  t → /tracks
  *  b → /builds
  *  s → /guide (stats guide)
  *  h → / (home)
@@ -31,6 +32,7 @@ export default function KeyboardNav() {
         case 'g': router.push('/garage'); break
         case 'c': router.push('/cars');   break
         case 'r': router.push('/races');  break
+        case 't': router.push('/tracks'); break
         case 'b': router.push('/builds'); break
         case 's': router.push('/guide');  break
         case 'h': router.push('/');       break

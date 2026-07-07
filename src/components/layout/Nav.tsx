@@ -13,6 +13,7 @@ const links = [
   { href: '/garage', label: 'My Garage', icon: GarageIcon, shortcut: 'g' },
   { href: '/cars', label: 'Car Database', icon: DatabaseIcon, shortcut: 'c' },
   { href: '/races', label: 'Races', icon: RacesIcon, shortcut: 'r' },
+  { href: '/tracks', label: 'Tracks', icon: TracksIcon, shortcut: 't' },
   { href: '/builds', label: 'Builds', icon: BuildsIcon, shortcut: 'b' },
   { href: '/guide', label: 'Stats Guide', icon: GuideIcon, shortcut: 's' },
 ]
@@ -274,6 +275,14 @@ function RacesIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
       <path d="M0 2h16v2H0zM0 7h10v2H0zM0 12h13v2H0z" />
+    </svg>
+  )
+}
+
+function TracksIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      <path d="M2 13 C4 7 6 11 8 6 C10 1 12 5 14 3" />
     </svg>
   )
 }
