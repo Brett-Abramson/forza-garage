@@ -1,6 +1,13 @@
+import type { Metadata } from 'next'
 import BuildsView from '@/components/builds/BuildsView'
 
-export const metadata = { title: 'Build Guides — Forza Garage' }
+export const metadata: Metadata = {
+  title: 'Build & Tuning Guides',
+  description:
+    'Upgrade paths and tuning priorities for Forza Horizon 6 by race type and PI class — ' +
+    'which parts matter most, in what order, and why.',
+  alternates: { canonical: '/builds' },
+}
 
 export default function BuildsPage() {
   return (

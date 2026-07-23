@@ -15,10 +15,29 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Forza Garage',
-  description: 'Track your Forza Horizon car collection',
+  metadataBase: new URL('https://forza-garage.vercel.app'),
+  title: {
+    default: 'Forza Garage — FH6 Car Database & Garage Tracker',
+    template: '%s | Forza Garage',
+  },
+  description:
+    'Browse every car in Forza Horizon 6, track your collection, and find the right car for each race type.',
+  applicationName: 'Forza Garage',
   icons: {
     icon: '/favicon.svg',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Forza Garage',
+    locale: 'en_US',
+    url: '/',
+    title: 'Forza Garage — FH6 Car Database & Garage Tracker',
+    description:
+      'Browse every car in Forza Horizon 6, track your collection, and find the right car for each race type.',
+    images: ['/features/car-database-cards.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
   },
 }
 

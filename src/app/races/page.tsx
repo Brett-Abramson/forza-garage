@@ -1,5 +1,14 @@
+import type { Metadata } from 'next'
 import RacesView from '@/components/races/RacesView'
 import { RACE_TYPES } from '@/lib/races'
+
+export const metadata: Metadata = {
+  title: 'Race Types',
+  description:
+    'What each Forza Horizon 6 race discipline demands — road, dirt, cross country, drag, and street — ' +
+    'with the competitive PI range and drivetrain notes for each.',
+  alternates: { canonical: '/races' },
+}
 
 export default function RacesPage() {
   return (

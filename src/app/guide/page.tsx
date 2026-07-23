@@ -1,6 +1,13 @@
+import type { Metadata } from 'next'
 import StatsGuideView from '@/components/guide/StatsGuideView'
 
-export const metadata = { title: 'Stats & Sims Guide — Forza Garage' }
+export const metadata: Metadata = {
+  title: 'Stats & Sims Guide',
+  description:
+    'What every Forza Horizon 6 stat and simulation metric actually means — bar stats, raw specs, ' +
+    '0-60, braking distance, lateral G, and top speed — and how to read them together.',
+  alternates: { canonical: '/guide' },
+}
 
 export default function GuidePage() {
   return (
