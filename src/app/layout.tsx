@@ -10,12 +10,13 @@ import KeyboardNav from '@/components/layout/KeyboardNav'
 import { NavControlsProvider } from '@/context/NavControls'
 import { UnitPreferencesProvider } from '@/context/UnitPreferences'
 import { getUserPreferences } from '@/server/dal/preferences'
+import { SITE_URL } from '@/lib/seo'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://forza-garage.vercel.app'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Forza Garage — FH6 Car Database & Garage Tracker',
     template: '%s | Forza Garage',
